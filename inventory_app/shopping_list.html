@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>お買い物リスト</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+:root {
+  --green:        #0F6E56;
+  --green-light:  #E1F5EE;
+  --green-mid:    #3B8C70;
+  --red:          #C0392B;
+  --red-light:    #FDECEA;
+  --orange:       #D35400;
+  --orange-light: #FEF3EB;
+  --gray:         #666;
+  --bg:           #ffffff;
+  --bg2:          #f8f8f6;
+  --bg3:          #eeeee9;
+  --text:         #1a1a1a;
+  --text2:        #666660;
+  --text3:        #999990;
+  --border:       rgba(0,0,0,0.1);
+  --border2:      rgba(0,0,0,0.18);
+  --radius:       14px;
+  --radius-sm:    8px;
+}
+
+/* ========== レイアウト ========== */
+#app { max-width: 860px; margin: 0 auto; padding: 16px; }
+
+/* ========== ヘッダー ========== */
+.app-header {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.header-left { flex: 1; }
+.app-title { font-size: 20px; font-weight: 600; color: var(--text); }
+.app-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.header-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ========== ボタン ========== */
+.btn {
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.8; }
+.btn-primary { background: var(--green); color: white; }
+.btn-outline {
+  background: none;
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { background: var(--bg2); }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+/* ========== URL設定パネル ========== */
+.setup-card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  text-align: center;
+}
+.setup-icon { font-size: 36px; margin-bottom: 12px; }
+.setup-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.setup-desc { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.6; }
+.url-input-row { display: flex; gap: 8px; }
+.url-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+}
+.url-input:focus { outline: 2px solid var(--green); border-color: transparent; }
+
+/* ========== ステータスバー ========== */
+.status-bar {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--text3);
+}
+.status-dot.ok { background: #27AE60; }
+.status-dot.loading {
+  background: var(--green);
+  animation: pulse 1s infinite;
+}
+.status-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ========== タブ ========== */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+/* 急ぎタブ：常に赤系 */
+#tab-high {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-light);
+}
+#tab-high.active {
+  background: var(--red);
+  color: white;
+}
+/* 余裕ありタブ：常にオレンジ系 */
+#tab-mid {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-light);
+}
+#tab-mid.active {
+  background: var(--orange);
+  color: white;
+}
+/* すべてタブ：常に青系 */
+#tab-all {
+  border-color: #3182CE;
+  color: #3182CE;
+  background: #EBF4FF;
+}
+#tab-all.active {
+  background: #3182CE;
+  color: white;
+}
+.tab-count {
+  display: inline-block;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 99px;
+  padding: 1px 7px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+/* 非アクティブ時：各タブ色の背景に白文字 */
+#tab-high .tab-count { background: var(--red); }
+#tab-mid  .tab-count { background: var(--orange); }
+#tab-all  .tab-count { background: #3182CE; }
+/* アクティブ時：白背景に各タブ色の文字 */
+#tab-high.active .tab-count { background: white; color: var(--red); }
+#tab-mid.active  .tab-count { background: white; color: var(--orange); }
+#tab-all.active  .tab-count { background: white; color: #3182CE; }
+
+/* 店舗タブのアクティブ状態（塗りつぶし） */
+.tab-btn.active {
+  background: #2D3748;
+  border-color: #2D3748;
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== 店舗カード ========== */
+.store-card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.store-header {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.store-header:active { opacity: 0.85; }
+.store-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+.store-badge {
+  font-size: 13px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.count-high {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--red);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.count-mid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--orange);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.count-low {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: #1E8449;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.chevron { font-size: 16px; color: var(--text3); transition: transform 0.2s; }
+.chevron.open { transform: rotate(90deg); }
+
+.store-body { display: none; border-top: 1px solid var(--border); }
+.store-body.open { display: block; }
+
+/* ========== カテゴリ区切り ========== */
+.cat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 10px 20px 4px;
+}
+
+/* ========== 品目行 ========== */
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.item-row:last-child { border-bottom: none; }
+.item-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+.item-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* ========== バッジ ========== */
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+/* 優先度に応じたバッジ配色（在庫チェックアプリの色分けと揃える）
+ *   high = 赤  : 急ぎで買う必要あり
+ *   mid  = 黄  : 余裕があれば買う
+ *   low  = 緑  : 在庫十分（参考用）
+ *   skip = 灰  : 未チェック・スキップ
+ */
+.badge-high  { background: var(--red-light);    color: var(--red); }
+.badge-mid   { background: var(--orange-light); color: var(--orange); }
+.badge-low   { background: #EAF6F0;             color: #1E8449; }
+.badge-skip  { background: var(--bg3);          color: var(--text3); }
+
+/* ========== 空状態 ========== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text2);
+}
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-title { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; line-height: 1.6; }
+
+/* ========== 備考 ========== */
+.memo-card {
+  background: #FFFBEB;
+  border: 1px solid #F9C74F;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #7D6008;
+  display: none;
+}
+.memo-card.show { display: block; }
+.memo-label { font-size: 11px; font-weight: 600; color: #9A7D0A; margin-bottom: 4px; }
+
+/* ========== ローディングスピナー ========== */
+.spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== 買い済みバー ========== */
+.bought-bar {
+  background: #F0FFF4;
+  border: 1px solid #9AE6B4;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #276749;
+}
+.bought-reset-btn {
+  background: none;
+  border: 1px solid #276749;
+  border-radius: 99px;
+  color: #276749;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 品目行をタップできるように見せる */
+.item-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.item-row:active { background: #F7FAFC; }
+
+/* ========== 設定リンク ========== */
+.settings-link {
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.settings-link:hover { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ヘッダー -->
+  <div class="app-header">
+    <div class="header-left">
+      <div class="app-title">お買い物リスト</div>
+      <div class="app-sub" id="header-sub">データを取得してください</div>
+    </div>
+    <div class="header-btns">
+      <button class="btn btn-outline btn-sm" onclick="showSetup()">⚙ URL設定</button>
+      <button class="btn btn-primary btn-sm" id="refresh-btn" onclick="fetchData()">データを取得</button>
+    </div>
+  </div>
+
+  <!-- URL設定パネル（初回表示） -->
+  <div id="setup-panel" style="display:none;">
+    <div class="setup-card">
+      <div class="setup-icon">🔗</div>
+      <div class="setup-title">GAS URLを設定してください</div>
+      <div class="setup-desc">
+        在庫チェックアプリと同じ<br>
+        「GAS ウェブアプリURL」を貼り付けてください。<br>
+        （一度設定すれば次回から自動で読み込まれます）
+      </div>
+      <div class="url-input-row">
+        <input type="url" id="gas-url-input" class="url-input"
+               placeholder="https://script.google.com/macros/s/...">
+        <button class="btn btn-primary" onclick="saveUrl()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ステータスバー -->
+  <div class="status-bar" id="status-bar" style="display:none;">
+    <div>
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">-</span>
+    </div>
+    <button class="settings-link" onclick="showSetup()">URLを変更</button>
+  </div>
+
+  <!-- 備考 -->
+  <div class="memo-card" id="memo-card">
+    <div class="memo-label">備考・申し送り</div>
+    <div id="memo-text"></div>
+  </div>
+
+  <!-- タブ：優先度で表示を切り替える
+       急ぎ     = 赤のみ（忙しいときの買い物用）
+       余裕あり = 赤+黄（ゆっくり買い物するとき）
+       全て     = 赤+黄+緑（緑は在庫十分の参考） -->
+  <div class="tab-bar" id="tab-bar" style="display:none;">
+    <button class="tab-btn active" id="tab-high" onclick="switchTab('high')">
+      急ぎ <span class="tab-count" id="count-high">0</span>
+    </button>
+    <button class="tab-btn" id="tab-mid" onclick="switchTab('mid')">
+      余裕あり <span class="tab-count" id="count-mid">0</span>
+    </button>
+    <button class="tab-btn" id="tab-all" onclick="switchTab('all')">
+      全て
+    </button>
+  </div>
+
+  <!-- 店舗タブ（2店舗以上あるときだけ表示） -->
+  <div class="tab-bar" id="store-tab-bar" style="display:none;"></div>
+
+  <!-- 買い済みバー（1件以上買い済みのときだけ表示） -->
+  <div class="bought-bar" id="bought-bar" style="display:none;">
+    <span id="bought-count-text">0件 買い済み</span>
+    <button class="bought-reset-btn" onclick="resetBought()">🔄 買い物リセット</button>
+  </div>
+
+  <!-- リスト本体 -->
+  <div id="list-area"></div>
+
+</div>
+
+<script>
+'use strict';
+
+// =========================================
+// 買い済み管理（大元のデータとは別にlocalStorageで保持）
+// =========================================
+
+// 「品目名|場所」をキーとして買い済み品目を管理するSet
+var boughtKeys = new Set(
+  JSON.parse(localStorage.getItem('shopping_list_bought') || '[]')
+);
+
+/** 品目行からキー文字列を生成する */
+function itemKey(r) {
+  return (r.name || '') + '|' + (r.tab || '');
+}
+
+/** 買い済み状態をlocalStorageに保存する */
+function saveBought() {
+  localStorage.setItem('shopping_list_bought', JSON.stringify(Array.from(boughtKeys)));
+}
+
+/**
+ * 品目を買い済みにしてリストから隠す。
+ * @param {number} idx - _buyableItems配列のインデックス
+ */
+function markAsBought(idx) {
+  boughtKeys.add(_buyableItems[idx]);
+  saveBought();
+  renderAll();
+}
+
+/** 買い済みをすべてリセットして品目を元に戻す */
+function resetBought() {
+  boughtKeys.clear();
+  saveBought();
+  renderAll();
+}
+
+/** クリックハンドラ用の一時配列（描画のたびに作り直す） */
+var _buyableItems = [];
+
+// =========================================
+// データの管理
+// =========================================
+
+/** アプリの状態（メモリ上に保持） */
+var state = {
+  gasUrl: '',       // GAS ウェブアプリURL
+  lastDate: null,   // 最後に取得したチェック日
+  lastMemo: '',     // 最後に取得した備考
+  rows: [],         // 全品目のチェック結果
+  tab: 'high',      // 現在表示中のタブ（high=急ぎ / mid=余裕あり / all=全て）
+  storeTab: 'all'   // 店舗フィルタ（'all'=全店舗、それ以外は店舗名）
+};
+
+/**
+ * アプリの初期化処理。ページ読み込み時に実行する。
+ * ローカルストレージから設定を読み込み、URLが設定済みなら自動でデータを取得する。
+ */
+function init() {
+  // ローカルストレージから保存済みのURLと前回データを読み込む
+  var saved = localStorage.getItem('shopping_list_state');
+  if (saved) {
+    try {
+      var p = JSON.parse(saved);
+      state.gasUrl  = p.gasUrl  || '';
+      state.lastDate = p.lastDate || null;
+      state.lastMemo = p.lastMemo || '';
+      state.rows    = p.rows    || [];
+      // 旧バージョンから保存された tab 名を新方式にマイグレーション
+      var tab = p.tab || 'high';
+      if (tab === 'buy') tab = 'high';
+      if (tab === 'low') tab = 'mid';
+      if (tab !== 'high' && tab !== 'mid' && tab !== 'all') tab = 'high';
+      state.tab = tab;
+    } catch(e) {}
+  }
+
+  if (state.gasUrl) {
+    // URL設定済み：ステータスバーを表示して前回データがあれば表示する
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('status-bar').style.display = '';
+    if (state.rows.length > 0) {
+      updateHeaderSub();
+      renderAll();
+    }
+    // 自動でデータを取得する
+    fetchData();
+  } else {
+    // URL未設定：設定パネルを表示する
+    document.getElementById('setup-panel').style.display = '';
+    document.getElementById('status-bar').style.display = 'none';
+  }
+}
+
+/**
+ * 現在の状態をローカルストレージに保存する。
+ * URLや取得データを次回起動時に再利用するために使う。
+ */
+function saveState() {
+  localStorage.setItem('shopping_list_state', JSON.stringify({
+    gasUrl:   state.gasUrl,
+    lastDate:  state.lastDate,
+    lastMemo:  state.lastMemo,
+    rows:     state.rows,
+    tab:      state.tab
+  }));
+}
+
+
+// =========================================
+// URL設定
+// =========================================
+
+/**
+ * URL設定パネルを表示・非表示にする。
+ * 設定パネルが非表示の場合は表示し、表示中の場合は閉じる。
+ */
+function showSetup() {
+  var panel = document.getElementById('setup-panel');
+  var isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? '' : 'none';
+  if (isHidden && state.gasUrl) {
+    document.getElementById('gas-url-input').value = state.gasUrl;
+  }
+}
+
+/**
+ * 入力されたGAS URLを保存する。
+ * 空白や末尾スラッシュを整えてからローカルストレージに保存する。
+ */
+function saveUrl() {
+  var input = document.getElementById('gas-url-input');
+  var url = input.value.trim().replace(/\/+$/, '');
+  if (!url.startsWith('http')) {
+    alert('正しいURLを入力してください。\n例：https://script.google.com/macros/s/...');
+    return;
+  }
+  state.gasUrl = url;
+  saveState();
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('status-bar').style.display = '';
+  fetchData();
+}
+
+
+// =========================================
+// データ取得
+// =========================================
+
+/**
+ * GASからチェック結果データを取得する。
+ *
+ * ★ なぜJSONPを使うか？
+ *   このHTMLは file:// で開くローカルファイルです。
+ *   ブラウザのセキュリティ制限（CORS）により、
+ *   file:// から外部サーバー（GAS）への通常のfetch()はブロックされます。
+ *   JSONP方式は <script> タグを使って読み込むため、この制限を回避できます。
+ */
+function fetchData() {
+  if (!state.gasUrl) {
+    document.getElementById('setup-panel').style.display = '';
+    return;
+  }
+
+  setStatus('loading', '取得中...');
+  var btn = document.getElementById('refresh-btn');
+  btn.innerHTML = '<span class="spinner"></span>取得中';
+  btn.disabled = true;
+
+  // fetch()でGASからデータを取得する。
+  // 以前はJSONP方式（scriptタグ）を使っていたが、スマホのブラウザで動かない
+  // 場合があるため、より信頼性の高いfetch()に切り替えた。
+  // ?_=タイムスタンプ を付けることで毎回新しいリクエストとして扱われ、
+  // ブラウザのキャッシュ（一時保存）による古いデータの表示を防ぐ。
+  var url = state.gasUrl + (state.gasUrl.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now();
+  fetch(url, { redirect: 'follow', cache: 'no-store' })
+    .then(function(response) { return response.text(); })
+    .then(function(text) {
+      var data;
+      try {
+        // GASがJSONP形式（関数名(データ)）で返した場合も対応できるよう
+        // カッコ内のJSONだけ取り出して解析する
+        var match = text.match(/^[^(]*\((.+)\)\s*;?\s*$/s);
+        data = JSON.parse(match ? match[1] : text);
+      } catch(e) {
+        throw new Error('データの形式が正しくありません');
+      }
+      if (data.error) {
+        setStatus('error', '取得失敗：' + data.error);
+      } else {
+        state.lastDate = data.date || null;
+        state.lastMemo = data.memo || '';
+        state.rows = deduplicateRows(data.rows || []);
+        saveState();
+        setStatus('ok', '取得完了 ' + nowTime());
+        updateHeaderSub();
+        renderAll();
+      }
+      btn.innerHTML = 'データを取得';
+      btn.disabled = false;
+    })
+    .catch(function(error) {
+      setStatus('error', '取得失敗：GAS URLを確認してください。');
+      btn.innerHTML = 'データを取得';
+      btn.disabled = false;
+    });
+}
+
+/**
+ * ステータスバーの表示を更新する。
+ *
+ * @param {string} type  - 'ok' / 'loading' / 'error'
+ * @param {string} label - 表示するテキスト
+ */
+function setStatus(type, label) {
+  var dot  = document.getElementById('status-dot');
+  var text = document.getElementById('status-text');
+  dot.className  = 'status-dot ' + type;
+  text.textContent = label;
+}
+
+/**
+ * 現在時刻を "HH:MM" 形式で返す。
+ *
+ * @returns {string} - 例："14:32"
+ */
+function nowTime() {
+  var d = new Date();
+  var h = String(d.getHours()).padStart(2, '0');
+  var m = String(d.getMinutes()).padStart(2, '0');
+  return h + ':' + m;
+}
+
+/**
+ * ヘッダー下部のサブテキスト（チェック日付）を更新する。
+ */
+function updateHeaderSub() {
+  var sub = document.getElementById('header-sub');
+  if (state.lastDate) {
+    sub.textContent = 'チェック日：' + state.lastDate;
+  } else {
+    sub.textContent = 'データなし';
+  }
+}
+
+
+// =========================================
+// 表示ロジック
+// =========================================
+
+/**
+ * 行データから買い物の優先度を判定する。
+ * 新しいデータ形式（level フィールド付き）を優先し、古いデータ形式は
+ * result 文字列から推定する（後方互換）。
+ *
+ * @param {Object} row - チェック結果の1行（level, result などを含む）
+ * @returns {string}   - 'high'（赤・急ぎ）/ 'mid'（黄・余裕あれば）
+ *                       / 'low'（緑・参考）/ 'skip'（未チェック）
+ */
+function priorityOf(row) {
+  // 在庫チェックアプリが計算した優先度を優先して使う
+  if (row && row.level) {
+    var lv = String(row.level).trim().toLowerCase();
+    if (lv === 'high' || lv === 'mid' || lv === 'low') return lv;
+    if (lv === 'none' || lv === '') return 'skip';
+    return 'skip';
+  }
+  // level が無い古いデータは result 文字列から推定する
+  var r = row && row.result ? String(row.result).trim() : '';
+  if (!r || r === '－' || r === '未チェック') return 'skip';
+  if (r === 'ない' || r === 'なし' || r === '0個') return 'high';
+  if (r === '少し' || r === '1個' || r === '2個') return 'mid';
+  if (r === 'ある' || r === 'たっぷり') return 'low';
+  var m = r.match(/^(\d+)個$/);
+  if (m && parseInt(m[1]) >= 3) return 'low';
+  return 'skip';
+}
+
+/**
+ * 優先度に対応するバッジHTMLを返す。
+ *
+ * @param {string} level  - priorityOf() の戻り値（'high'/'mid'/'low'/'skip'）
+ * @param {string} result - 元の表示テキスト（バッジに表示する文字）
+ * @returns {string}      - バッジのHTMLテキスト
+ */
+function badgeHtml(level, result) {
+  var map = { high: 'badge-high', mid: 'badge-mid', low: 'badge-low', skip: 'badge-skip' };
+  var label = result || '未';
+  return '<span class="badge ' + (map[level] || 'badge-skip') + '">' + label + '</span>';
+}
+
+/**
+ * 品目行の重複を除去する。
+ * 品目名＋場所が同じ行が複数ある場合、より緊急度の高い方を残して1件にまとめる。
+ *
+ * @param {Array} rows - チェック結果の配列
+ * @returns {Array} - 重複を除去した配列
+ */
+function deduplicateRows(rows) {
+  var priorityOrder = { high: 1, mid: 2, low: 3, skip: 4 };
+  var seen = {};
+  var result = [];
+  rows.forEach(function(r) {
+    var key = (r.name || '') + '|' + (r.tab || '');
+    var p = priorityOrder[priorityOf(r)] || 9;
+    if (!seen[key]) {
+      seen[key] = { idx: result.length, priority: p };
+      result.push(r);
+    } else if (p < seen[key].priority) {
+      // より緊急度が高ければ既存の行を置き換える
+      result[seen[key].idx] = r;
+      seen[key].priority = p;
+    }
+    // 緊急度が同じか低い場合は追加しない（最初の行をそのまま使う）
+  });
+  return result;
+}
+
+/**
+ * 現在のタブに応じて全体を再描画する。
+ */
+function renderAll() {
+  updateTabCounts();
+  // 保存していたタブ状態をボタンの見た目に反映する
+  ['high', 'mid', 'all'].forEach(function(t) {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', t === state.tab);
+  });
+  renderList();
+  renderMemo();
+  document.getElementById('tab-bar').style.display = '';
+  // 買い済みバーを更新する
+  var bar = document.getElementById('bought-bar');
+  if (boughtKeys.size > 0) {
+    document.getElementById('bought-count-text').textContent = boughtKeys.size + '件 買い済み';
+    bar.style.display = '';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+/**
+ * 各タブのカウントバッジを更新する。
+ * 急ぎタブ   = 高優先（赤）の件数
+ * 余裕ありタブ = 高+中の件数（そのタブで表示される件数に合わせる）
+ */
+function updateTabCounts() {
+  var highCount = 0;
+  var midCount  = 0;
+  state.rows.forEach(function(r) {
+    var p = priorityOf(r);
+    if (p === 'high') highCount++;
+    if (p === 'mid')  midCount++;
+  });
+  document.getElementById('count-high').textContent = highCount;
+  document.getElementById('count-mid').textContent  = highCount + midCount;
+}
+
+/**
+ * 備考欄を表示する。備考がない場合は非表示にする。
+ */
+function renderMemo() {
+  var card = document.getElementById('memo-card');
+  if (state.lastMemo) {
+    document.getElementById('memo-text').textContent = state.lastMemo;
+    card.classList.add('show');
+  } else {
+    card.classList.remove('show');
+  }
+}
+
+/**
+ * タブを切り替える。
+ *
+ * @param {string} tab - 'high'（急ぎ）/ 'mid'（余裕あり）/ 'all'（全て）
+ */
+function switchTab(tab) {
+  state.tab = tab;
+  state.storeTab = 'all'; // 優先度タブを切り替えたら店舗タブをリセットする
+  saveState();  // 次回開いた時も同じタブから始められるようにする
+  // タブボタンのスタイルを更新する
+  ['high', 'mid', 'all'].forEach(function(t) {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  renderList();
+}
+
+/**
+ * 店舗タブを描画する。
+ * 対象品目が2店舗以上にまたがるときだけタブを表示する。
+ *
+ * @param {Array} rows - 表示対象の品目行（優先度フィルタ済み）
+ */
+function renderStoreTabs(rows) {
+  var bar = document.getElementById('store-tab-bar');
+  // 対象品目に含まれる店舗を出現順で重複なく取得する
+  var stores = [];
+  rows.forEach(function(r) {
+    var s = r.store || '店舗未設定';
+    if (stores.indexOf(s) === -1) stores.push(s);
+  });
+  // 店舗が1つ以下ならタブ不要
+  if (stores.length <= 1) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = '';
+  bar.innerHTML = '';
+  // 「全て」ボタン
+  var allBtn = document.createElement('button');
+  allBtn.className = 'tab-btn' + (state.storeTab === 'all' ? ' active' : '');
+  allBtn.textContent = '全て';
+  allBtn.onclick = function() { switchStoreTab('all'); };
+  bar.appendChild(allBtn);
+  // 店舗ごとのボタン
+  stores.forEach(function(store) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (state.storeTab === store ? ' active' : '');
+    btn.textContent = store;
+    btn.onclick = function() { switchStoreTab(store); };
+    bar.appendChild(btn);
+  });
+}
+
+/**
+ * 店舗タブを切り替えて再描画する。
+ *
+ * @param {string} store - 'all' または店舗名
+ */
+function switchStoreTab(store) {
+  state.storeTab = store;
+  renderList();
+}
+
+/**
+ * 「すべて」タブ用：店舗区分なしでカテゴリ別の一覧を描画する。
+ * 各品目の店舗名はサブテキストとして表示する。
+ *
+ * @param {HTMLElement} area    - 描画先の要素
+ * @param {Array}       filtered - 表示対象の品目行
+ */
+function renderFlatList(area, filtered) {
+  // 買い済みを除外する
+  filtered = filtered.filter(function(r) { return !boughtKeys.has(itemKey(r)); });
+
+  if (filtered.length === 0) {
+    area.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">✅</div>' +
+        '<div class="empty-title">全て買い済みです</div>' +
+        '<div class="empty-sub">お疲れさまでした！</div>' +
+      '</div>';
+    return;
+  }
+
+  // カテゴリごとにまとめる
+  var byCat = {};
+  var catOrder = [];
+  filtered.forEach(function(r) {
+    var cat = r.cat || 'その他';
+    if (!byCat[cat]) {
+      byCat[cat] = [];
+      catOrder.push(cat);
+    }
+    byCat[cat].push(r);
+  });
+
+  var html = '<div class="store-card">';
+  catOrder.forEach(function(cat) {
+    html += '<div class="cat-label">' + escHtml(cat) + '</div>';
+    var sorted = byCat[cat].slice().sort(function(a, b) {
+      var order = { high: 1, mid: 2, low: 3, skip: 4 };
+      return (order[priorityOf(a)] || 99) - (order[priorityOf(b)] || 99);
+    });
+    sorted.forEach(function(r) {
+      var p = priorityOf(r);
+      var storeSub = r.store ? escHtml(r.store) : '';
+      var tabSub   = r.tab  ? escHtml(r.tab)   : '';
+      var sub = [tabSub, storeSub].filter(Boolean).join(' ／ ');
+      var idx = _buyableItems.length;
+      _buyableItems.push(itemKey(r));
+      html += '<div class="item-row" onclick="markAsBought(' + idx + ')">';
+      html += '<div>';
+      html += '<div class="item-name">' + escHtml(r.name) + '</div>';
+      if (sub) html += '<div class="item-sub">' + sub + '</div>';
+      html += '</div>';
+      html += badgeHtml(p, r.result);
+      html += '</div>';
+    });
+  });
+  html += '</div>';
+
+  area.innerHTML = html;
+}
+
+/**
+ * 現在のタブに合わせて品目リストを描画する。
+ * 急ぎ・余裕あり：店舗ごとのカードにまとめ、カテゴリ別に表示する。
+ * すべて：店舗区分なしのカテゴリ別一覧で表示する。
+ */
+function renderList() {
+  var area = document.getElementById('list-area');
+  // タップハンドラ用配列を毎回リセットする
+  _buyableItems = [];
+
+  // 優先度タブでフィルタリングする
+  var filtered = state.rows.filter(function(r) {
+    var p = priorityOf(r);
+    if (state.tab === 'high') return p === 'high';
+    if (state.tab === 'mid')  return p === 'high' || p === 'mid';
+    return true;
+  });
+
+  // 全タブ共通：店舗タブを描画する（優先度フィルタ後の件数で判定）
+  renderStoreTabs(filtered);
+
+  // 店舗タブで絞り込む
+  if (state.storeTab !== 'all') {
+    // 特定の店舗が選ばれている場合はその店舗のみ表示する
+    filtered = filtered.filter(function(r) {
+      return (r.store || '店舗未設定') === state.storeTab;
+    });
+  } else {
+    // 店舗タブの「全て」が選ばれている場合はフラットな一覧で表示する
+    renderFlatList(area, filtered);
+    return;
+  }
+
+  // 買い済みを除外する
+  filtered = filtered.filter(function(r) { return !boughtKeys.has(itemKey(r)); });
+
+  if (filtered.length === 0) {
+    area.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">✅</div>' +
+        '<div class="empty-title">全て買い済みです</div>' +
+        '<div class="empty-sub">お疲れさまでした！</div>' +
+      '</div>';
+    return;
+  }
+
+  // 店舗ごとにグループ化する
+  // store が空の品目は「店舗未設定」にまとめる
+  var byStore = {};
+  var storeOrder = [];
+  filtered.forEach(function(r) {
+    var store = r.store || '店舗未設定';
+    if (!byStore[store]) {
+      byStore[store] = {};
+      storeOrder.push(store);
+    }
+    var cat = r.cat || 'その他';
+    if (!byStore[store][cat]) byStore[store][cat] = [];
+    byStore[store][cat].push(r);
+  });
+
+  // 重複しないよう店舗一覧を作成する（出現順を維持）
+  var uniqueStores = storeOrder.filter(function(s, i) { return storeOrder.indexOf(s) === i; });
+
+  var html = '';
+  uniqueStores.forEach(function(store, idx) {
+    var cats = byStore[store];
+    var allItems = Object.values(cats).reduce(function(a, b) { return a.concat(b); }, []);
+
+    // 店舗ヘッダーの優先度別カウントを計算する
+    var highCount = allItems.filter(function(r) { return priorityOf(r) === 'high'; }).length;
+    var midCount  = allItems.filter(function(r) { return priorityOf(r) === 'mid';  }).length;
+    var lowCount  = allItems.filter(function(r) { return priorityOf(r) === 'low';  }).length;
+
+    // 最初の店舗は開いた状態で、それ以降は閉じた状態で表示する
+    var isOpen = idx === 0;
+
+    html += '<div class="store-card">';
+    html += '<div class="store-header" onclick="toggleStore(this)">';
+    html += '<div class="store-name">' + escHtml(store) + '</div>';
+    html += '<div class="store-badge">';
+    if (highCount > 0) html += '<span class="count-high">' + highCount + '</span>';
+    if (midCount  > 0) html += '<span class="count-mid">'  + midCount  + '</span>';
+    if (lowCount  > 0) html += '<span class="count-low">'  + lowCount  + '</span>';
+    html += '<span class="chevron' + (isOpen ? ' open' : '') + '">›</span>';
+    html += '</div></div>';
+
+    html += '<div class="store-body' + (isOpen ? ' open' : '') + '">';
+
+    Object.keys(cats).forEach(function(cat) {
+      html += '<div class="cat-label">' + escHtml(cat) + '</div>';
+      var sorted = cats[cat].slice().sort(function(a, b) {
+        var order = { high: 1, mid: 2, low: 3, skip: 4 };
+        return (order[priorityOf(a)] || 99) - (order[priorityOf(b)] || 99);
+      });
+      sorted.forEach(function(r) {
+        var p = priorityOf(r);
+        var bidx = _buyableItems.length;
+        _buyableItems.push(itemKey(r));
+        html += '<div class="item-row" onclick="markAsBought(' + bidx + ')">';
+        html += '<div>';
+        html += '<div class="item-name">' + escHtml(r.name) + '</div>';
+        html += '<div class="item-sub">'  + escHtml(r.tab)  + '</div>';
+        html += '</div>';
+        html += badgeHtml(p, r.result);
+        html += '</div>';
+      });
+    });
+
+    html += '</div></div>';
+  });
+
+  area.innerHTML = html;
+}
+
+/**
+ * 店舗カードの開閉を切り替える。
+ * 店舗ヘッダーをタップしたときに呼ばれる。
+ *
+ * @param {HTMLElement} headerEl - クリックされたヘッダー要素
+ */
+function toggleStore(headerEl) {
+  var body    = headerEl.nextElementSibling;
+  var chevron = headerEl.querySelector('.chevron');
+  var isOpen  = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+/**
+ * HTMLの特殊文字をエスケープしてXSS攻撃を防ぐ。
+ *
+ * @param {string} str - エスケープするテキスト
+ * @returns {string} - エスケープ済みテキスト
+ */
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// =========================================
+// 起動
+// =========================================
+init();
+</script>
+</body>
+</html>

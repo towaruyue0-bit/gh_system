@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>すみか 在庫チェック</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif; background: #f5f5f0; min-height: 100vh; }
+
+:root {
+  --green: #3B6D11;
+  --green-light: #EAF3DE;
+  --green-mid: #639922;
+  --accent: #0F6E56;
+  --accent-light: #E1F5EE;
+  --bg: #ffffff;
+  --bg2: #f8f8f6;
+  --bg3: #f0f0ec;
+  --text: #1a1a1a;
+  --text2: #666660;
+  --text3: #999990;
+  --border: rgba(0,0,0,0.12);
+  --border2: rgba(0,0,0,0.2);
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+#app { max-width: 640px; margin: 0 auto; padding: 12px; }
+
+.screen { display: none; }
+.screen.active { display: block; }
+
+.app-header {
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-title { font-size: 16px; font-weight: 500; color: var(--text); }
+.app-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.settings-btn {
+  font-size: 11px;
+  color: var(--text2);
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+}
+.settings-btn:hover { background: var(--bg3); }
+
+.tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.tab-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+.tab-btn.done { background: var(--bg2); color: var(--text3); }
+.tab-btn.done::after { content: ' ✓'; font-size: 11px; }
+
+.progress-bar { background: var(--bg2); border-radius: 99px; height: 4px; margin-bottom: 12px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.3s; }
+
+.card {
+  background: var(--bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.card-counter { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.card-item-name { font-size: 26px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+.card-item-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+.choice-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.choice-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.choice-grid-num { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+
+.choice-btn {
+  padding: 20px 8px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.1s;
+  min-height: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.choice-btn:active { transform: scale(0.96); }
+.choice-btn.ok { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+.choice-btn.warn { border-color: #BA7517; background: #FAEEDA; color: #633806; }
+.choice-btn.ng { border-color: #A32D2D; background: #FCEBEB; color: #501313; }
+.choice-btn.num { padding: 14px 4px; font-size: 20px; }
+.choice-btn-label { font-size: 11px; font-weight: 400; color: inherit; opacity: 0.8; }
+
+.nav-row { display: flex; gap: 10px; margin-top: 8px; }
+.back-btn {
+  flex: 1;
+  padding: 16px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover { background: var(--bg2); }
+.skip-btn {
+  flex: 1;
+  padding: 16px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 15px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.section-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 16px 0 8px;
+}
+
+.result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.result-item:last-child { border-bottom: none; }
+.result-name { font-size: 15px; color: var(--text); }
+.result-cat { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.result-badge { font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 99px; }
+.badge-ng { background: #FCEBEB; color: #A32D2D; }
+.badge-warn { background: #FAEEDA; color: #854F0B; }
+.badge-ok { background: var(--accent-light); color: var(--accent); }
+.badge-none { background: var(--bg2); color: var(--text3); }
+
+.change-btn {
+  font-size: 12px;
+  color: var(--text2);
+  background: none;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  cursor: pointer;
+  margin-left: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+textarea {
+  width: 100%;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  resize: vertical;
+  min-height: 80px;
+}
+
+.send-btn {
+  width: 100%;
+  padding: 18px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+.send-btn:active { opacity: 0.85; }
+
+.setting-section { margin-bottom: 12px; }
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.setting-row:last-child { border-bottom: none; }
+.setting-name { font-size: 15px; color: var(--text); }
+.setting-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.icon-btn {
+  width: 34px; height: 34px;
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg2);
+  cursor: pointer;
+  font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:hover { background: var(--bg3); }
+.add-row-btn {
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text2);
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+.add-row-btn:hover { background: var(--bg2); }
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.45);
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  width: 90%;
+  max-width: 420px;
+  border: 0.5px solid var(--border);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; color: var(--text); }
+.modal-field { margin-bottom: 12px; }
+.modal-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
+.modal-input, .modal-select {
+  width: 100%;
+  padding: 12px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+}
+.modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+.modal-cancel {
+  flex: 1; padding: 14px;
+  border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text2);
+  font-size: 15px; cursor: pointer;
+}
+.modal-save {
+  flex: 1; padding: 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: white;
+  font-size: 15px; font-weight: 500; cursor: pointer;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text2);
+  font-size: 15px;
+}
+.success-box {
+  background: var(--accent-light);
+  border: 0.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+.success-title { font-size: 20px; font-weight: 500; color: var(--accent); margin-bottom: 6px; }
+.success-sub { font-size: 13px; color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+<div id="screen-check" class="screen active">
+  <div class="app-header">
+    <div>
+      <div class="app-title">すみか 在庫チェック</div>
+      <div class="app-sub" id="check-date"></div>
+    </div>
+    <div style="display:flex;gap:6px;">
+      <button class="settings-btn" onclick="goResult()">リストを見る</button>
+      <button class="settings-btn" onclick="goHistory()">📋 履歴</button>
+      <button class="settings-btn" onclick="goSettings()">⚙ 設定</button>
+    </div>
+  </div>
+  <div class="tab-bar" id="tab-bar"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div id="check-card-area"></div>
+</div>
+
+<div id="screen-result" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title">確認・買い物リスト</div>
+      <div class="app-sub" id="result-date"></div>
+    </div>
+  </div>
+  <div class="tab-bar" id="result-tab-bar" style="display:none;"></div>
+  <div id="result-area"></div>
+  <div class="card">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:6px;">備考・コメント</div>
+    <textarea id="memo-field" placeholder="気づいたこと、次回への申し送りなど自由に書いてください"></textarea>
+  </div>
+  <button class="send-btn" id="send-btn" onclick="sendResult()">送信（スプレッドシートに記録）</button>
+  <button style="width:100%;padding:16px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px;" onclick="resumeCheck()">◀ チェックに戻る（続きから）</button>
+</div>
+
+<div id="screen-settings" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title">設定・管理</div>
+      <div class="app-sub">品目・場所・カテゴリの編集</div>
+    </div>
+    <button class="settings-btn" onclick="resumeCheck()">チェックへ戻る</button>
+  </div>
+
+  <div class="card setting-section">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:15px;font-weight:500;color:var(--text);">品目一覧</div>
+      <button class="icon-btn" id="select-mode-btn" onclick="toggleSelectMode()" style="width:auto;padding:4px 10px;font-size:12px;white-space:nowrap;">選択削除</button>
+    </div>
+    <div id="items-list"></div>
+    <button class="add-row-btn" id="add-item-btn" onclick="openItemModal()">＋ 品目を追加</button>
+    <div id="bulk-delete-area"></div>
+  </div>
+
+  <div class="card setting-section">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:12px;">場所（タブ）</div>
+    <div id="tabs-list"></div>
+    <button class="add-row-btn" onclick="addTab()">＋ 場所を追加</button>
+  </div>
+
+  <div class="card setting-section">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:12px;">買い物カテゴリ</div>
+    <div id="cats-list"></div>
+    <button class="add-row-btn" onclick="addCat()">＋ カテゴリを追加</button>
+  </div>
+
+  <div class="card setting-section">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:12px;">購入店舗</div>
+    <div id="stores-list"></div>
+    <button class="add-row-btn" onclick="addStore()">＋ 店舗を追加</button>
+  </div>
+
+  <div class="card setting-section">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:8px;">CSV エクスポート／インポート</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px;">現在の品目リストをCSVで書き出してタブレットに移行したり、スプレッドシートで作成したCSVを取り込んだりできます。</div>
+    <button class="send-btn" style="padding:14px;margin-bottom:16px;margin-top:0;" onclick="exportItems()">⬆ 現在の品目リストをエクスポート（<span id="export-count">0</span>件）</button>
+    <div style="font-size:13px;font-weight:500;color:var(--text2);margin-bottom:8px;padding-top:4px;border-top:0.5px solid var(--border);">インポート</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+      <button class="add-row-btn" style="width:auto;flex:1;padding:12px 16px;border-style:solid;" onclick="downloadTemplate()">⬇ テンプレートをダウンロード</button>
+      <label for="csv-file-input" class="send-btn" style="flex:1;padding:12px;margin-top:0;display:flex;align-items:center;justify-content:center;cursor:pointer;">📂 CSVファイルを読み込む</label>
+      <input type="file" id="csv-file-input" style="position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;" onchange="handleCsvFile(this)">
+    </div>
+    <div id="csv-preview"></div>
+  </div>
+
+  <div class="card setting-section">
+    <div style="font-size:15px;font-weight:500;color:var(--text);margin-bottom:6px;">GAS送信先URL</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px;">スプレッドシート連携用のウェブアプリURLを入力してください（後で設定しても大丈夫です）</div>
+    <input class="modal-input" id="gas-url" placeholder="https://script.google.com/..." style="margin-bottom:8px;">
+    <button class="send-btn" style="padding:12px;margin-top:0;" onclick="saveGasUrl()">URLを保存</button>
+  </div>
+</div>
+
+<div id="screen-history" class="screen">
+  <div class="app-header">
+    <div>
+      <div class="app-title">チェック履歴</div>
+      <div class="app-sub" id="history-sub"></div>
+    </div>
+    <button class="settings-btn" onclick="resumeCheck()">チェックへ戻る</button>
+  </div>
+  <div id="history-area"></div>
+  <button style="width:100%;padding:14px;border:0.5px solid #A32D2D;border-radius:var(--radius-sm);background:none;color:#A32D2D;font-size:13px;cursor:pointer;margin-top:4px;" onclick="clearHistory()">履歴を全て削除</button>
+</div>
+
+<div id="screen-sent" class="screen">
+  <div class="success-box">
+    <div class="success-title">送信完了！</div>
+    <div class="success-sub">買い物リストを記録しました</div>
+  </div>
+  <div class="card" id="sent-summary"></div>
+  <button class="send-btn" onclick="startNewCheck()">新しいチェックを始める</button>
+</div>
+
+</div>
+
+<!-- 履歴編集モーダル -->
+<div id="modal-log" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title">履歴を編集</div>
+    <div class="modal-field">
+      <div class="modal-label">日時（例：2025-05-13 14:30）</div>
+      <input class="modal-input" id="ml-datetime" placeholder="2025-05-13 14:30">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">備考・コメント</div>
+      <textarea class="modal-input" id="ml-memo" style="min-height:80px;resize:vertical;" placeholder="備考を入力"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeLogModal()">キャンセル</button>
+      <button class="modal-save" onclick="saveLog()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 品目編集モーダル -->
+<div id="modal-item" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-item-title">品目を追加</div>
+    <div class="modal-field">
+      <div class="modal-label">品目名</div>
+      <input class="modal-input" id="mi-name" placeholder="例：牛乳">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">場所（タブ）</div>
+      <select class="modal-select" id="mi-tab"></select>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">選択肢タイプ</div>
+      <select class="modal-select" id="mi-type" onchange="onTypeChange()">
+        <option value="2">2択（ある／ない）</option>
+        <option value="3">3択（たっぷり／少し／ない）</option>
+        <option value="num">数量（0〜5個）</option>
+        <option value="custom">カスタム（自由設定）</option>
+      </select>
+    </div>
+    <div class="modal-field" id="mi-custom-field" style="display:none;">
+      <div class="modal-label">選択肢（1行に1つ・上から「なし→たっぷり」の順で入力）</div>
+      <textarea class="modal-input" id="mi-choices" placeholder="なし&#10;5個以上&#10;10個以上" style="min-height:96px;resize:vertical;"></textarea>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">先頭の選択肢＝赤、末尾＝緑、中間＝黄で表示されます</div>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">買い物カテゴリ</div>
+      <select class="modal-select" id="mi-cat"></select>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">購入する店舗</div>
+      <select class="modal-select" id="mi-store"></select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeItemModal()">キャンセル</button>
+      <button class="modal-save" onclick="saveItem()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// 複数選択削除用の変数
+let _selectMode = false;
+let _selectedIds = new Set();
+// 履歴編集中のインデックス
+let _editingLogIdx = null;
+// 展開されている場所名を管理するセット（デフォルトは折りたたみ）
+let _openTabs = new Set();
+
+let state = {
+  tabs: ['冷蔵庫','冷凍庫','引き出し'],
+  cats: ['野菜','肉','魚','乳製品','調味料','冷凍食品','その他'],
+  stores: ['スーパー'],
+  items: [
+    {id:1,name:'牛乳',tab:'冷蔵庫',type:'3',cat:'乳製品',store:'スーパー'},
+    {id:2,name:'卵',tab:'冷蔵庫',type:'num',cat:'その他',store:'スーパー'},
+    {id:3,name:'バター',tab:'冷蔵庫',type:'2',cat:'乳製品',store:'スーパー'},
+    {id:4,name:'マーガリン',tab:'冷蔵庫',type:'2',cat:'乳製品',store:'スーパー'},
+    {id:5,name:'豆腐',tab:'冷蔵庫',type:'2',cat:'野菜',store:'スーパー'},
+    {id:6,name:'冷凍うどん',tab:'冷凍庫',type:'num',cat:'冷凍食品',store:'スーパー'},
+    {id:7,name:'冷凍ご飯',tab:'冷凍庫',type:'num',cat:'冷凍食品',store:'スーパー'},
+    {id:8,name:'アイスクリーム',tab:'冷凍庫',type:'2',cat:'その他',store:'スーパー'},
+    {id:9,name:'醤油',tab:'引き出し',type:'3',cat:'調味料',store:'スーパー'},
+    {id:10,name:'みりん',tab:'引き出し',type:'2',cat:'調味料',store:'スーパー'},
+    {id:11,name:'砂糖',tab:'引き出し',type:'3',cat:'調味料',store:'スーパー'},
+  ],
+  gasUrl: '',
+  checkLogs: [],
+  results: {},
+  currentTab: 0,
+  currentIdx: 0,
+  editingItemId: null,
+  nextId: 12,
+  resultStoreTab: 'all'  // 買い物リスト画面の店舗タブ（'all'=全て、それ以外は店舗名）
+};
+
+function save() {
+  try { localStorage.setItem('sumika_inv', JSON.stringify(state)); } catch(e) {}
+}
+
+function load() {
+  try {
+    const d = localStorage.getItem('sumika_inv');
+    if (d) {
+      const p = JSON.parse(d);
+      state.tabs = p.tabs || state.tabs;
+      state.cats = p.cats || state.cats;
+      state.stores = p.stores || state.stores;
+      state.items = p.items || state.items;
+      state.gasUrl = p.gasUrl || '';
+      state.checkLogs = p.checkLogs || [];
+      state.nextId = p.nextId || 20;
+    }
+  } catch(e) {}
+}
+
+function today() {
+  return new Date().toLocaleDateString('ja-JP', {year:'numeric',month:'long',day:'numeric',weekday:'short'});
+}
+
+function todayISO() {
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function tabItems(tabName) {
+  return state.items.filter(i => i.tab === tabName);
+}
+
+function allItemsFlat() {
+  let arr = [];
+  state.tabs.forEach(t => { arr = arr.concat(tabItems(t)); });
+  return arr;
+}
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// 最初からチェックをやり直す（結果をリセット）
+function goCheck() {
+  state.results = {};
+  state.currentTab = 0;
+  state.currentIdx = 0;
+  document.getElementById('check-date').textContent = today();
+  showScreen('check');
+  renderTabs();
+  renderCard();
+  renderCheckFooter();
+}
+
+// 途中からチェックを再開する（結果は保持したままタブ・インデックスも維持）
+function resumeCheck() {
+  document.getElementById('check-date').textContent = today();
+  showScreen('check');
+  renderTabs();
+  renderCard();
+  renderCheckFooter();
+}
+
+function goSettings() {
+  showScreen('settings');
+  renderSettings();
+}
+
+function renderTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  state.tabs.forEach((t, i) => {
+    const tabItemsList = tabItems(t);
+    const done = tabItemsList.length > 0 && tabItemsList.every(item => state.results[item.id] !== undefined);
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (i === state.currentTab ? ' active' : '') + (done ? ' done' : '');
+    btn.textContent = t;
+    btn.onclick = () => { state.currentTab = i; state.currentIdx = 0; renderTabs(); renderCard(); };
+    bar.appendChild(btn);
+  });
+}
+
+function renderCard() {
+  const area = document.getElementById('check-card-area');
+  const items = tabItems(state.tabs[state.currentTab]);
+  const total = allItemsFlat().length;
+  const done = Object.keys(state.results).length;
+  document.getElementById('progress-fill').style.width = total > 0 ? Math.round(done / total * 100) + '%' : '0%';
+
+  if (items.length === 0) {
+    area.innerHTML = '<div class="card empty-state">この場所に品目がありません<br><span style="font-size:13px;margin-top:8px;display:block;">設定画面から追加できます</span></div>';
+    return;
+  }
+
+  if (state.currentIdx >= items.length) {
+    const allDone = allItemsFlat().every(i => state.results[i.id] !== undefined);
+    if (allDone) {
+      area.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:20px;font-weight:500;color:var(--accent);margin-bottom:10px;">全項目チェック完了！</div><div style="font-size:14px;color:var(--text2);margin-bottom:24px;">買い物リストを確認してください</div><button class="send-btn" style="max-width:280px;margin:0 auto;display:block;" onclick="goResult()">買い物リストを見る →</button></div>';
+    } else {
+      area.innerHTML = '<div class="card" style="text-align:center;padding:40px 20px;"><div style="font-size:18px;font-weight:500;color:var(--text);margin-bottom:10px;">' + state.tabs[state.currentTab] + 'のチェック完了</div><div style="font-size:13px;color:var(--text2);margin-bottom:24px;">次の場所に進んでください</div><button class="send-btn" style="max-width:280px;margin:0 auto;display:block;" onclick="nextTab()">次の場所へ →</button></div>';
+    }
+    return;
+  }
+
+  const item = items[state.currentIdx];
+  let choicesHtml = '';
+
+  if (item.type === '2') {
+    choicesHtml = '<div class="choice-grid-2"><button class="choice-btn ok" onclick="choose(' + item.id + ',\'ある\')">ある</button><button class="choice-btn ng" onclick="choose(' + item.id + ',\'ない\')">ない</button></div>';
+  } else if (item.type === '3') {
+    choicesHtml = '<div class="choice-grid-3"><button class="choice-btn ok" onclick="choose(' + item.id + ',\'たっぷり\')">たっぷり</button><button class="choice-btn warn" onclick="choose(' + item.id + ',\'少し\')">少し</button><button class="choice-btn ng" onclick="choose(' + item.id + ',\'ない\')">ない</button></div>';
+  } else if (item.type === 'custom') {
+    // カスタム選択肢：先頭=赤、末尾=緑、中間=黄で色分けする
+    const choices = item.choices || [];
+    const last = choices.length - 1;
+    const gridClass = choices.length <= 2 ? 'choice-grid-2' : choices.length === 3 ? 'choice-grid-3' : 'choice-grid-num';
+    choicesHtml = '<div class="' + gridClass + '">' + choices.map((c, idx) => {
+      const cls = idx === last ? 'ok' : idx === 0 ? 'ng' : 'warn';
+      return '<button class="choice-btn ' + cls + '" onclick="choose(' + item.id + ',\'' + c.replace(/'/g, "\\'") + '\')">' + c + '</button>';
+    }).join('') + '</div>';
+  } else {
+    const nums = [0,1,2,3,4,5];
+    choicesHtml = '<div class="choice-grid-num">' + nums.map(n =>
+      '<button class="choice-btn num ' + (n <= 1 ? 'ng' : n <= 2 ? 'warn' : 'ok') + '" onclick="choose(' + item.id + ',' + n + ')">' + n + '<span class="choice-btn-label">個</span></button>'
+    ).join('') + '</div>';
+  }
+
+  area.innerHTML = `
+    <div class="card">
+      <div class="card-counter">${state.currentIdx + 1} / ${items.length}　${state.tabs[state.currentTab]}</div>
+      <div class="card-item-name">${item.name}</div>
+      <div class="card-item-sub">カテゴリ：${item.cat}</div>
+      ${choicesHtml}
+    </div>
+    <div class="nav-row">
+      <button class="back-btn" onclick="goBack()">← 戻る</button>
+      <button class="skip-btn" onclick="choose(${item.id}, '－')">次へ →</button>
+    </div>
+  `;
+}
+
+// チェック画面の下部に「終了→リストへ」「最初からやり直す」ボタンを描画する
+function renderCheckFooter() {
+  // すでにフッターがあれば削除してから再生成する
+  const existing = document.getElementById('check-footer');
+  if (existing) existing.remove();
+
+  const footer = document.createElement('div');
+  footer.id = 'check-footer';
+  footer.style.cssText = 'margin-top:4px;display:flex;gap:8px;';
+  footer.innerHTML = `
+    <button style="flex:1;padding:14px;border:none;border-radius:var(--radius-sm);background:var(--accent);color:white;font-size:14px;font-weight:500;cursor:pointer;" onclick="goResult()">ここで終了 → リストを見る</button>
+    <button style="padding:14px 16px;border:0.5px solid var(--border2);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:13px;cursor:pointer;white-space:nowrap;" onclick="confirmRestart()">最初から</button>
+  `;
+  document.getElementById('screen-check').appendChild(footer);
+}
+
+// 最初からやり直す前に確認する
+function confirmRestart() {
+  const done = Object.keys(state.results).length;
+  if (done > 0 && !confirm('入力済みの結果（' + done + '件）がリセットされます。最初からやり直しますか？')) return;
+  goCheck();
+}
+
+function choose(id, val) {
+  state.results[id] = val;
+  state.currentIdx++;
+  renderTabs();
+  renderCard();
+}
+
+function goBack() {
+  if (state.currentIdx > 0) {
+    state.currentIdx--;
+    const items = tabItems(state.tabs[state.currentTab]);
+    const item = items[state.currentIdx];
+    delete state.results[item.id];
+    renderCard();
+  }
+}
+
+function nextTab() {
+  if (state.currentTab < state.tabs.length - 1) {
+    state.currentTab++;
+    state.currentIdx = 0;
+    renderTabs();
+    renderCard();
+  }
+}
+
+function goResult() {
+  state.resultStoreTab = 'all'; // 結果画面に入るたびに「全て」に戻す
+  showScreen('result');
+  document.getElementById('result-date').textContent = today();
+  renderResult();
+}
+
+function isShortage(v, item) {
+  if (v === undefined || v === '－' || v === 'ある' || v === 'たっぷり') return false;
+  if (v === 'ない' || v === '少し') return true;
+  const n = Number(v);
+  if (!isNaN(n)) return n <= 1;
+  // カスタム選択肢の場合：先頭（index=0）が選ばれたら不足とみなす
+  if (item && item.type === 'custom' && item.choices) {
+    return item.choices[0] === v;
+  }
+  return false;
+}
+
+// チェック結果から買い物の優先度（3段階）を返す
+//   'high' = 赤（今すぐ買う必要あり）
+//   'mid'  = 黄（余裕があれば買う）
+//   'low'  = 緑（在庫十分・参考のみ）
+//   'none' = スキップ・未チェック
+// この判定を買い物リストアプリ側でも使うため、送信データに含める
+function priorityLevel(v, item) {
+  if (v === undefined || v === '－' || v === '未チェック') return 'none';
+  if (!item) return 'none';
+  if (item.type === '2') {
+    if (v === 'ない') return 'high';
+    if (v === 'ある') return 'low';
+    return 'none';
+  }
+  if (item.type === '3') {
+    if (v === 'ない')     return 'high';
+    if (v === '少し')     return 'mid';
+    if (v === 'たっぷり') return 'low';
+    return 'none';
+  }
+  if (item.type === 'num') {
+    const n = Number(v);
+    if (isNaN(n)) return 'none';
+    if (n <= 1) return 'high';
+    if (n === 2) return 'mid';
+    return 'low';
+  }
+  if (item.type === 'custom' && item.choices) {
+    const idx = item.choices.indexOf(String(v));
+    if (idx < 0) return 'none';
+    if (idx === 0) return 'high';                         // 先頭 = 不足
+    if (idx === item.choices.length - 1) return 'low';    // 末尾 = 十分
+    return 'mid';                                         // 中間
+  }
+  return 'none';
+}
+
+function badgeClass(v) {
+  if (v === 'ない' || v === 0 || v === '0') return 'badge-ng';
+  if (v === '少し' || v === 1 || v === '1') return 'badge-warn';
+  if (v === undefined || v === '未チェック') return 'badge-none';
+  return 'badge-ok';
+}
+
+function dispVal(v) {
+  if (v === undefined) return '未チェック';
+  if (typeof v === 'number') return v + '個';
+  if (!isNaN(Number(v)) && v !== '' && v !== 'ない' && v !== 'ある' && v !== 'たっぷり' && v !== '少し' && v !== '－') return Number(v) + '個';
+  return String(v);
+}
+
+// 買い物リスト画面の店舗タブを描画する
+// 不足品目のある店舗が2つ以上のときだけタブを表示する（1つ以下は不要なため非表示）
+function renderResultTabs(needBuy) {
+  const bar = document.getElementById('result-tab-bar');
+  // 不足品目が存在する店舗を state.stores の順で抽出する
+  const activeStores = [...state.stores, '未設定'].filter(s =>
+    needBuy.some(i => (i.store || '未設定') === s)
+  );
+  // 店舗が1つ以下ならタブは不要なので非表示にして終了
+  if (activeStores.length <= 1) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = '';
+  bar.innerHTML = '';
+  // 「全て」ボタン
+  const allBtn = document.createElement('button');
+  allBtn.className = 'tab-btn' + (state.resultStoreTab === 'all' ? ' active' : '');
+  allBtn.textContent = '全て';
+  allBtn.onclick = () => switchResultTab('all');
+  bar.appendChild(allBtn);
+  // 店舗ごとのボタン
+  activeStores.forEach(store => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (state.resultStoreTab === store ? ' active' : '');
+    btn.textContent = store;
+    btn.onclick = () => switchResultTab(store);
+    bar.appendChild(btn);
+  });
+}
+
+// 買い物リスト画面の店舗タブを切り替えて再描画する
+function switchResultTab(store) {
+  state.resultStoreTab = store;
+  renderResult();
+}
+
+function renderResult() {
+  const area = document.getElementById('result-area');
+  // 全不足品目を取得してタブを描画する
+  const allNeedBuy = allItemsFlat().filter(i => isShortage(state.results[i.id], i));
+  renderResultTabs(allNeedBuy);
+
+  // 選択中の店舗タブでフィルタリングする（'all'なら全店舗）
+  const needBuy = state.resultStoreTab === 'all'
+    ? allNeedBuy
+    : allNeedBuy.filter(i => (i.store || '未設定') === state.resultStoreTab);
+
+  let html = '';
+
+  if (needBuy.length === 0) {
+    const emptyMsg = state.resultStoreTab === 'all'
+      ? 'すべての在庫が十分あります'
+      : '「' + state.resultStoreTab + '」で買うものはありません';
+    html += '<div class="card empty-state">買い物リストは空です<br><span style="font-size:13px;display:block;margin-top:6px;color:var(--accent);">' + emptyMsg + '</span></div>';
+  } else {
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:8px;padding:0 4px;">買い物が必要な品目：' + needBuy.length + '品目</div>';
+    // 店舗ごとにグループ化し、さらにカテゴリでまとめる
+    const byStore = {};
+    needBuy.forEach(i => {
+      const store = i.store || '未設定';
+      if (!byStore[store]) byStore[store] = {};
+      if (!byStore[store][i.cat]) byStore[store][i.cat] = [];
+      byStore[store][i.cat].push(i);
+    });
+    // 店舗の順番はstate.storesの順に従う
+    const storeOrder = [...state.stores, '未設定'];
+    storeOrder.forEach(store => {
+      if (!byStore[store]) return;
+      const storeItems = Object.values(byStore[store]).flat();
+      html += '<div class="card" style="margin-bottom:10px;">';
+      html += '<div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:12px;">🏪 ' + store + '<span style="font-size:12px;font-weight:400;color:var(--text2);margin-left:8px;">' + storeItems.length + '品目</span></div>';
+      Object.keys(byStore[store]).forEach(cat => {
+        html += '<div class="section-title">' + cat + '</div>';
+        byStore[store][cat].forEach(i => {
+          const v = state.results[i.id];
+          html += '<div class="result-item"><div><div class="result-name">' + i.name + '</div><div class="result-cat">' + i.tab + '</div></div><div style="display:flex;align-items:center;"><span class="result-badge ' + badgeClass(v) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
+        });
+      });
+      html += '</div>';
+    });
+  }
+
+  html += '<div class="card" style="margin-top:8px;"><div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;">全項目の結果</div>';
+  state.tabs.forEach(tab => {
+    const tabList = tabItems(tab);
+    if (tabList.length === 0) return;
+    html += '<div class="section-title">' + tab + '</div>';
+    tabList.forEach(i => {
+      const v = state.results[i.id];
+      html += '<div class="result-item"><div class="result-name">' + i.name + '</div><div style="display:flex;align-items:center;"><span class="result-badge ' + badgeClass(v) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
+    });
+  });
+  html += '</div>';
+  area.innerHTML = html;
+}
+
+function changeResult(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  let opts = [];
+  if (item.type === '2') opts = ['ある', 'ない'];
+  else if (item.type === '3') opts = ['たっぷり', '少し', 'ない'];
+  else opts = ['0', '1', '2', '3', '4', '5'];
+  const val = prompt(item.name + 'の状態を変更します。\n選択肢：' + opts.join('、') + '\n\n半角で入力してください。');
+  if (val !== null && val.trim() !== '') {
+    const trimmed = val.trim();
+    const n = Number(trimmed);
+    state.results[id] = (!isNaN(n) && item.type === 'num') ? n : trimmed;
+    renderResult();
+  }
+}
+
+function sendResult() {
+  // 連打防止：すでに送信中なら何もしない
+  const btn = document.getElementById('send-btn');
+  if (btn && btn.disabled) return;
+
+  const gasUrl = state.gasUrl;
+  const dateStr = todayISO();
+  const memo = document.getElementById('memo-field').value;
+  // チェック済みの品目だけ送信する（未チェックを送ると、GAS側で前回の結果が「未チェック」で上書きされてしまうため）
+  const rows = allItemsFlat()
+    .filter(i => state.results[i.id] !== undefined)
+    .map(i => ({
+      date: dateStr,
+      name: i.name,
+      tab: i.tab,
+      cat: i.cat,
+      store: i.store || '',                        // 購入店舗（買い物リストアプリで店舗ごとに表示するために追加）
+      result: dispVal(state.results[i.id]),
+      level: priorityLevel(state.results[i.id], i) // 優先度（high/mid/low/none）
+    }));
+  const payload = { date: dateStr, memo, rows };
+
+  // ボタンを押せない状態にして「送信中...」表示に切り替える
+  // 送信が完了するか失敗するまでこの状態を維持する
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'wait';
+    btn.textContent = '送信中...';
+  }
+
+  // 送信完了後にボタンを元の状態に戻す共通処理
+  function resetSendBtn() {
+    if (!btn) return;
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.style.cursor = '';
+    btn.textContent = '送信（スプレッドシートに記録）';
+  }
+
+  if (gasUrl && gasUrl.startsWith('http')) {
+    // mode: 'no-cors' を指定することで、ローカルHTMLファイルからGASへの送信時に
+    // 発生するCORSエラー（ブラウザのセキュリティ制限）を回避する。
+    // no-corsではレスポンスの内容は読めないが、データはGAS側に届く。
+    // Content-Typeヘッダーを外すことでブラウザのセキュリティ制限（CORS）に引っかからず、
+    // GASにデータが確実に届くようになる（GAS側はヘッダーがなくてもJSONを読み取れる）
+    fetch(gasUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      // 送信完了画面に遷移（画面全体が切り替わるので結果が見える）
+      showSent(payload);
+      // ボタンを元に戻しておく（新しいチェック時のために）
+      resetSendBtn();
+    })
+    .catch(() => {
+      alert('送信に失敗しました。GAS URLを確認してください。\n\nデータはコンソールに出力されています。');
+      console.log('送信データ:', JSON.stringify(payload, null, 2));
+      resetSendBtn();
+    });
+  } else {
+    console.log('GAS URL未設定 - 送信データ:', JSON.stringify(payload, null, 2));
+    showSent(payload);
+    resetSendBtn();
+  }
+}
+
+function saveCheckLog(payload) {
+  // チェックした日時・件数・不足数をログとして保存する
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const checkedCount = Object.keys(state.results).filter(k => state.results[k] !== undefined).length;
+  const shortageCount = allItemsFlat().filter(i => isShortage(state.results[i.id], i)).length;
+  state.checkLogs.unshift({
+    datetime: payload.date + ' ' + timeStr,
+    checkedCount,
+    totalItems: allItemsFlat().length,
+    shortageCount,
+    memo: payload.memo || ''
+  });
+  // 最大50件まで保持し、古いものは削除する
+  if (state.checkLogs.length > 50) state.checkLogs = state.checkLogs.slice(0, 50);
+  save();
+}
+
+function showSent(payload) {
+  saveCheckLog(payload);
+  showScreen('sent');
+  const needBuy = allItemsFlat().filter(i => isShortage(state.results[i.id], i));
+  let html = '<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">' + payload.date + '</div>';
+  html += '<div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:12px;">買い物リスト：' + needBuy.length + '品目</div>';
+  if (needBuy.length === 0) {
+    html += '<div style="color:var(--text2);font-size:14px;">不足品目なし</div>';
+  } else {
+    needBuy.forEach(i => {
+      const v = state.results[i.id];
+      html += '<div style="padding:8px 0;border-bottom:0.5px solid var(--border);font-size:15px;">' + i.name + ' <span style="color:var(--text2);font-size:12px;">（' + i.cat + '）' + dispVal(v) + '</span></div>';
+    });
+  }
+  if (payload.memo) {
+    html += '<div style="margin-top:14px;font-size:13px;color:var(--text2);background:var(--bg2);padding:10px;border-radius:var(--radius-sm);">備考：' + payload.memo + '</div>';
+  }
+  document.getElementById('sent-summary').innerHTML = html;
+}
+
+function startNewCheck() { goCheck(); }
+
+function goHistory() {
+  showScreen('history');
+  renderHistory();
+}
+
+function renderHistory() {
+  const logs = state.checkLogs;
+  const sub = document.getElementById('history-sub');
+  const area = document.getElementById('history-area');
+  sub.textContent = '過去のチェック記録：' + logs.length + '件';
+
+  if (logs.length === 0) {
+    area.innerHTML = '<div class="card empty-state">まだチェック履歴がありません<br><span style="font-size:13px;display:block;margin-top:6px;">チェックを送信すると、ここに記録が残ります</span></div>';
+    return;
+  }
+
+  let html = '';
+  logs.forEach(log => {
+    // 不足なしの場合は緑、不足ありは件数に応じて色を変える
+    const badgeColor = log.shortageCount === 0 ? 'var(--accent)' : log.shortageCount >= 3 ? '#A32D2D' : '#BA7517';
+    const badgeBg   = log.shortageCount === 0 ? 'var(--accent-light)' : log.shortageCount >= 3 ? '#FCEBEB' : '#FAEEDA';
+    const shortageText = log.shortageCount === 0 ? '不足なし' : '不足 ' + log.shortageCount + '品目';
+    html += `
+      <div class="card" style="margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:16px;font-weight:500;color:var(--text);">${log.datetime}</div>
+          <span style="font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;background:${badgeBg};color:${badgeColor};">${shortageText}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text2);">チェック済み：${log.checkedCount} / ${log.totalItems} 品目</div>
+        ${log.memo ? '<div style="margin-top:8px;font-size:13px;color:var(--text2);background:var(--bg2);padding:8px 10px;border-radius:var(--radius-sm);">備考：' + log.memo + '</div>' : ''}
+      </div>`;
+  });
+  area.innerHTML = html;
+}
+
+function clearHistory() {
+  if (!confirm('チェック履歴を全て削除しますか？この操作は元に戻せません。')) return;
+  state.checkLogs = [];
+  save();
+  renderHistory();
+}
+
+function renderSettings() {
+  const il = document.getElementById('items-list');
+  const addBtn = document.getElementById('add-item-btn');
+  const bulkArea = document.getElementById('bulk-delete-area');
+  const selectBtn = document.getElementById('select-mode-btn');
+
+  // 選択削除モードに応じてボタンの見た目を切り替える
+  if (selectBtn) {
+    selectBtn.textContent = _selectMode ? 'キャンセル' : '選択削除';
+    selectBtn.style.background = _selectMode ? '#FCEBEB' : '';
+    selectBtn.style.color = _selectMode ? '#A32D2D' : '';
+    selectBtn.style.borderColor = _selectMode ? '#A32D2D' : '';
+  }
+  // 選択削除モード中は「＋ 品目を追加」ボタンを非表示にする
+  if (addBtn) addBtn.style.display = _selectMode ? 'none' : '';
+
+  if (state.items.length === 0) {
+    il.innerHTML = '<div style="color:var(--text2);font-size:14px;padding:8px 0;">品目がありません</div>';
+    if (bulkArea) bulkArea.innerHTML = '';
+  } else {
+    il.innerHTML = '';
+    // 選択削除モード時は全選択・全解除リンクを追加する
+    if (_selectMode) {
+      const allRow = document.createElement('div');
+      allRow.style.cssText = 'display:flex;gap:12px;padding:4px 0 10px;border-bottom:0.5px solid var(--border);margin-bottom:8px;';
+      allRow.innerHTML = '<button style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;" onclick="selectAllItems()">全て選択</button><button style="font-size:12px;color:var(--text2);background:none;border:none;cursor:pointer;padding:0;" onclick="deselectAllItems()">全て解除</button>';
+      il.appendChild(allRow);
+    }
+    // 場所ごとにグループ化して表示する
+    state.tabs.forEach(tab => {
+      const tabItems = state.items.filter(i => i.tab === tab);
+      if (tabItems.length === 0) return;
+
+      // 場所のヘッダー（タップで折りたたみ）
+      const isOpen = _openTabs.has(tab);
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;user-select:none;border-bottom:0.5px solid var(--border);margin-bottom:' + (isOpen ? '4px' : '8px') + ';';
+      header.innerHTML = `<div style="font-size:13px;font-weight:500;color:var(--text2);">${tab}<span style="font-size:11px;font-weight:400;margin-left:6px;">${tabItems.length}件</span></div><div style="font-size:12px;color:var(--text3);">${isOpen ? '▲' : '▼'}</div>`;
+      header.onclick = () => {
+        if (_openTabs.has(tab)) { _openTabs.delete(tab); } else { _openTabs.add(tab); }
+        renderSettings();
+      };
+      il.appendChild(header);
+
+      if (!isOpen) return;
+
+      tabItems.forEach((item, idxInTab) => {
+        const row = document.createElement('div');
+        row.className = 'setting-row';
+        if (_selectMode) {
+          const checked = _selectedIds.has(item.id);
+          row.innerHTML = `<label style="display:flex;align-items:center;gap:10px;width:100%;cursor:pointer;"><input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleItemSelection(${item.id})" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;"><div><div class="setting-name">${item.name}</div><div class="setting-detail">${item.cat}・${item.store||''}・${typeLabel(item)}</div></div></label>`;
+        } else {
+          // 並べ替え用の↑↓ボタン。同じ場所（タブ）内での先頭・末尾では無効化する
+          const isFirst = idxInTab === 0;
+          const isLast = idxInTab === tabItems.length - 1;
+          const upBtn = isFirst
+            ? `<button class="icon-btn" style="opacity:0.3;cursor:not-allowed;" disabled title="これ以上 上に移動できません">↑</button>`
+            : `<button class="icon-btn" onclick="moveItemUp(${item.id})" title="上へ移動">↑</button>`;
+          const downBtn = isLast
+            ? `<button class="icon-btn" style="opacity:0.3;cursor:not-allowed;" disabled title="これ以上 下に移動できません">↓</button>`
+            : `<button class="icon-btn" onclick="moveItemDown(${item.id})" title="下へ移動">↓</button>`;
+          row.innerHTML = `<div style="flex:1;min-width:0;"><div class="setting-name">${item.name}</div><div class="setting-detail">${item.cat}・${item.store||''}・${typeLabel(item)}</div></div><div style="display:flex;gap:4px;flex-shrink:0;">${upBtn}${downBtn}<button class="icon-btn" onclick="editItem(${item.id})" title="編集">✎</button><button class="icon-btn" style="color:#A32D2D;" onclick="deleteItem(${item.id})" title="削除">✕</button></div>`;
+        }
+        il.appendChild(row);
+      });
+    });
+  }
+
+  // 選択削除モード時に一括削除ボタンを表示する
+  if (bulkArea) {
+    if (_selectMode) {
+      const count = _selectedIds.size;
+      bulkArea.innerHTML = `<button class="send-btn" style="padding:14px;margin-top:8px;background:${count > 0 ? '#A32D2D' : '#ccc'};${count === 0 ? 'cursor:not-allowed;' : ''}" ${count === 0 ? 'disabled' : ''} onclick="deleteSelectedItems()">選択した ${count} 件を削除</button>`;
+    } else {
+      bulkArea.innerHTML = '';
+    }
+  }
+
+  const tl = document.getElementById('tabs-list');
+  tl.innerHTML = '';
+  state.tabs.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    row.innerHTML = `<div class="setting-name">${t}</div><button class="icon-btn" style="color:#A32D2D;" onclick="deleteTab(${i})">✕</button>`;
+    tl.appendChild(row);
+  });
+
+  const cl = document.getElementById('cats-list');
+  cl.innerHTML = '';
+  state.cats.forEach((c, i) => {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    row.innerHTML = `<div class="setting-name">${c}</div><button class="icon-btn" style="color:#A32D2D;" onclick="deleteCat(${i})">✕</button>`;
+    cl.appendChild(row);
+  });
+
+  const sl = document.getElementById('stores-list');
+  sl.innerHTML = '';
+  state.stores.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'setting-row';
+    row.innerHTML = `<div class="setting-name">${s}</div><button class="icon-btn" style="color:#A32D2D;" onclick="deleteStore(${i})">✕</button>`;
+    sl.appendChild(row);
+  });
+
+  document.getElementById('gas-url').value = state.gasUrl || '';
+  const exportCount = document.getElementById('export-count');
+  if (exportCount) exportCount.textContent = state.items.length;
+}
+
+function openItemModal(id) {
+  state.editingItemId = id || null;
+  const item = id ? state.items.find(i => i.id === id) : null;
+  document.getElementById('modal-item-title').textContent = id ? '品目を編集' : '品目を追加';
+  document.getElementById('mi-name').value = item ? item.name : '';
+
+  const tabSel = document.getElementById('mi-tab');
+  tabSel.innerHTML = state.tabs.map(t => `<option value="${t}">${t}</option>`).join('');
+  if (item) tabSel.value = item.tab;
+
+  document.getElementById('mi-type').value = item ? item.type : '2';
+
+  const catSel = document.getElementById('mi-cat');
+  catSel.innerHTML = state.cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  if (item) catSel.value = item.cat;
+
+  const storeSel = document.getElementById('mi-store');
+  storeSel.innerHTML = state.stores.map(s => `<option value="${s}">${s}</option>`).join('');
+  if (item) storeSel.value = item.store || state.stores[0];
+
+  // カスタムタイプの場合は選択肢テキストエリアを表示する
+  const customField = document.getElementById('mi-custom-field');
+  const choicesArea = document.getElementById('mi-choices');
+  if (item && item.type === 'custom') {
+    customField.style.display = '';
+    choicesArea.value = (item.choices || []).join('\n');
+  } else {
+    customField.style.display = 'none';
+    choicesArea.value = '';
+  }
+
+  document.getElementById('modal-item').classList.add('open');
+}
+
+// タイプを人が読みやすい文字列に変換する
+function typeLabel(item) {
+  if (item.type === '2') return '2択（ある/ない）';
+  if (item.type === '3') return '3択（たっぷり/少し/ない）';
+  if (item.type === 'num') return '数量（0〜5個）';
+  if (item.type === 'custom') return 'カスタム（' + (item.choices || []).join('・') + '）';
+  return '';
+}
+
+// タイプのプルダウンが変わったときにカスタム入力欄の表示を切り替える
+function onTypeChange() {
+  const type = document.getElementById('mi-type').value;
+  document.getElementById('mi-custom-field').style.display = type === 'custom' ? '' : 'none';
+}
+
+function closeItemModal() {
+  document.getElementById('modal-item').classList.remove('open');
+}
+
+function saveItem() {
+  const name = document.getElementById('mi-name').value.trim();
+  if (!name) { alert('品目名を入力してください'); return; }
+  const tab = document.getElementById('mi-tab').value;
+  const type = document.getElementById('mi-type').value;
+  const cat = document.getElementById('mi-cat').value;
+  const store = document.getElementById('mi-store').value;
+
+  // カスタムタイプの場合、選択肢を行ごとに分割して配列にする
+  let choices = [];
+  if (type === 'custom') {
+    choices = document.getElementById('mi-choices').value
+      .split('\n').map(s => s.trim()).filter(s => s !== '');
+    if (choices.length < 2) { alert('カスタムの選択肢は2つ以上入力してください'); return; }
+  }
+
+  if (state.editingItemId) {
+    const item = state.items.find(i => i.id === state.editingItemId);
+    if (item) { item.name = name; item.tab = tab; item.type = type; item.cat = cat; item.store = store; item.choices = choices; }
+  } else {
+    state.items.push({ id: state.nextId++, name, tab, type, cat, store, choices });
+  }
+  save();
+  closeItemModal();
+  renderSettings();
+}
+
+function editItem(id) { openItemModal(id); }
+
+function deleteItem(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  if (!confirm('「' + item.name + '」を削除しますか？')) return;
+  state.items = state.items.filter(i => i.id !== id);
+  save();
+  renderSettings();
+}
+
+// 品目を同じ場所（タブ）内で1つ上に移動する
+// state.items 内で、同じ tab を持つ直前のアイテムと位置を入れ替える
+function moveItemUp(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  const sameTab = state.items.filter(i => i.tab === item.tab);
+  const idxInTab = sameTab.findIndex(i => i.id === id);
+  if (idxInTab <= 0) return; // すでに先頭
+  const prevId = sameTab[idxInTab - 1].id;
+  const globalIdx = state.items.findIndex(i => i.id === id);
+  const prevGlobalIdx = state.items.findIndex(i => i.id === prevId);
+  [state.items[globalIdx], state.items[prevGlobalIdx]] = [state.items[prevGlobalIdx], state.items[globalIdx]];
+  save();
+  renderSettings();
+}
+
+// 品目を同じ場所（タブ）内で1つ下に移動する
+function moveItemDown(id) {
+  const item = state.items.find(i => i.id === id);
+  if (!item) return;
+  const sameTab = state.items.filter(i => i.tab === item.tab);
+  const idxInTab = sameTab.findIndex(i => i.id === id);
+  if (idxInTab < 0 || idxInTab >= sameTab.length - 1) return; // すでに末尾
+  const nextId = sameTab[idxInTab + 1].id;
+  const globalIdx = state.items.findIndex(i => i.id === id);
+  const nextGlobalIdx = state.items.findIndex(i => i.id === nextId);
+  [state.items[globalIdx], state.items[nextGlobalIdx]] = [state.items[nextGlobalIdx], state.items[globalIdx]];
+  save();
+  renderSettings();
+}
+
+function addTab() {
+  const name = prompt('新しい場所の名前を入力してください\n例：食品棚、パントリーなど');
+  if (name && name.trim()) {
+    state.tabs.push(name.trim());
+    save();
+    renderSettings();
+  }
+}
+
+function deleteTab(i) {
+  if (state.tabs.length <= 1) { alert('最低1つの場所が必要です'); return; }
+  const tabName = state.tabs[i];
+  const itemsInTab = tabItems(tabName).length;
+  const msg = itemsInTab > 0
+    ? '「' + tabName + '」を削除しますか？\nこの場所の品目（' + itemsInTab + '件）は「' + state.tabs[0] + '」に移動されます。'
+    : '「' + tabName + '」を削除しますか？';
+  if (!confirm(msg)) return;
+  state.items.forEach(item => { if (item.tab === tabName) item.tab = state.tabs[0]; });
+  state.tabs.splice(i, 1);
+  save();
+  renderSettings();
+}
+
+function addCat() {
+  const name = prompt('新しいカテゴリ名を入力してください\n例：飲料、お菓子など');
+  if (name && name.trim()) {
+    state.cats.push(name.trim());
+    save();
+    renderSettings();
+  }
+}
+
+function deleteCat(i) {
+  if (!confirm('「' + state.cats[i] + '」を削除しますか？')) return;
+  const old = state.cats[i];
+  state.cats.splice(i, 1);
+  save();
+  renderSettings();
+}
+
+function addStore() {
+  const name = prompt('新しい店舗名を入力してください\n例：ドラッグストア、業務スーパーなど');
+  if (name && name.trim()) {
+    state.stores.push(name.trim());
+    save();
+    renderSettings();
+  }
+}
+
+function deleteStore(i) {
+  if (state.stores.length <= 1) { alert('最低1つの店舗が必要です'); return; }
+  const storeName = state.stores[i];
+  const itemsInStore = state.items.filter(item => item.store === storeName).length;
+  const msg = itemsInStore > 0
+    ? '「' + storeName + '」を削除しますか？\nこの店舗の品目（' + itemsInStore + '件）は「' + state.stores[0] + '」に移動されます。'
+    : '「' + storeName + '」を削除しますか？';
+  if (!confirm(msg)) return;
+  state.items.forEach(item => { if (item.store === storeName) item.store = state.stores[0]; });
+  state.stores.splice(i, 1);
+  save();
+  renderSettings();
+}
+
+function saveGasUrl() {
+  state.gasUrl = document.getElementById('gas-url').value.trim();
+  save();
+  alert('GAS URLを保存しました');
+}
+
+// 選択削除モードのON/OFFを切り替える
+function toggleSelectMode() {
+  _selectMode = !_selectMode;
+  _selectedIds = new Set();
+  renderSettings();
+}
+
+// 品目のチェック状態を切り替え、削除ボタンのカウントを更新する
+function toggleItemSelection(id) {
+  if (_selectedIds.has(id)) {
+    _selectedIds.delete(id);
+  } else {
+    _selectedIds.add(id);
+  }
+  // 削除ボタンのカウント表示だけ更新する（全体の再描画を避けるため）
+  const bulkArea = document.getElementById('bulk-delete-area');
+  if (bulkArea) {
+    const count = _selectedIds.size;
+    bulkArea.innerHTML = `<button class="send-btn" style="padding:14px;margin-top:8px;background:${count > 0 ? '#A32D2D' : '#ccc'};${count === 0 ? 'cursor:not-allowed;' : ''}" ${count === 0 ? 'disabled' : ''} onclick="deleteSelectedItems()">選択した ${count} 件を削除</button>`;
+  }
+}
+
+// 全品目を選択する
+function selectAllItems() {
+  state.items.forEach(item => _selectedIds.add(item.id));
+  renderSettings();
+}
+
+// 全品目の選択を解除する
+function deselectAllItems() {
+  _selectedIds = new Set();
+  renderSettings();
+}
+
+// 選択した品目をまとめて削除する
+function deleteSelectedItems() {
+  if (_selectedIds.size === 0) return;
+  if (!confirm(_selectedIds.size + '件の品目を削除しますか？この操作は元に戻せません。')) return;
+  state.items = state.items.filter(i => !_selectedIds.has(i.id));
+  _selectedIds = new Set();
+  _selectMode = false;
+  save();
+  renderSettings();
+}
+
+// CSVインポート用の一時保存変数
+let _csvPreviewRows = [];
+
+// 現在の品目リストをCSVファイルとして書き出す
+// タブレットなど別の端末に品目を移行するために使う
+function exportItems() {
+  if (state.items.length === 0) {
+    alert('エクスポートする品目がありません。');
+    return;
+  }
+  // タイプの内部値（2/3/num/custom）をCSVの文字列に変換する
+  const typeStr = t => t === '3' ? '3択' : t === 'num' ? '数量' : '2択';
+  const header = '品目名,場所（タブ）,タイプ,カテゴリ,店舗\n';
+  const rows = state.items.map(i =>
+    [i.name, i.tab, typeStr(i.type), i.cat, i.store || ''].join(',')
+  ).join('\n');
+  // BOM付きUTF-8にするとExcelやGoogleスプレッドシートで文字化けしない
+  const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const d = new Date();
+  const dateStr = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+  a.download = '品目リスト_' + dateStr + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// テンプレートCSVをダウンロードする
+function downloadTemplate() {
+  const header = '品目名,場所（タブ）,タイプ,カテゴリ,店舗\n';
+  // タイプの説明：2択（ある/ない）、3択（たっぷり/少し/ない）、数量（0〜5個）
+  const examples = [
+    '牛乳,冷蔵庫,3択,乳製品,スーパー',
+    '卵,冷蔵庫,数量,その他,スーパー',
+    'バター,冷蔵庫,2択,乳製品,スーパー',
+    '冷凍うどん,冷凍庫,数量,冷凍食品,スーパー',
+    '醤油,引き出し,3択,調味料,スーパー',
+  ].join('\n');
+  // BOM（バイト順マーク）を付けるとExcelで文字化けしない
+  const content = '\uFEFF' + header + examples;
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '品目テンプレート.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// CSVファイルを選択したときの処理
+function handleCsvFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    let text = e.target.result;
+    // BOMが付いている場合は除去する
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    const rows = parseCsv(text);
+    showCsvPreview(rows);
+    // 同じファイルを再度選択できるようにリセット
+    input.value = '';
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+// CSVテキストをパースして品目の配列を返す
+function parseCsv(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  // 2行未満（ヘッダーのみ）は空として返す
+  if (lines.length < 2) return [];
+  const results = [];
+  // 1行目はヘッダーなのでスキップ（i=1から開始）
+  for (let i = 1; i < lines.length; i++) {
+    // ダブルクォートを除去してカンマで分割
+    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    if (cols.length < 4 || !cols[0]) continue;
+    const [name, tab, typeStr, cat, store] = cols;
+    results.push({ name, tab, type: parseItemType(typeStr), cat, store: store || state.stores[0] });
+  }
+  return results;
+}
+
+// タイプ文字列を内部値（2/3/num）に変換する
+function parseItemType(str) {
+  const s = str.trim();
+  if (s === '3' || s === '3択' || s.includes('たっぷり')) return '3';
+  if (s === 'num' || s === '数量' || s === '個数') return 'num';
+  // 上記以外はすべて2択として扱う
+  return '2';
+}
+
+// 読み込んだCSVのプレビューを画面に表示する
+function showCsvPreview(rows) {
+  const area = document.getElementById('csv-preview');
+  if (rows.length === 0) {
+    area.innerHTML = '<div style="color:#A32D2D;font-size:13px;padding:8px 0;">読み込めるデータがありませんでした。ファイルの形式を確認してください。</div>';
+    return;
+  }
+  // プレビュー用にモジュール変数へ保存しておく
+  _csvPreviewRows = rows;
+  const typeLabel = t => t === '3' ? '3択' : t === 'num' ? '数量' : '2択';
+  let html = `<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">${rows.length}件のデータを読み込みました。内容を確認して「インポート実行」を押してください。</div>`;
+  html += '<div style="border:0.5px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:10px;">';
+  html += '<div style="display:grid;grid-template-columns:1fr 70px 50px 70px 70px;background:var(--bg2);padding:8px 10px;font-size:11px;font-weight:500;color:var(--text2);">';
+  html += '<div>品目名</div><div>場所</div><div>タイプ</div><div>カテゴリ</div><div>店舗</div></div>';
+  rows.forEach((r, i) => {
+    const bg = i % 2 === 0 ? 'var(--bg)' : 'var(--bg2)';
+    html += `<div style="display:grid;grid-template-columns:1fr 70px 50px 70px 70px;padding:8px 10px;font-size:13px;background:${bg};">`;
+    html += `<div style="font-weight:500;">${r.name}</div><div style="color:var(--text2);">${r.tab}</div><div style="color:var(--text2);">${typeLabel(r.type)}</div><div style="color:var(--text2);">${r.cat}</div><div style="color:var(--text2);">${r.store||''}</div>`;
+    html += '</div>';
+  });
+  html += '</div>';
+  html += `<button class="send-btn" style="padding:14px;margin-top:0;" onclick="importCsvRows()">インポート実行（${rows.length}件追加）</button>`;
+  html += `<button style="width:100%;padding:12px;border:0.5px solid var(--border);border-radius:var(--radius-sm);background:none;color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px;" onclick="document.getElementById('csv-preview').innerHTML='';_csvPreviewRows=[];">キャンセル</button>`;
+  area.innerHTML = html;
+}
+
+// すべてのデータをリセットして最初の状態に戻す
+function resetAllData() {
+  if (!confirm('品目リスト・設定・チェック履歴をすべて削除します。\nこの操作は元に戻せません。よろしいですか？')) return;
+  localStorage.removeItem('sumika_inv');
+  location.reload();
+}
+
+// プレビューで確認した品目を実際にインポートする
+function importCsvRows() {
+  let added = 0;
+  let skipped = 0;
+  // 現在の品目名をセットとして持つことで、同名チェックを高速に行う
+  const existingNames = new Set(state.items.map(i => i.name));
+  _csvPreviewRows.forEach(r => {
+    // すでに同じ品目名が存在する場合は追加せずスキップする（重複防止）
+    if (existingNames.has(r.name)) {
+      skipped++;
+      return;
+    }
+    if (r.tab && !state.tabs.includes(r.tab)) state.tabs.push(r.tab);
+    if (r.cat && !state.cats.includes(r.cat)) state.cats.push(r.cat);
+    if (r.store && !state.stores.includes(r.store)) state.stores.push(r.store);
+    state.items.push({ id: state.nextId++, name: r.name, tab: r.tab, type: r.type, cat: r.cat, store: r.store || state.stores[0] });
+    existingNames.add(r.name);
+    added++;
+  });
+  _csvPreviewRows = [];
+  save();
+  document.getElementById('csv-preview').innerHTML = '';
+  renderSettings();
+  const msg = skipped > 0
+    ? added + '件をインポートしました。\n（' + skipped + '件はすでに同じ品目名があるためスキップしました）'
+    : added + '件の品目をインポートしました。';
+  alert(msg);
+}
+
+load();
+goCheck();
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>パート職員募集・説明シート</title>
+<style>
+/* 印刷時はA4サイズ・余白最小に */
+@page { size: A4; margin: 6mm; }
+@media print {
+  body { margin: 0; background: white; }
+  .no-print { display: none; }
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'MS Gothic', 'Yu Gothic', 'Meiryo', sans-serif;
+  font-size: 10pt;
+  background: #e8ecf0;
+  color: #222;
+}
+
+/* 用紙全体の枠 */
+.page {
+  width: 190mm;
+  min-height: 270mm;
+  margin: 10px auto;
+  padding: 7mm 8mm;
+  background: white;
+  border: 3px solid #A0C0E0;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* ヘッダー */
+.header {
+  background: linear-gradient(135deg, #E8F3FF, #C4DEFF);
+  border: 1.5px solid #A0C0E0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.header-animals {
+  font-size: 26pt;
+  line-height: 1.1;
+  color: #5080B0;
+  flex-shrink: 0;
+}
+.header-center { text-align: center; flex: 1; }
+.header h1 {
+  font-size: 14.5pt;
+  font-weight: bold;
+  color: #1a3a5c;
+  margin-bottom: 5px;
+  letter-spacing: 0.02em;
+}
+.header .facility-info {
+  font-size: 10.5pt;
+  color: #2a4a6c;
+  line-height: 1.7;
+}
+
+/* セクション見出し */
+.section-title {
+  font-size: 10.5pt;
+  font-weight: bold;
+  color: #1a3a5c;
+  border-left: 5px solid #4A6FA5;
+  padding: 2px 7px;
+  margin: 9px 0 5px;
+  background: #EEF4FB;
+}
+
+/* 募集表 */
+table.schedule {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 7px;
+  font-size: 9.5pt;
+}
+table.schedule th {
+  background: #D0E2F5;
+  border: 1px solid #A0C0E0;
+  padding: 5px 2px;
+  text-align: center;
+  font-weight: bold;
+  color: #1a3a5c;
+}
+table.schedule th.weekend { background: #B8D0EC; }
+table.schedule td {
+  border: 1px solid #C0CED8;
+  padding: 7px 4px;
+  text-align: center;
+  vertical-align: middle;
+  height: 36px;
+}
+.band-cell {
+  background: #EEF2F8 !important;
+  font-weight: bold;
+  text-align: left !important;
+  padding-left: 9px !important;
+  color: #1a3a5c;
+  white-space: nowrap;
+  width: 82px;
+}
+/* 「募集中」セル：画像に合わせた水色 */
+.cell-vacant {
+  background: #BFDBFE;
+  color: #1e40af;
+  font-weight: bold;
+  font-size: 10pt;
+}
+.cell-ok { background: #F8FAFC; }
+
+/* 待遇セクション */
+.benefits {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F5F8FC;
+  border: 1.5px solid #C8D8EC;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin: 5px 0;
+  flex-wrap: wrap;
+}
+.benefits-label {
+  font-weight: bold;
+  color: #1a3a5c;
+  margin-right: 4px;
+}
+.benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: white;
+  border: 1px solid #C8D8EC;
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-size: 10pt;
+  white-space: nowrap;
+}
+.wage-box {
+  display: inline-block;
+  min-width: 64px;
+  border: 1.5px solid #999;
+  padding: 1px 6px;
+  text-align: center;
+  border-radius: 3px;
+}
+
+/* 業務内容カード */
+.job-cards {
+  display: flex;
+  gap: 6px;
+  margin: 5px 0;
+}
+.job-card {
+  flex: 1;
+  border-radius: 9px;
+  padding: 8px 7px;
+  font-size: 9pt;
+}
+.card-title {
+  font-weight: bold;
+  font-size: 9.5pt;
+  color: #1a3a5c;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(0,0,0,0.15);
+  padding-bottom: 3px;
+}
+.card-emoji {
+  font-size: 20pt;
+  text-align: center;
+  margin: 4px 0 5px;
+}
+.job-card ul {
+  padding-left: 14px;
+  line-height: 1.75;
+  color: #333;
+}
+
+/* 職場の特徴 */
+.feature-box {
+  text-align: center;
+  font-size: 17pt;
+  font-weight: bold;
+  color: #1a3a5c;
+  padding: 8px 6px;
+  letter-spacing: 0.04em;
+}
+
+/* 連絡先 */
+.contact-box {
+  border: 1.5px solid #A0C0E0;
+  border-radius: 8px;
+  padding: 8px 16px;
+  background: #EEF4FB;
+  margin-top: 8px;
+  font-size: 10pt;
+  line-height: 1.9;
+}
+.contact-box .corp { font-size: 11pt; font-weight: bold; color: #1a3a5c; }
+
+/* 発行日 */
+.date-line {
+  text-align: right;
+  font-size: 8pt;
+  color: #999;
+  margin-top: 5px;
+}
+
+/* ブラウザ表示時の印刷ボタン */
+.print-area {
+  text-align: center;
+  padding: 16px 0 24px;
+}
+.print-btn {
+  padding: 11px 36px;
+  background: #4A6FA5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 12pt;
+  cursor: pointer;
+  font-family: 'MS Gothic', sans-serif;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+.print-btn:hover { background: #3a5f95; }
+.print-hint {
+  margin-top: 6px;
+  font-size: 9pt;
+  color: #888;
+  font-family: 'MS Gothic', sans-serif;
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ヘッダー：施設情報 -->
+  <div class="header">
+    <div class="header-animals">🐐<br>🐐</div>
+    <div class="header-center">
+      <h1>グループホーム　パート職員募集・説明シート</h1>
+      <div class="facility-info">
+        施設名称：シェアホームすみか<br>
+        ①押切　②小江川　利用者定員 各4名
+      </div>
+    </div>
+    <div class="header-animals">🐐<br>🐐</div>
+  </div>
+
+  <!-- 募集している時間帯 -->
+  <div class="section-title">募集している時間帯</div>
+  <table class="schedule">
+    <tr>
+      <th style="width:82px"></th>
+      <th>月</th><th>火</th><th>水</th><th>木</th><th>金</th>
+      <th class="weekend">土</th>
+      <th class="weekend">日</th>
+    </tr>
+    <tr><td class="band-cell">① 8:00〜14:30</td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td><td class="cell-ok"></td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td></tr>
+<tr><td class="band-cell">② 14:00〜16:00</td><td class="cell-vacant">募集中</td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td><td class="cell-vacant">募集中</td></tr>
+<tr><td class="band-cell">③ 16:00〜20:00</td><td class="cell-ok"></td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-ok"></td><td class="cell-ok"></td><td class="cell-ok"></td><td class="cell-ok"></td></tr>
+<tr><td class="band-cell">④ 20:00〜翌8:00</td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-ok"></td><td class="cell-vacant">募集中</td><td class="cell-ok"></td></tr>
+
+  </table>
+
+  <!-- 待遇 -->
+  <div class="section-title">待遇</div>
+  <div class="benefits">
+    <span class="benefits-label">待遇</span>
+    <span class="benefit-item">
+      💴 時給&nbsp;<span class="wage-box">　　　　</span>&nbsp;円
+    </span>
+    <span class="benefit-item">🚗 交通費支給</span>
+    <span class="benefit-item">🍽️ 食事代助成</span>
+  </div>
+
+  <!-- 時間帯別の仕事内容 -->
+  <div class="section-title">時間帯別の仕事内容</div>
+  <div class="job-cards">
+        <div class="job-card" style="background:#DBEAFE;border:2px solid #93C5FD;">
+          <div class="card-title">① 8:00〜14:30</div>
+          <div class="card-emoji">🍳</div>
+          <ul><li>8:00〜 掃除</li><li>10:30〜 昼食準備</li><li>12:00〜 昼食提供</li><li>13:00〜 食器洗い</li><li>〜14:30 その他雑務</li></ul>
+        </div>
+        <div class="job-card" style="background:#D1FAE5;border:2px solid #6EE7B7;">
+          <div class="card-title">② 14:00〜16:00</div>
+          <div class="card-emoji">🏠</div>
+          <ul><li>掃除</li><li>夕食下ごしらえ</li><li>利用者帰宅受け入れ</li></ul>
+        </div>
+        <div class="job-card" style="background:#EDE9FE;border:2px solid #C4B5FD;">
+          <div class="card-title">③ 16:00〜20:00</div>
+          <div class="card-emoji">🛁</div>
+          <ul><li>入浴促し</li><li>朝食下ごしらえ</li><li>夕食提供</li></ul>
+        </div>
+        <div class="job-card" style="background:#FEF3C7;border:2px solid #FCD34D;">
+          <div class="card-title">④ 20:00〜翌8:00</div>
+          <div class="card-emoji">🌙</div>
+          <ul><li>利用者洗濯物</li><li>定時巡視</li><li>朝食提供</li><li>通所送り出し</li></ul>
+        </div>
+  </div>
+
+  <!-- 職場の特徴 -->
+  <div class="section-title">職場の特徴</div>
+  <div class="feature-box">シフトの固定／曜日／時間の調整相談可</div>
+
+  <!-- 連絡先 -->
+  <div class="contact-box">
+    <div class="corp">社会福祉法人 ○○</div>
+    TEL：000-0000-0000　担当：○○
+  </div>
+
+  <div class="date-line">作成日：2026年05月13日</div>
+
+</div>
+
+<!-- 印刷ボタン（印刷時は非表示） -->
+<div class="no-print print-area">
+  <button class="print-btn" onclick="window.print()">🖨️ 印刷する</button>
+  <div class="print-hint">
+    ブラウザの印刷設定で「余白：最小」「用紙サイズ：A4」を選択してください
+  </div>
+</div>
+
+</body>
+</html>

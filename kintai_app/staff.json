@@ -1,0 +1,212 @@
+[
+  {
+    "id": "S20260421094548",
+    "employment_type": "正社員",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [],
+    "is_manager": true,
+    "weekly_pattern": {
+      "0": "",
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": "day_a"
+    }
+  },
+  {
+    "id": "S20260421092031",
+    "employment_type": "正社員",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "",
+      "1": "",
+      "2": "shift_20260421110054",
+      "3": "shift_20260421110054",
+      "4": "",
+      "5": "",
+      "6": ""
+    },
+    "deemed_hours": 0.0
+  },
+  {
+    "id": "S20260421094706",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "",
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": ""
+    },
+    "deemed_hours": 5.0,
+    "deemed_minutes": 30
+  },
+  {
+    "id": "S20260421095019",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "shift_20260421100007",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_off",
+      "2": "day_off",
+      "3": "shift_20260421100007",
+      "4": "day_off",
+      "5": "shift_20260421100007",
+      "6": "day_off"
+    },
+    "deemed_hours": 0.0
+  },
+  {
+    "id": "S20260421094904",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "day_a",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_a",
+      "2": "day_off",
+      "3": "day_off",
+      "4": "day_off",
+      "5": "day_off",
+      "6": "day_off"
+    },
+    "deemed_hours": 0.0
+  },
+  {
+    "id": "S20260421094927",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "day_a",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_a",
+      "2": "day_off",
+      "3": "day_off",
+      "4": "day_off",
+      "5": "day_off",
+      "6": "day_off"
+    },
+    "deemed_hours": 0.0
+  },
+  {
+    "id": "S20260421094938",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "shift_20260421094513",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_off",
+      "2": "shift_20260421094513",
+      "3": "day_off",
+      "4": "day_off",
+      "5": "day_off",
+      "6": "day_off"
+    },
+    "deemed_hours": 0.0
+  },
+  {
+    "id": "S20260421094950",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "night",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_off",
+      "2": "day_off",
+      "3": "day_off",
+      "4": "night",
+      "5": "day_off",
+      "6": "day_off"
+    }
+  },
+  {
+    "id": "S20260421095004",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "assigned_shifts": [
+      "night",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_off",
+      "2": "day_off",
+      "3": "day_off",
+      "4": "day_off",
+      "5": "day_off",
+      "6": "night"
+    },
+    "retired": true,
+    "retirement_date": "2026-05-13"
+  },
+  {
+    "id": "S20260422104515",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "deemed_hours": 0.0,
+    "assigned_shifts": [
+      "shift_20260422104443"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "day_off",
+      "1": "day_off",
+      "2": "day_off",
+      "3": "day_off",
+      "4": "day_off",
+      "5": "day_off",
+      "6": "day_off"
+    }
+  },
+  {
+    "id": "S20260513082910",
+    "employment_type": "パート",
+    "weekly_hours": 40.0,
+    "deemed_hours": 0.0,
+    "assigned_shifts": [
+      "night",
+      "day_off"
+    ],
+    "is_manager": false,
+    "weekly_pattern": {
+      "0": "night",
+      "1": "",
+      "2": "",
+      "3": "",
+      "4": "",
+      "5": "",
+      "6": ""
+    }
+  }
+]

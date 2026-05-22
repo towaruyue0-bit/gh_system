@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(//c/GH_Data/**)",
+      "Write(//c/GH_Data/**)",
+      "Edit(//c/GH_Data/**)",
+      "Read(//c/Users/Public/gh_system/書類/**)",
+      "Write(//c/Users/Public/gh_system/書類/**)",
+      "Edit(//c/Users/Public/gh_system/書類/**)",
+      "Read(//c/Users/Public/gh_system/GH会計資料_2025年度/**)",
+      "Write(//c/Users/Public/gh_system/GH会計資料_2025年度/**)",
+      "Edit(//c/Users/Public/gh_system/GH会計資料_2025年度/**)"
+    ],
+    "allow": [
+      "Bash(python envelope_app/envelope_app.py)",
+      "Bash(python usage_app/usage_app.py)",
+      "Bash(python -m py_compile billing_app/billing_app.py)",
+      "Bash(python -m py_compile residents_app/main.py)",
+      "Bash(python3 -c \"import win32com.client; print\\('pywin32: OK'\\)\")",
+      "Bash(pip install *)",
+      "Bash(python3 contract_app.py)",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 -c \"import pypdf; print\\('pypdf OK'\\)\")",
+      "Bash(python3 -c \"import pypdf; print\\('pypdf', pypdf.__version__\\)\")",
+      "Bash(python vacancy_viewer.py)",
+      "Bash(python -c ' *)",
+      "Read(//c/Users/tanak/**)",
+      "Bash(start pythonw *)",
+      "Bash(python deposit_app/deposit_app.py)",
+      "Bash(python finance_app.py)"
+    ]
+  }
+}

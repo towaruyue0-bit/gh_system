@@ -1,0 +1,41 @@
+[
+  {
+    "name": "夕食帯",
+    "start_h": 15,
+    "start_m": 0,
+    "end_h": 20,
+    "end_m": 0,
+    "break_min": 0,
+    "sessions": 30,
+    "count": 1,
+    "wage": 1150,
+    "breakfast": false,
+    "lunch": false,
+    "dinner": true
+  },
+  {
+    "name": "昼食帯",
+    "start_h": 10,
+    "start_m": 0,
+    "end_h": 15,
+    "end_m": 0,
+    "break_min": 0,
+    "sessions": 8,
+    "count": 1,
+    "wage": 1150
+  },
+  {
+    "name": "夜勤帯",
+    "start_h": 20,
+    "start_m": 0,
+    "end_h": 8,
+    "end_m": 0,
+    "break_min": 0,
+    "sessions": 30,
+    "count": 1,
+    "wage": 1150,
+    "breakfast": true,
+    "lunch": false,
+    "dinner": false
+  }
+]

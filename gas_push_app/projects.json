@@ -1,0 +1,13 @@
+[
+  {
+    "name": "支援記録アプリ",
+    "folder": "C:\\Users\\tanak\\Documents\\gh_system\\gas_support_record",
+    "deploy_url": "https://script.google.com/home/projects/1gsJNDWQY8UJeOQFbpdhSwj8RYlVJqiPVluFKEUl6AAngRbGTP6la817E/edit"
+  },
+  {
+    "name": "在庫チェック・お買い物リスト（共通GAS）",
+    "folder": "C:\\Users\\tanak\\Documents\\gh_system\\inventory_app",
+    "deploy_url": "https://script.google.com/home/projects/1HNfHRSoSilhpfPbEVHvfrxunNGfqbMg4iEc7nCm5o34Lj9CsVRdkKAHD/edit",
+    "netlify_dir": "C:\\Users\\tanak\\Documents\\gh_system\\inventory_app"
+  }
+]

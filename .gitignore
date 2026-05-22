@@ -1,0 +1,35 @@
+# データベースファイル（実行時に生成される・個人情報含む可能性あり）
+*.db
+*.db-shm
+*.db-wal
+
+# 出力ファイル（PDF・Word・Excel）個人情報・財務データを含む
+*.pdf
+*.docx
+*.doc
+*.xls
+*.xlsx
+*.xlsm
+
+# 出力フォルダ
+billing_app/output/
+contract_app/temp/
+
+# 会計資料フォルダ（財務データ）
+GH会計資料_2025年度/
+
+# 書類フォルダ
+書類/
+
+# Pythonキャッシュ
+__pycache__/
+*.pyc
+*.pyo
+
+# OS生成ファイル
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ランチャー設定（ローカル環境依存）
+launcher_settings.json

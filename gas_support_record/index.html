@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支援記録入力</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      padding: 12px;
+      font-size: 16px;
+    }
+
+    /* ===== ページタイトル ===== */
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      color: #2c5282;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* ===== ローディング / エラー ===== */
+    #loadingInit {
+      text-align: center;
+      padding: 40px;
+      font-size: 18px;
+      color: #4a86e8;
+    }
+    #errorMsg {
+      display: none;
+      background: #fff5f5;
+      border: 2px solid #fc8181;
+      border-radius: 10px;
+      padding: 16px;
+      color: #c53030;
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    /* ===== 共通セクション ===== */
+    .common-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-left: 5px solid #4a86e8;
+    }
+    .common-section h2 {
+      font-size: 17px;
+      color: #4a86e8;
+      margin-bottom: 14px;
+    }
+
+    /* ===== フォーム行 ===== */
+    .form-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .form-row .row-label {
+      font-weight: bold;
+      font-size: 15px;
+      min-width: 130px;
+      flex-shrink: 0;
+    }
+    .form-row input[type="text"],
+    .form-row input[type="date"] {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      min-height: 46px;
+      font-family: inherit;
+    }
+    .form-row input:focus { outline: none; border-color: #4a86e8; }
+
+    /* 時間範囲（開始〜終了） */
+    .time-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .time-range input[type="text"] {
+      flex: 1;
+      min-width: 0;
+    }
+    .time-sep { font-size: 18px; color: #666; white-space: nowrap; }
+
+    /* 共通時間の補足テキスト */
+    .hint {
+      font-size: 13px;
+      color: #718096;
+      margin-top: -8px;
+      margin-bottom: 10px;
+      padding-left: 140px;
+    }
+
+    /* ===== 利用者カード ===== */
+    .resident-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-left: 5px solid #48bb78;
+    }
+    .resident-card h2 {
+      font-size: 18px;
+      color: #276749;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #c6f6d5;
+    }
+
+    /* ===== フィールドグループ ===== */
+    .field-group { margin-bottom: 14px; }
+    .field-label {
+      display: block;
+      font-weight: bold;
+      font-size: 15px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    /* ===== チェックボックス系 ===== */
+    .check-group { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      min-height: 46px;
+      user-select: none;
+    }
+    .check-item input[type="checkbox"] {
+      width: 24px; height: 24px;
+      cursor: pointer;
+      accent-color: #48bb78;
+      flex-shrink: 0;
+    }
+    .check-item span { font-size: 16px; }
+    .check-item:has(input:checked) { background: #c6f6d5; border-color: #48bb78; }
+
+    /* ===== ラジオ（喫煙） ===== */
+    .radio-group { display: flex; gap: 10px; }
+    .radio-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 20px;
+      cursor: pointer;
+      min-height: 46px;
+      user-select: none;
+    }
+    .radio-item input[type="radio"] {
+      width: 22px; height: 22px;
+      cursor: pointer;
+      accent-color: #e53e3e;
+      flex-shrink: 0;
+    }
+    .radio-item span { font-size: 16px; }
+    .radio-item:has(input:checked) { background: #fed7d7; border-color: #e53e3e; }
+
+    /* ===== 食事 ===== */
+    .meals-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .meals-row input[type="number"] {
+      width: 80px;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 18px;
+      text-align: center;
+      min-height: 46px;
+    }
+    .meals-row input[type="number"]:disabled {
+      background: #e2e8f0;
+      color: #a0aec0;
+    }
+    .meals-row input:focus { outline: none; border-color: #4a86e8; }
+    .meals-unit { font-size: 16px; }
+
+    /* 未記載ボタン */
+    .unknown-btn {
+      padding: 10px 18px;
+      background: #f7fafc;
+      border: 2px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #4a5568;
+      cursor: pointer;
+      min-height: 46px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .unknown-btn.active {
+      background: #e2e8f0;
+      border-color: #718096;
+      font-weight: bold;
+      color: #2d3748;
+    }
+
+    /* ===== 定型文ボタン + テキストエリア ===== */
+    .preset-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+    .preset-btn {
+      padding: 10px 16px;
+      background: #ebf8ff;
+      border: 2px solid #90cdf4;
+      border-radius: 8px;
+      font-size: 15px;
+      color: #2b6cb0;
+      cursor: pointer;
+      min-height: 46px;
+      transition: background 0.15s;
+    }
+    .preset-btn:active { background: #bee3f8; }
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      min-height: 76px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: #4a86e8; }
+
+    /* ===== 個別 外出/帰宅 ===== */
+    .time-inline {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .time-inline .time-field {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .time-inline .time-field label { font-size: 15px; font-weight: bold; white-space: nowrap; }
+    .time-inline input[type="text"] {
+      width: 110px;
+      padding: 10px 12px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      min-height: 46px;
+      font-family: inherit;
+    }
+    .time-inline input:focus { outline: none; border-color: #4a86e8; }
+
+    /* ===== 送信ボタン ===== */
+    .submit-area { text-align: center; margin: 20px 0 10px; }
+    #submitBtn {
+      background: #4a86e8;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 60px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(74,134,232,0.4);
+      min-height: 62px;
+      width: 100%;
+      max-width: 420px;
+      transition: background 0.15s;
+    }
+    #submitBtn:active { background: #2b6cb0; }
+    #submitBtn:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* ===== 送信ステータス ===== */
+    #sendingMsg {
+      display: none;
+      text-align: center;
+      color: #4a86e8;
+      font-size: 17px;
+      margin: 10px 0;
+    }
+    #successMsg {
+      display: none;
+      background: #c6f6d5;
+      border: 2px solid #48bb78;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      color: #276749;
+      margin: 14px 0;
+    }
+
+    /* セクション区切り */
+    .section-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 12px 0;
+    }
+
+    /* ===== 対象利用者選択セクション ===== */
+    .select-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      border-left: 5px solid #9f7aea;
+    }
+    .select-section h2 {
+      font-size: 17px;
+      color: #553c9a;
+      margin-bottom: 12px;
+    }
+    .select-btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .select-toggle-btn {
+      padding: 8px 16px;
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #4a5568;
+      cursor: pointer;
+      min-height: 40px;
+    }
+    .select-toggle-btn:active { background: #e2e8f0; }
+    .resident-select-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .resident-select-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f7fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 14px;
+      cursor: pointer;
+      user-select: none;
+      min-height: 44px;
+    }
+    .resident-select-item input[type="checkbox"] {
+      width: 22px; height: 22px;
+      cursor: pointer;
+      accent-color: #9f7aea;
+      flex-shrink: 0;
+    }
+    .resident-select-item span { font-size: 16px; font-weight: bold; }
+    .resident-select-item:has(input:checked) {
+      background: #e9d8fd;
+      border-color: #9f7aea;
+    }
+    /* 選択数カウント表示 */
+    #selectCount {
+      font-size: 13px;
+      color: #718096;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>支援記録入力</h1>
+
+<!-- 初期ローディング -->
+<div id="loadingInit">マスターデータを読み込み中...</div>
+
+<!-- エラー表示 -->
+<div id="errorMsg"></div>
+
+<!-- フォーム本体（ロード後に表示） -->
+<div id="formBody" style="display:none;">
+
+  <!-- 共通入力 -->
+  <div class="common-section">
+    <h2>共通情報</h2>
+
+    <div class="form-row">
+      <span class="row-label">日付</span>
+      <input type="date" id="date">
+    </div>
+
+    <div class="form-row">
+      <span class="row-label">勤務時間</span>
+      <div class="time-range">
+        <input type="text" id="workStart" placeholder="例：8:00">
+        <span class="time-sep">〜</span>
+        <input type="text" id="workEnd" placeholder="例：13:00">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <span class="row-label">記録者名</span>
+      <input type="text" id="recorder" placeholder="氏名を入力">
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div class="form-row">
+      <span class="row-label">共通外出時間</span>
+      <input type="text" id="commonLeave" placeholder="例：9:00"
+             oninput="applyCommonTime('leave')">
+    </div>
+    <div class="form-row">
+      <span class="row-label">共通帰宅時間</span>
+      <input type="text" id="commonReturn" placeholder="例：16:00"
+             oninput="applyCommonTime('return')">
+    </div>
+    <p class="hint">入力すると各利用者欄に自動反映されます（個別に上書き可）</p>
+  </div>
+
+  <!-- 利用者カード（JSで生成） -->
+  <div id="residentsArea"></div>
+
+  <!-- 送信完了 / ローディング -->
+  <div id="successMsg">送信しました ✓</div>
+  <div id="sendingMsg">送信中...</div>
+
+  <div class="submit-area">
+    <button id="submitBtn" onclick="submitForm()">送信する</button>
+  </div>
+
+</div><!-- /formBody -->
+
+<script>
+// ===================================================
+// グローバル変数
+// ===================================================
+var RESIDENTS_MASTER   = [];   // [{code, medication, smoking}, ...]
+var CHECK_ITEMS_MASTER = {};   // {name: [item, ...], ...}
+var PRESETS_MASTER     = {};   // {name: {本人の様子: [...], 対応: [...]}, ...}
+
+// 定型文マスターに登録がない場合のデフォルト
+var DEFAULT_CONDITION_PRESETS = ['自室にて過ごす', '穏やかに過ごす', '特記なし'];
+var DEFAULT_RESPONSE_PRESETS  = ['声かけのみ', '見守り対応', '特記なし'];
+
+// ===================================================
+// 起動処理：マスターデータ読み込み
+// ===================================================
+document.addEventListener('DOMContentLoaded', function() {
+  // 今日の日付をセット
+  var today = new Date();
+  document.getElementById('date').value = formatDateInput(today);
+
+  // GASからマスターデータ取得
+  google.script.run
+    .withSuccessHandler(function(data) {
+      RESIDENTS_MASTER   = data.residents;
+      CHECK_ITEMS_MASTER = data.checkItems;
+      PRESETS_MASTER     = data.presets || {};
+      buildForm();
+      document.getElementById('loadingInit').style.display = 'none';
+      document.getElementById('formBody').style.display    = 'block';
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('loadingInit').style.display = 'none';
+      var el = document.getElementById('errorMsg');
+      el.style.display = 'block';
+      el.textContent   = 'マスターデータの読み込みに失敗しました: ' + err.message;
+    })
+    .getMasterData();
+});
+
+// ===================================================
+// フォーム生成
+// ===================================================
+function buildForm() {
+  var area = document.getElementById('residentsArea');
+  area.innerHTML = '';
+  // 対象利用者の選択セクションを先に追加
+  area.appendChild(buildSelectSection());
+  // 各利用者のカードを追加
+  RESIDENTS_MASTER.forEach(function(res, i) {
+    area.appendChild(buildResidentCard(res, i));
+  });
+}
+
+function buildResidentCard(res, i) {
+  var meds     = parseMedications(res.medication);
+  var hasMeds  = meds.length > 0;
+  var hasSmoke = res.smoking === 'あり';
+  var checks   = CHECK_ITEMS_MASTER[res.code] || [];
+
+  var card = document.createElement('div');
+  card.className = 'resident-card';
+  card.id = 'card-' + i;
+
+  var html = '<h2>' + esc(res.code) + '</h2>';
+
+  // 外出・帰宅時間
+  html += '<div class="field-group">'
+        + '<div class="time-inline">'
+        + '  <div class="time-field">'
+        + '    <label>外出時間</label>'
+        + '    <input type="text" id="leave-' + i + '" placeholder="例：9:00">'
+        + '  </div>'
+        + '  <div class="time-field">'
+        + '    <label>帰宅時間</label>'
+        + '    <input type="text" id="return-' + i + '" placeholder="例：16:00">'
+        + '  </div>'
+        + '</div>'
+        + '</div>';
+
+  // 服薬確認
+  if (hasMeds) {
+    html += '<div class="field-group"><span class="field-label">服薬確認</span><div class="check-group">';
+    meds.forEach(function(timing) {
+      html += '<label class="check-item">'
+            + '<input type="checkbox" id="med-' + i + '-' + timing + '">'
+            + '<span>' + esc(timing) + '</span></label>';
+    });
+    html += '</div></div>';
+  }
+
+  // 洗面援助
+  html += '<div class="field-group"><span class="field-label">洗面援助</span>'
+        + '<div class="check-group">'
+        + '<label class="check-item"><input type="checkbox" id="washing-' + i + '"><span>実施</span></label>'
+        + '</div></div>';
+
+  // 入浴
+  html += '<div class="field-group"><span class="field-label">入浴</span>'
+        + '<div class="check-group">'
+        + '<label class="check-item"><input type="checkbox" id="bathing-' + i + '"><span>実施</span></label>'
+        + '</div></div>';
+
+  // 喫煙
+  if (hasSmoke) {
+    html += '<div class="field-group"><span class="field-label">喫煙</span>'
+          + '<div class="radio-group">'
+          + '<label class="radio-item"><input type="radio" name="smoking-' + i + '" value="した"><span>した</span></label>'
+          + '<label class="radio-item"><input type="radio" name="smoking-' + i + '" value="しなかった" checked><span>しなかった</span></label>'
+          + '</div></div>';
+  }
+
+  // 業務チェック項目
+  if (checks.length > 0) {
+    html += '<div class="field-group"><span class="field-label">業務チェック</span><div class="check-group">';
+    checks.forEach(function(item, ci) {
+      html += '<label class="check-item">'
+            + '<input type="checkbox" id="chk-' + i + '-' + ci + '">'
+            + '<span>' + esc(item) + '</span></label>';
+    });
+    html += '</div></div>';
+  }
+
+  // 食事（何割）
+  html += '<div class="field-group"><span class="field-label">食事（何割）</span>'
+        + '<div class="meals-row">'
+        + '<input type="number" id="meals-' + i + '" value="10" min="0" max="10" step="1">'
+        + '<span class="meals-unit">割</span>'
+        + '<button type="button" class="unknown-btn" id="meals-unknown-btn-' + i + '" '
+        + 'onclick="toggleMealsUnknown(' + i + ')">未記載</button>'
+        + '</div></div>';
+
+  // 利用者ごとの定型文（なければデフォルトを使用）
+  // 「本人の様子」「対応」両方の定型文をまとめて1つの欄で使う
+  var resPresets   = PRESETS_MASTER[res.code] || {};
+  var condPresets  = resPresets['本人の様子'] || [];
+  var respPresets  = resPresets['対応']       || [];
+  var recordPresets = condPresets.concat(respPresets);
+  if (recordPresets.length === 0) {
+    recordPresets = DEFAULT_CONDITION_PRESETS.concat(DEFAULT_RESPONSE_PRESETS);
+  }
+
+  // 本人の様子・対応（1つにまとめた記録欄）
+  html += buildTextAreaField('本人の様子・対応', 'record-' + i, recordPresets);
+
+  card.innerHTML = html;
+  return card;
+}
+
+function buildTextAreaField(label, fieldId, presets) {
+  var btns = presets.map(function(p) {
+    return '<button type="button" class="preset-btn" onclick="insertPreset(\'' + fieldId + '\', \'' + p + '\')">' + esc(p) + '</button>';
+  }).join('');
+  return '<div class="field-group">'
+       + '<span class="field-label">' + esc(label) + '</span>'
+       + '<div class="preset-row">' + btns + '</div>'
+       + '<textarea id="' + fieldId + '" placeholder="入力してください"></textarea>'
+       + '</div>';
+}
+
+// ===================================================
+// 対象利用者の選択セクション生成・操作
+// ===================================================
+function buildSelectSection() {
+  var section = document.createElement('div');
+  section.className = 'select-section';
+
+  var html = '<h2>今日の対象利用者を選んでください</h2>';
+  html += '<div class="select-btn-row">';
+  html += '<button type="button" class="select-toggle-btn" onclick="selectAll()">全員チェック</button>';
+  html += '<button type="button" class="select-toggle-btn" onclick="selectNone()">全員解除</button>';
+  html += '</div>';
+  html += '<div class="resident-select-grid">';
+
+  RESIDENTS_MASTER.forEach(function(res, i) {
+    html += '<label class="resident-select-item">'
+          + '<input type="checkbox" id="sel-' + i + '" checked '
+          + 'onchange="toggleCard(' + i + ')">'
+          + '<span>' + esc(res.code) + '</span>'
+          + '</label>';
+  });
+
+  html += '</div>';
+  html += '<p id="selectCount">' + RESIDENTS_MASTER.length + ' 名 選択中</p>';
+  section.innerHTML = html;
+  return section;
+}
+
+function toggleCard(i) {
+  // チェック状態に応じてカードの表示・非表示を切り替える
+  var card    = document.getElementById('card-' + i);
+  var checked = document.getElementById('sel-' + i).checked;
+  if (card) card.style.display = checked ? '' : 'none';
+  updateSelectCount();
+}
+
+function selectAll() {
+  RESIDENTS_MASTER.forEach(function(_, i) {
+    var el = document.getElementById('sel-' + i);
+    if (el) el.checked = true;
+    var card = document.getElementById('card-' + i);
+    if (card) card.style.display = '';
+  });
+  updateSelectCount();
+}
+
+function selectNone() {
+  RESIDENTS_MASTER.forEach(function(_, i) {
+    var el = document.getElementById('sel-' + i);
+    if (el) el.checked = false;
+    var card = document.getElementById('card-' + i);
+    if (card) card.style.display = 'none';
+  });
+  updateSelectCount();
+}
+
+function updateSelectCount() {
+  // 何名選択中かをセクション下部に表示する
+  var count = RESIDENTS_MASTER.filter(function(_, i) {
+    var el = document.getElementById('sel-' + i);
+    return el && el.checked;
+  }).length;
+  var el = document.getElementById('selectCount');
+  if (el) el.textContent = count + ' 名 選択中';
+}
+
+// ===================================================
+// 共通時間の自動反映
+// ===================================================
+function applyCommonTime(type) {
+  var val = document.getElementById(type === 'leave' ? 'commonLeave' : 'commonReturn').value;
+  // 選択中（表示中）の利用者にだけ反映する
+  RESIDENTS_MASTER.forEach(function(_, i) {
+    var selEl = document.getElementById('sel-' + i);
+    if (!selEl || !selEl.checked) return;
+    var fieldId = (type === 'leave' ? 'leave-' : 'return-') + i;
+    var el = document.getElementById(fieldId);
+    if (el) el.value = val;
+  });
+}
+
+// ===================================================
+// 食事「未記載」トグル
+// ===================================================
+function toggleMealsUnknown(i) {
+  var btn   = document.getElementById('meals-unknown-btn-' + i);
+  var input = document.getElementById('meals-' + i);
+  var active = btn.classList.toggle('active');
+  input.disabled = active;
+  if (active) {
+    input.value = '';
+  } else {
+    input.value = '10';
+  }
+}
+
+// ===================================================
+// 定型文挿入
+// ===================================================
+function insertPreset(fieldId, text) {
+  var el = document.getElementById(fieldId);
+  el.value = el.value === '' ? text : el.value + '　' + text;
+  el.focus();
+}
+
+// ===================================================
+// 服薬タイミング文字列をパース
+// ===================================================
+function parseMedications(medStr) {
+  if (!medStr || medStr === 'なし') return [];
+  var result = [];
+  if (medStr.indexOf('朝') !== -1) result.push('朝');
+  if (medStr.indexOf('昼') !== -1) result.push('昼');
+  if (medStr.indexOf('夕') !== -1) result.push('夕');
+  return result;
+}
+
+// ===================================================
+// 送信処理
+// ===================================================
+function submitForm() {
+  var date      = document.getElementById('date').value;
+  var workStart = document.getElementById('workStart').value.trim();
+  var workEnd   = document.getElementById('workEnd').value.trim();
+  var recorder  = document.getElementById('recorder').value.trim();
+
+  if (!date || !workStart || !workEnd || !recorder) {
+    alert('日付・開始時間・終了時間・記録者名をすべて入力してください。');
+    return;
+  }
+
+  var workHours = workStart + '〜' + workEnd;
+
+  // チェックされた利用者だけを対象にする
+  var residentsData = [];
+  RESIDENTS_MASTER.forEach(function(res, i) {
+    var selEl = document.getElementById('sel-' + i);
+    if (!selEl || !selEl.checked) return;
+
+    var meds    = parseMedications(res.medication);
+    var checks  = CHECK_ITEMS_MASTER[res.code] || [];
+
+    // 服薬確認
+    var checkedMeds = meds.filter(function(t) {
+      var el = document.getElementById('med-' + i + '-' + t);
+      return el && el.checked;
+    });
+    var medicationStr = meds.length === 0
+      ? '服薬なし'
+      : (checkedMeds.length > 0 ? checkedMeds.join('・') + ' 確認済' : '未確認');
+
+    // 喫煙
+    var smokingStr = '－';
+    if (res.smoking === 'あり') {
+      var radios = document.querySelectorAll('input[name="smoking-' + i + '"]');
+      radios.forEach(function(r) { if (r.checked) smokingStr = r.value; });
+    }
+
+    // 業務チェック
+    var checkedItems = checks.filter(function(_, ci) {
+      var el = document.getElementById('chk-' + i + '-' + ci);
+      return el && el.checked;
+    });
+    var checkStr = checkedItems.length > 0 ? checkedItems.join('・') : '－';
+
+    // 食事
+    var isUnknown = document.getElementById('meals-unknown-btn-' + i).classList.contains('active');
+    var mealsStr  = isUnknown ? '－' : document.getElementById('meals-' + i).value + '割';
+
+    residentsData.push({
+      code:       res.code,
+      leaveTime:  (document.getElementById('leave-'  + i).value.trim()) || '－',
+      returnTime: (document.getElementById('return-' + i).value.trim()) || '－',
+      medication: medicationStr,
+      washing:    document.getElementById('washing-' + i).checked,
+      bathing:    document.getElementById('bathing-' + i).checked,
+      smoking:    smokingStr,
+      checkItems: checkStr,
+      meals:      mealsStr,
+      record:     document.getElementById('record-' + i).value.trim()
+    });
+  });
+
+  if (residentsData.length === 0) {
+    alert('対象利用者が選択されていません。\n上の選択欄で少なくとも1名をチェックしてください。');
+    return;
+  }
+
+  var payload = { date: date, workHours: workHours, recorder: recorder, residents: residentsData };
+
+  document.getElementById('submitBtn').disabled   = true;
+  document.getElementById('sendingMsg').style.display  = 'block';
+  document.getElementById('successMsg').style.display  = 'none';
+
+  google.script.run
+    .withSuccessHandler(function() {
+      document.getElementById('sendingMsg').style.display = 'none';
+      document.getElementById('successMsg').style.display = 'block';
+      document.getElementById('submitBtn').disabled = false;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      resetForm();
+    })
+    .withFailureHandler(function(err) {
+      document.getElementById('sendingMsg').style.display = 'none';
+      document.getElementById('submitBtn').disabled = false;
+      alert('送信に失敗しました。\n' + err.message);
+    })
+    .saveRecords(payload);
+}
+
+// ===================================================
+// フォームリセット
+// ===================================================
+function resetForm() {
+  var today = new Date();
+  document.getElementById('date').value       = formatDateInput(today);
+  document.getElementById('workStart').value  = '';
+  document.getElementById('workEnd').value    = '';
+  document.getElementById('recorder').value   = '';
+  document.getElementById('commonLeave').value  = '';
+  document.getElementById('commonReturn').value = '';
+
+  // 対象利用者の選択を全員チェックに戻し、全カードを再表示する
+  selectAll();
+
+  RESIDENTS_MASTER.forEach(function(res, i) {
+    document.getElementById('leave-'  + i).value = '';
+    document.getElementById('return-' + i).value = '';
+
+    // 服薬チェック解除
+    parseMedications(res.medication).forEach(function(t) {
+      var el = document.getElementById('med-' + i + '-' + t);
+      if (el) el.checked = false;
+    });
+
+    document.getElementById('washing-' + i).checked = false;
+    document.getElementById('bathing-' + i).checked = false;
+
+    // 喫煙リセット
+    if (res.smoking === 'あり') {
+      var noRadio = document.querySelector('input[name="smoking-' + i + '"][value="しなかった"]');
+      if (noRadio) noRadio.checked = true;
+    }
+
+    // 業務チェック解除
+    var checks = CHECK_ITEMS_MASTER[res.code] || [];
+    checks.forEach(function(_, ci) {
+      var el = document.getElementById('chk-' + i + '-' + ci);
+      if (el) el.checked = false;
+    });
+
+    // 食事リセット
+    var btn   = document.getElementById('meals-unknown-btn-' + i);
+    var input = document.getElementById('meals-' + i);
+    btn.classList.remove('active');
+    input.disabled = false;
+    input.value    = '10';
+
+    document.getElementById('record-' + i).value = '';
+  });
+}
+
+// ===================================================
+// ユーティリティ
+// ===================================================
+function formatDateInput(d) {
+  var yyyy = d.getFullYear();
+  var mm   = String(d.getMonth() + 1).padStart(2, '0');
+  var dd   = String(d.getDate()).padStart(2, '0');
+  return yyyy + '-' + mm + '-' + dd;
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>

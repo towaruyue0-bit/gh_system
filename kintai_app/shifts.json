@@ -1,0 +1,118 @@
+[
+  {
+    "id": "day_a",
+    "name": "早番",
+    "abbr": "早番",
+    "start": "14：00",
+    "end": "16：00",
+    "break_min": 0,
+    "is_night": false,
+    "color": "#ffacac"
+  },
+  {
+    "id": "day_b",
+    "name": "夕食帯A",
+    "abbr": "夕A",
+    "start": "16：00",
+    "end": "20：00",
+    "break_min": 0,
+    "is_night": false,
+    "color": "#DDEEFF"
+  },
+  {
+    "id": "shift_20260421095948",
+    "name": "夕食帯B",
+    "abbr": "夕B",
+    "start": "16：00",
+    "end": "21：00",
+    "break_min": 0,
+    "is_night": false,
+    "color": "#ddeeff"
+  },
+  {
+    "id": "shift_20260421100007",
+    "name": "夕食帯C",
+    "abbr": "夕C",
+    "start": "15：00",
+    "end": "20：00",
+    "break_min": 0,
+    "is_night": false,
+    "color": "#ddeeff"
+  },
+  {
+    "id": "night",
+    "name": "夜勤A",
+    "abbr": "夜A",
+    "start": "20：00",
+    "end": "8：00",
+    "break_min": 180,
+    "is_night": true,
+    "color": "#e8daff",
+    "break_start": "0:00"
+  },
+  {
+    "id": "shift_20260421094513",
+    "name": "夜勤B",
+    "abbr": "夜B",
+    "start": "20：00",
+    "end": "7：00",
+    "break_min": 180,
+    "is_night": true,
+    "color": "#e8daff",
+    "break_start": "0:00"
+  },
+  {
+    "id": "day_off",
+    "name": "公休",
+    "abbr": "休",
+    "start": "",
+    "end": "",
+    "break_min": 0,
+    "is_night": false,
+    "color": "#EEEEEE"
+  },
+  {
+    "id": "shift_20260421105929",
+    "name": "昼食帯A",
+    "abbr": "昼A",
+    "start": "8：00",
+    "end": "14：30",
+    "break_min": 60,
+    "break_start": "13：00",
+    "is_night": false,
+    "color": "#ffff80"
+  },
+  {
+    "id": "shift_20260421110006",
+    "name": "昼食帯B",
+    "abbr": "昼B",
+    "start": "8：00",
+    "end": "15：00",
+    "break_min": 60,
+    "break_start": "13：00",
+    "is_night": false,
+    "color": "#ffff80"
+  },
+  {
+    "id": "shift_20260421110054",
+    "name": "昼食帯C",
+    "abbr": "昼C",
+    "start": "8：00",
+    "end": "16：00",
+    "break_min": 60,
+    "break_start": "13：00",
+    "is_night": false,
+    "color": "#ffff80"
+  },
+  {
+    "id": "shift_20260422104443",
+    "name": "昼食帯D",
+    "abbr": "昼D",
+    "start": "10：00",
+    "end": "14：00",
+    "break_min": 0,
+    "break_start": "",
+    "is_night": false,
+    "color": "#ffff80"
+  }
+]

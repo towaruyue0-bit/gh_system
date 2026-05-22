@@ -1,0 +1,21 @@
+{
+  "region": "7級地",
+  "year": "2026",
+  "month": "5",
+  "default_wage": 1150,
+  "treatment_allowance": 250,
+  "breakfast_price": 430,
+  "lunch_price": 430,
+  "dinner_price": 430,
+  "night_start_h": 22,
+  "night_start_m": 0,
+  "night_end_h": 5,
+  "night_end_m": 0,
+  "night_break_min": 180,
+  "use_night_break": true,
+  "night_break_start_h": 0,
+  "night_break_start_m": 0,
+  "night_break_end_h": 3,
+  "night_break_end_m": 0,
+  "treatment": "処遇改善加算Ⅲ"
+}
