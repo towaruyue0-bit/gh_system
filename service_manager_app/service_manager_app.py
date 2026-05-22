@@ -12,9 +12,11 @@ from datetime import datetime
 # =============================================================================
 # パス設定
 # =============================================================================
-BASE_DIR = r"C:\Users\Public\gh_system"
-APP_DIR  = os.path.join(BASE_DIR, "service_manager_app")
-DB_PATH  = os.path.join(APP_DIR, "services.db")
+BASE_DIR     = r"C:\Users\Public\gh_system"
+APP_DIR      = os.path.join(BASE_DIR, "service_manager_app")
+PRIVATE_ROOT = r"C:\GH_Data"
+DATA_DIR     = os.path.join(PRIVATE_ROOT, "data")
+DB_PATH      = os.path.join(DATA_DIR, "services.db")
 
 FONT       = ("MS Gothic", 11)
 FONT_BOLD  = ("MS Gothic", 11, "bold")
@@ -41,6 +43,7 @@ LOGIN_METHODS = ["Google連携", "メール＋パスワード", "GitHub連携", 
 # =============================================================================
 
 def setup_database():
+    os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute("""

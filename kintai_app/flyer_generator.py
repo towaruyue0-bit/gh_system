@@ -602,8 +602,8 @@ class FlyerApp(tk.Tk):
                 merged = DEFAULT_SETTINGS.copy()
                 merged.update(saved)
                 return merged
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[flyer_generator] 設定ファイルの読み込みに失敗しました。デフォルト設定を使います: {e}")
         return DEFAULT_SETTINGS.copy()
 
     def _collect_from_ui(self):

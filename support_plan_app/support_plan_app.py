@@ -14,8 +14,6 @@ import webbrowser
 import tempfile
 import calendar
 from datetime import datetime, date
-from dateutil.relativedelta import relativedelta   # 月単位の計算に使用
-
 # relativedelta が使えない場合は標準ライブラリだけで代替する
 try:
     from dateutil.relativedelta import relativedelta

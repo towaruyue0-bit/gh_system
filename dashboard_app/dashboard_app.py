@@ -396,6 +396,8 @@ class DashboardApp(tk.Tk):
             )
             return
         conn = open_db(RESIDENTS_DB)
+        if not conn:
+            return
         rows = conn.execute(
             "SELECT id, name FROM residents WHERE status='入居中' ORDER BY room_number"
         ).fetchall()

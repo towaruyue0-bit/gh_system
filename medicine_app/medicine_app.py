@@ -101,20 +101,29 @@ def _migrate_db():
     cols = [row[1] for row in c.fetchall()]
     if "stock_pills" in cols and "stock_days" not in cols:
         # dose_countを使って日数に換算する（旧データ移行）
-        c.execute("ALTER TABLE medicine_inventory ADD COLUMN stock_days INTEGER DEFAULT 0")
-        c.execute("""
-            UPDATE medicine_inventory SET stock_days = (
-                SELECT CASE WHEN ms.dose_count > 0
-                            THEN mi2.stock_pills / ms.dose_count
-                            ELSE 0 END
-                FROM medicine_settings ms, medicine_inventory mi2
-                WHERE ms.resident_id = medicine_inventory.resident_id
-                  AND ms.time_slot   = medicine_inventory.time_slot
-                  AND mi2.id         = medicine_inventory.id
-            )
-        """)
-    elif "stock_pills" in cols:
-        pass  # stock_days既存 → そのまま
+        try:
+            c.execute("ALTER TABLE medicine_inventory ADD COLUMN stock_days INTEGER DEFAULT 0")
+            c.execute("""
+                UPDATE medicine_inventory SET stock_days = (
+                    SELECT CASE WHEN ms.dose_count > 0
+                                THEN mi2.stock_pills / ms.dose_count
+                                ELSE 0 END
+                    FROM medicine_settings ms, medicine_inventory mi2
+                    WHERE ms.resident_id = medicine_inventory.resident_id
+                      AND ms.time_slot   = medicine_inventory.time_slot
+                      AND mi2.id         = medicine_inventory.id
+                )
+            """)
+        except Exception as e:
+            conn.rollback()
+            conn.close()
+            from tkinter import messagebox
+            messagebox.showerror(
+                "データ移行エラー",
+                f"お薬在庫データの形式更新に失敗しました。\n"
+                f"データは変更されていません。\n\n"
+                f"エラー内容: {e}")
+            return
 
     # 操作履歴テーブル
     c.execute("""

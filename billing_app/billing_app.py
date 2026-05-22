@@ -180,7 +180,10 @@ def load_settings():
                 "zengin": {**DEFAULT_SETTINGS["zengin"], **data.get("zengin", {})},
             }
         except Exception:
-            pass
+            messagebox.showwarning(
+                "設定ファイル読み込みエラー",
+                "設定ファイルが壊れているためデフォルト設定で起動します。\n"
+                f"ファイル: {SETTINGS_FILE}")
     return {k: dict(v) for k, v in DEFAULT_SETTINGS.items()}
 
 def save_settings(s):

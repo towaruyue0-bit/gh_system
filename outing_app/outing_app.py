@@ -54,7 +54,11 @@ def load_settings():
             with open(SETTINGS_PATH, encoding="utf-8") as f:
                 defaults.update(json.load(f))
         except Exception:
-            pass
+            import tkinter.messagebox as mb
+            mb.showwarning(
+                "設定ファイル読み込みエラー",
+                "設定ファイルが壊れているためデフォルト設定で起動します。\n"
+                f"ファイル: {SETTINGS_PATH}")
     return defaults
 
 

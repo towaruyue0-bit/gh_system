@@ -390,7 +390,11 @@ class ContractPrintApp:
         結合PDFは temp フォルダに保存され、次回起動時に自動削除される。
         """
         if not PYWIN32_OK:
-            messagebox.showerror("エラー", "pywin32 がインストールされていません。")
+            messagebox.showerror(
+                "エラー",
+                "pywin32 がインストールされていません。\n"
+                "コマンドプロンプトで以下を実行してください:\n"
+                "  pip install pywin32")
             return
 
         targets = [item for item in self.file_items if item["checked"]]
@@ -522,7 +526,11 @@ class ContractPrintApp:
         Wordを閉じると変更は破棄され、元のファイルは変更されない。
         """
         if not PYWIN32_OK:
-            messagebox.showerror("エラー", "pywin32 がインストールされていません。")
+            messagebox.showerror(
+                "エラー",
+                "pywin32 がインストールされていません。\n"
+                "コマンドプロンプトで以下を実行してください:\n"
+                "  pip install pywin32")
             return
 
         if self.selected_idx is None:

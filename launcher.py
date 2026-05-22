@@ -130,7 +130,7 @@ DEFAULT_SETTINGS = {
             "items": [
                 {"name": "書類フォルダ",           "desc": "コワークで作成した書類の保存フォルダを開く",                           "path": "書類"},
                 {"name": "GH_Data フォルダ",       "desc": "入居者DBなど個人情報データの保存フォルダを開く",                       "path": r"C:\GH_Data"},
-                {"name": "gh_system フォルダ",     "desc": "管理システム本体のフォルダを開く（アプリの場所を確認したいとき）",     "path": r"C:\Users\tanak\Documents\gh_system"},
+                {"name": "gh_system フォルダ",     "desc": "管理システム本体のフォルダを開く（アプリの場所を確認したいとき）",     "path": BASE_DIR},
             ],
         },
         {
@@ -159,8 +159,8 @@ def load_settings():
         try:
             with open(SETTINGS_PATH, encoding="utf-8") as f:
                 return json.load(f)
-        except Exception:
-            pass  # 読み込み失敗時はデフォルトを使う
+        except Exception as e:
+            print(f"[launcher] 設定ファイルの読み込みに失敗しました。デフォルト設定を使います: {e}")
     return copy.deepcopy(DEFAULT_SETTINGS)
 
 
