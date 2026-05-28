@@ -372,8 +372,32 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   font-size: 13px;
   color: #276749;
+}
+.bought-bar-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.bought-submit-btn {
+  background: var(--green);
+  border: none;
+  border-radius: 99px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bought-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .bought-reset-btn {
   background: none;
@@ -475,7 +499,10 @@ body {
   <!-- 買い済みバー（1件以上買い済みのときだけ表示） -->
   <div class="bought-bar" id="bought-bar" style="display:none;">
     <span id="bought-count-text">0件 買い済み</span>
-    <button class="bought-reset-btn" onclick="resetBought()">🔄 買い物リセット</button>
+    <div class="bought-bar-btns">
+      <button class="bought-submit-btn" id="submit-bought-btn" onclick="submitBought()">📤 スプレッドシートに送信</button>
+      <button class="bought-reset-btn" onclick="resetBought()">🔄 リセット</button>
+    </div>
   </div>
 
   <!-- リスト本体 -->
@@ -522,6 +549,70 @@ function resetBought() {
   renderAll();
 }
 
+/**
+ * 買い済み品目をスプレッドシートに送信する。
+ * GASの doPost に action:'markBought' で送ることで、
+ * 在庫記録シートの該当行の優先度列を 'bought' に更新する。
+ * 元のチェックデータ（日付・品目名・結果など）は上書きされない。
+ */
+function submitBought() {
+  if (boughtKeys.size === 0) {
+    alert('まだ何も買い済みにしていません。');
+    return;
+  }
+  if (!state.gasUrl) {
+    alert('GAS URLが設定されていません。');
+    return;
+  }
+
+  // boughtKeys に一致するアイテムの詳細情報を state.rows から取得する
+  var boughtItems = state.rows.filter(function(r) {
+    return boughtKeys.has(itemKey(r));
+  }).map(function(r) {
+    return { name: r.name, tab: r.tab };
+  });
+
+  if (boughtItems.length === 0) {
+    alert('送信できる買い済みデータがありません。');
+    return;
+  }
+
+  var btn = document.getElementById('submit-bought-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>送信中…';
+
+  fetch(state.gasUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action: 'markBought',
+      // type 未指定（または 'default'）で在庫記録シートを対象にする
+      items: boughtItems
+    }),
+    redirect: 'follow'
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status === 'success') {
+        boughtKeys.clear();
+        saveBought();
+        // 送信完了後すぐにデータ取得して表示を更新する。
+        // GASはPOSTが完了してからレスポンスを返すため、
+        // 続けてGETしても bought 反映済みのデータが取れる。
+        fetchData();
+      } else {
+        alert('送信に失敗しました：' + (data.message || '不明なエラー'));
+        btn.disabled = false;
+        btn.innerHTML = '📤 スプレッドシートに送信';
+      }
+    })
+    .catch(function() {
+      alert('送信に失敗しました。GAS URLを確認してください。');
+      btn.disabled = false;
+      btn.innerHTML = '📤 スプレッドシートに送信';
+    });
+}
+
 /** クリックハンドラ用の一時配列（描画のたびに作り直す） */
 var _buyableItems = [];
 
@@ -531,7 +622,7 @@ var _buyableItems = [];
 
 /** アプリの状態（メモリ上に保持） */
 var state = {
-  gasUrl: '',       // GAS ウェブアプリURL
+  gasUrl: 'https://script.google.com/macros/s/AKfycbz7f2zJ_yk56v_dl8eebfiPHCVsmGOjEife1z4fvCLssK3QOLgJy3HypCNF-n6K_IAWUQ/exec', // GAS ウェブアプリURL
   lastDate: null,   // 最後に取得したチェック日
   lastMemo: '',     // 最後に取得した備考
   rows: [],         // 全品目のチェック結果
@@ -829,7 +920,7 @@ function renderAll() {
 /**
  * 各タブのカウントバッジを更新する。
  * 急ぎタブ   = 高優先（赤）の件数
- * 余裕ありタブ = 高+中の件数（そのタブで表示される件数に合わせる）
+ * 余裕ありタブ = 中優先（黄）の件数
  */
 function updateTabCounts() {
   var highCount = 0;
@@ -840,7 +931,7 @@ function updateTabCounts() {
     if (p === 'mid')  midCount++;
   });
   document.getElementById('count-high').textContent = highCount;
-  document.getElementById('count-mid').textContent  = highCount + midCount;
+  document.getElementById('count-mid').textContent  = midCount;
 }
 
 /**
@@ -995,7 +1086,7 @@ function renderList() {
   var filtered = state.rows.filter(function(r) {
     var p = priorityOf(r);
     if (state.tab === 'high') return p === 'high';
-    if (state.tab === 'mid')  return p === 'high' || p === 'mid';
+    if (state.tab === 'mid')  return p === 'mid';
     return true;
   });
 
