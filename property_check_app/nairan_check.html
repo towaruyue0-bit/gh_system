@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>物件内覧チェック表</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -38,6 +41,15 @@ body {
 }
 .page-header h1 { font-size: 20px; font-weight: 700; }
 .page-header p  { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+#save-indicator {
+  font-size: 11px;
+  margin-top: 6px;
+  opacity: 0.3;
+  transition: opacity 0.5s;
+  color: #a5f3d0;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
 
 /* ===== 物件情報カード ===== */
 .info-card {
@@ -339,6 +351,7 @@ body {
   .page-header { background: var(--blue) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .check-btn.selected { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .section-header { background: #f0f4fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #save-indicator { display: none; }
 }
 </style>
 </head>
@@ -349,6 +362,7 @@ body {
 <div class="page-header">
   <h1>🏠 物件内覧チェック表</h1>
   <p>グループホーム物件 内覧用チェックリスト</p>
+  <div id="save-indicator">✔ 自動保存済み</div>
 </div>
 
 <!-- 物件基本情報 -->
@@ -436,13 +450,10 @@ body {
 <!-- ===== 4. 居室確認 ===== -->
 <div class="section" id="s4">
   <div class="section-header" onclick="toggleSection('s4')">
-    <div class="section-title"><span class="section-icon">🚪</span>居室確認（各部屋）</div>
+    <div class="section-title"><span class="section-icon">🚪</span>居室確認</div>
     <span class="section-arrow">⌄</span>
   </div>
-  <div class="section-body" id="s4body">
-    <div id="roomList"></div>
-    <button class="add-room-btn" onclick="addRoom()">＋ 部屋を追加する</button>
-  </div>
+  <div class="section-body"></div>
 </div>
 
 <!-- ===== 5. バリアフリー ===== -->
@@ -472,10 +483,10 @@ body {
   <div class="section-body"></div>
 </div>
 
-<!-- ===== 8. 契約・管理 ===== -->
-<div class="section" id="s8">
-  <div class="section-header" onclick="toggleSection('s8')">
-    <div class="section-title"><span class="section-icon">📄</span>契約・管理面</div>
+<!-- ===== 9. 不動産屋への聞き取り ===== -->
+<div class="section" id="s9">
+  <div class="section-header" onclick="toggleSection('s9')">
+    <div class="section-title"><span class="section-icon">🗣</span>不動産屋への聞き取り確認</div>
     <span class="section-arrow">⌄</span>
   </div>
   <div class="section-body"></div>
@@ -498,7 +509,7 @@ body {
 
 <!-- 操作ボタン -->
 <button class="print-btn" onclick="printCheck()">🖨 PDF・印刷する</button>
-<button class="reset-btn" onclick="resetAll()">🔄 リセット（チェックをすべてクリア）</button>
+<button class="reset-btn" onclick="resetAll()">🔄 リセット（チェックをすべてクリア・保存データ削除）</button>
 
 </div><!-- /wrap -->
 
@@ -509,13 +520,10 @@ body {
 const SECTIONS = {
   s1: {
     items: [
-      { id: "loc_access",  label: "公共交通アクセス", sub: "最寄り駅・バス停からの距離・本数は適切か" },
-      { id: "loc_shop",    label: "生活施設（スーパー・コンビニ・薬局）", sub: "徒歩圏内または送迎で利用できる範囲にあるか" },
-      { id: "loc_hosp",    label: "医療機関（病院・クリニック）", sub: "通院に無理のない距離か" },
-      { id: "loc_env",     label: "周辺環境（騒音・臭い・治安）", sub: "住宅地として落ち着いた環境か" },
+      { id: "loc_env",     label: "周辺環境（騒音・臭い・治安）", sub: "住宅地として落ち着いた環境か。実際に現地で感じた印象を記録" },
       { id: "loc_park",    label: "駐車スペース", sub: "スタッフ・送迎車が停められる台数か" },
       { id: "loc_road",    label: "道路状況・接道", sub: "救急車・福祉車両が入れる道路幅か" },
-      { id: "loc_neigh",   label: "隣接施設・近隣", sub: "近隣住民への説明・理解が得やすい環境か" },
+      { id: "loc_neigh",   label: "隣接施設・近隣", sub: "隣に何があるか。工場・風俗・騒音源などがないか目視確認" },
     ]
   },
   s2: {
@@ -531,6 +539,8 @@ const SECTIONS = {
   s3: {
     items: [
       { id: "com_hall",    label: "玄関・廊下の広さ", sub: "車いす通行や複数人の出入りに対応できるか（廊下幅80cm以上推奨）" },
+      { id: "com_camera",  label: "廊下への見守りカメラ設置の可否", sub: "設置できる位置・高さがあるか。電源（コンセント）が近くにあるか確認" },
+      { id: "com_hallout", label: "廊下のコンセント位置・数", sub: "カメラ・センサー等を設置したい箇所の近くにコンセントがあるか" },
       { id: "com_living",  label: "リビング・ダイニングの広さ", sub: "入居者全員が利用できる十分なスペースがあるか" },
       { id: "com_kitchen", label: "キッチンの状態・広さ", sub: "調理・片付けができる設備があるか" },
       { id: "com_bath",    label: "浴室の広さ・状態", sub: "介助が必要な場合に対応できる広さか（要介護対応）" },
@@ -538,6 +548,16 @@ const SECTIONS = {
       { id: "com_toilet",  label: "トイレの数・広さ", sub: "入居者数に対して十分な数があるか（2つ以上推奨）" },
       { id: "com_laundry", label: "洗濯機置き場", sub: "洗濯機・乾燥機の設置スペースがあるか" },
       { id: "com_storage", label: "共用収納・倉庫", sub: "備品・消耗品の保管場所があるか" },
+    ]
+  },
+  s4: {
+    items: [
+      { id: "rm_size",    label: "各居室の広さ", sub: "GH基準: 1人あたり7.43㎡以上。各部屋の広さをメモ欄に記録しておく" },
+      { id: "rm_window",  label: "窓の有無・数", sub: "各居室に窓があるか。採光・換気が確保できるか" },
+      { id: "rm_outlet",  label: "コンセントの数・位置", sub: "家電・介護機器を考慮して十分な数があるか（2口×2箇所以上が目安）" },
+      { id: "rm_tvline",  label: "テレビ線（アンテナ端子）の有無", sub: "各居室にテレビ端子があるか、または配線が引き込み可能か" },
+      { id: "rm_storage", label: "収納スペース", sub: "クローゼット・押し入れなど個人の荷物が収まる収納があるか" },
+      { id: "rm_cond",    label: "床・壁・天井の状態", sub: "シミ・カビ・破損・においなど。リフォーム費用の見積もりに影響" },
     ]
   },
   s5: {
@@ -549,6 +569,7 @@ const SECTIONS = {
       { id: "bf_door",     label: "ドアの種類・幅", sub: "引き戸への変更が可能か、ドア幅は十分か" },
       { id: "bf_bath_in",  label: "浴室の入口段差", sub: "洗い場への段差が大きくないか、またぎ段の高さ" },
       { id: "bf_garden",   label: "庭・テラスの安全性", sub: "転落・迷い出しのリスクがないか" },
+      { id: "bf_reform",   label: "改修・リフォームの余地", sub: "手すり設置・段差解消・ドア変更など、必要な改修が物理的に可能そうか目視で判断" },
     ]
   },
   s6: {
@@ -564,34 +585,148 @@ const SECTIONS = {
   },
   s7: {
     items: [
-      { id: "sf_alarm",    label: "火災報知器", sub: "設置されているか。設置義務箇所（各居室・廊下・キッチン）の確認" },
-      { id: "sf_exit",     label: "避難経路・非常口", sub: "2方向避難が確保されているか。窓からの避難も含む" },
-      { id: "sf_ext",      label: "消火器", sub: "設置されているか。期限内か" },
-      { id: "sf_sprink",   label: "スプリンクラー", sub: "必要規模か確認。なければ設置工事の可否" },
-      { id: "sf_light",    label: "非常照明・誘導灯", sub: "設置されているか（一定規模以上の施設は義務）" },
-      { id: "sf_lock",     label: "施錠・防犯", sub: "玄関・窓の施錠状態、セキュリティの確認" },
+      { id: "sf_alarm",    label: "火災報知器", sub: "各居室・廊下・キッチンに設置されているか（戸建て住宅でも設置義務あり）" },
+      { id: "sf_exit",     label: "避難経路", sub: "2方向以上の脱出ルートが確保できそうか。窓からの避難も確認" },
+      { id: "sf_lock",     label: "施錠・防犯", sub: "玄関・窓の施錠状態。夜間の見通し・防犯環境も確認" },
     ]
   },
-  s8: {
+  s9: {
     items: [
-      { id: "con_owner",   label: "オーナー・管理会社の理解", sub: "障害者グループホームとしての利用を了承しているか" },
-      { id: "con_reform",  label: "改修・リフォームの可否", sub: "手すり設置・間取り変更などが認められるか" },
-      { id: "con_term",    label: "契約形態・契約期間", sub: "定期借家か普通借家か。長期利用が可能か" },
-      { id: "con_renew",   label: "更新条件・退去条件", sub: "突然の退去を求められるリスクがないか" },
-      { id: "con_cost",    label: "修繕費・原状回復の取り決め", sub: "退去時の費用負担の範囲が明確か" },
-      { id: "con_zoning",  label: "用途地域・法的制限", sub: "グループホーム設置可能な用途地域か（住居系・商業系は概ねOK）" },
+      { id: "inq_reason",   label: "売却理由の確認", sub: "なぜ売るのか背景を把握。売主が不動産業者の場合は仕入れ・転売目的かも確認" },
+      { id: "inq_handover", label: "引渡し時期・条件", sub: "いつ引渡し可能か。現況引渡しか、清掃・残置物撤去後か" },
+      { id: "inq_mortgage", label: "抵当権・担保権の有無", sub: "売主が不動産業者の場合も残債・仕入れローンの抵当権が残っていることがある。売買完了時に抹消されるか必ず確認" },
+      { id: "inq_defect",   label: "告知事項・瑕疵の有無", sub: "雨漏り・シロアリ・地盤沈下・事故物件など。物件状況確認書で必ず確認" },
+      { id: "inq_inspect",  label: "建物の劣化診断調査（ホームインスペクション）の有無", sub: "国認定の調査技術者による構造・雨漏り・シロアリ等の診断。実施済みなら報告書をもらう。未実施なら「依頼できますか？」と聞いてみる（費用目安5〜10万円）" },
+      { id: "inq_tax",      label: "固定資産税・都市計画税の年額", sub: "年間いくらかかるか。納税通知書のコピーをもらう" },
+      { id: "inq_history",  label: "修繕履歴・設備の経年状態", sub: "屋根・外壁・給湯器・水回りなど直近の修繕時期を確認" },
+      { id: "inq_trouble",  label: "近隣トラブルの有無", sub: "過去に騒音・境界・近隣住民との問題がなかったか" },
     ]
   }
 };
 
 // ===================================================
+// 状態管理・自動保存
+// ===================================================
+const LS_KEY = 'nairan_check_v1';
+const checkState = {};
+let saveTimer = null;
+let currentStars = 0;
+let roomCount = 0;
+
+function autoSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+}
+
+function doSave() {
+  const data = {
+    info: {},
+    checkState: Object.assign({}, checkState),
+    notes: {},
+    rooms: gatherRooms(),
+    stars: currentStars,
+    summaryNote: (document.getElementById('summaryNote') || {}).value || ''
+  };
+  ['addr','date','person','age','struct','price','area','layout','capacity'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (el) data.info[id] = el.value;
+  });
+  document.querySelectorAll('.check-note-area').forEach(function(el) {
+    if (el.id && el.id.startsWith('note_')) {
+      data.notes[el.id.slice(5)] = el.value;
+    }
+  });
+  try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {}
+  const ind = document.getElementById('save-indicator');
+  if (ind) {
+    ind.textContent = '✔ 自動保存済み';
+    ind.style.opacity = '1';
+    clearTimeout(ind._t);
+    ind._t = setTimeout(function() { ind.style.opacity = '0.3'; }, 2000);
+  }
+}
+
+function gatherRooms() {
+  const rooms = [];
+  for (let i = 1; i <= roomCount; i++) {
+    const room = document.getElementById('room_' + i);
+    if (!room) continue;
+    const ni = room.querySelector('.room-name-input');
+    const rl = document.getElementById('rl' + i);
+    const rw = document.getElementById('rw' + i);
+    const rs = document.getElementById('rs' + i);
+    const nt = document.getElementById('note_rm' + i);
+    rooms.push({
+      name:  ni ? ni.value : '',
+      l:     rl ? rl.value : '',
+      w:     rw ? rw.value : '',
+      s:     rs ? rs.value : '',
+      check: checkState['rm' + i] || null,
+      note:  nt ? nt.value : ''
+    });
+  }
+  return rooms;
+}
+
+function loadSaved() {
+  const raw = localStorage.getItem(LS_KEY);
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { return; }
+
+  // 物件情報
+  if (data.info) {
+    Object.keys(data.info).forEach(function(id) {
+      const el = document.getElementById(id);
+      if (el) el.value = data.info[id];
+    });
+  }
+
+  // チェック状態（居室以外）
+  if (data.checkState) {
+    Object.assign(checkState, data.checkState);
+    Object.keys(checkState).forEach(function(itemId) {
+      const type = checkState[itemId];
+      if (!type || itemId.startsWith('rm')) return;
+      const noteEl = document.getElementById('note_' + itemId);
+      if (!noteEl) return;
+      const item = noteEl.closest('.check-item');
+      if (!item) return;
+      const btn = item.querySelector('.check-btn.' + type);
+      if (btn) btn.classList.add('selected');
+    });
+  }
+
+  // メモ
+  if (data.notes) {
+    Object.keys(data.notes).forEach(function(id) {
+      const val = data.notes[id];
+      if (!val) return;
+      const el = document.getElementById('note_' + id);
+      if (el) { el.value = val; el.classList.add('visible'); }
+    });
+  }
+
+  // 星評価
+  if (data.stars) setStars(data.stars);
+
+  // 総合コメント
+  if (data.summaryNote) {
+    const el = document.getElementById('summaryNote');
+    if (el) el.value = data.summaryNote;
+  }
+
+}
+
+// ===================================================
 // セクションにアイテムを描画
 // ===================================================
 function buildSections() {
-  Object.entries(SECTIONS).forEach(([secId, sec]) => {
-    const body = document.querySelector(`#${secId} .section-body`);
+  Object.keys(SECTIONS).forEach(function(secId) {
+    const sec = SECTIONS[secId];
+    const body = document.querySelector('#' + secId + ' .section-body');
     if (!body) return;
-    sec.items.forEach(item => {
+    sec.items.forEach(function(item) {
       body.appendChild(buildCheckItem(item));
     });
   });
@@ -600,17 +735,17 @@ function buildSections() {
 function buildCheckItem(item) {
   const div = document.createElement('div');
   div.className = 'check-item';
-  div.innerHTML = `
-    <div class="check-label">${item.label}</div>
-    ${item.sub ? `<div class="check-sub">${item.sub}</div>` : ''}
-    <div class="check-btns">
-      <button class="check-btn ok"   onclick="selectBtn(this,'ok'  ,'${item.id}')">✅ 良好</button>
-      <button class="check-btn warn" onclick="selectBtn(this,'warn','${item.id}')">⚠️ 要確認</button>
-      <button class="check-btn ng"   onclick="selectBtn(this,'ng'  ,'${item.id}')">❌ 問題あり</button>
-      <button class="check-btn note" onclick="toggleNote('${item.id}')">📝 メモ</button>
-    </div>
-    <textarea class="check-note-area" id="note_${item.id}" placeholder="メモを入力..."></textarea>
-  `;
+  div.innerHTML =
+    '<div class="check-label">' + item.label + '</div>' +
+    (item.sub ? '<div class="check-sub">' + item.sub + '</div>' : '') +
+    '<div class="check-btns">' +
+      '<button class="check-btn ok"   onclick="selectBtn(this,\'ok\'  ,\'' + item.id + '\')">✅ 良好</button>' +
+      '<button class="check-btn warn" onclick="selectBtn(this,\'warn\',\'' + item.id + '\')">⚠️ 要確認</button>' +
+      '<button class="check-btn ng"   onclick="selectBtn(this,\'ng\'  ,\'' + item.id + '\')">❌ 問題あり</button>' +
+      '<button class="check-btn note" onclick="toggleNote(\'' + item.id + '\')">📝 メモ</button>' +
+    '</div>' +
+    '<textarea class="check-note-area" id="note_' + item.id + '" placeholder="メモを入力..."></textarea>';
+  div.querySelector('textarea').addEventListener('input', autoSave);
   return div;
 }
 
@@ -623,10 +758,11 @@ function toggleSection(id) {
 
 function selectBtn(btn, type, id) {
   const btns = btn.parentElement.querySelectorAll('.check-btn');
-  btns.forEach(b => {
-    if (b !== btn) b.classList.remove('selected');
-  });
+  const wasSelected = btn.classList.contains('selected');
+  btns.forEach(function(b) { if (b !== btn) b.classList.remove('selected'); });
   btn.classList.toggle('selected');
+  checkState[id] = wasSelected ? null : type;
+  autoSave();
 }
 
 function toggleNote(id) {
@@ -638,55 +774,81 @@ function toggleNote(id) {
 // ===================================================
 // 居室追加
 // ===================================================
-let roomCount = 0;
-function addRoom() {
+function addRoom(savedName, savedL, savedW, savedS, savedCheck, savedNote) {
   roomCount++;
   const n = roomCount;
   const div = document.createElement('div');
   div.className = 'room-item';
   div.id = 'room_' + n;
-  div.innerHTML = `
-    <div class="room-header">
-      <div class="room-label">🚪 居室 ${n}（部屋番号・名称: <input style="width:80px;border:none;border-bottom:1px solid #ccc;font-size:13px;outline:none;" placeholder="例:洋室A">）</div>
-      <button class="room-del-btn" onclick="document.getElementById('room_${n}').remove()">削除</button>
-    </div>
-    <div class="room-grid">
-      <div class="room-field">
-        <label>縦（m）</label>
-        <input type="number" step="0.01" placeholder="例: 3.5" id="rl${n}" oninput="calcArea(${n})">
-      </div>
-      <div class="room-field">
-        <label>横（m）</label>
-        <input type="number" step="0.01" placeholder="例: 2.7" id="rw${n}" oninput="calcArea(${n})">
-      </div>
-      <div class="room-field">
-        <label>収納（㎡）</label>
-        <input type="number" step="0.01" placeholder="例: 0.5" id="rs${n}" oninput="calcArea(${n})">
-      </div>
-    </div>
-    <div class="room-area-display" id="ra${n}">面積: 入力してください</div>
-    <div class="check-btns" style="margin-top:8px;">
-      <button class="check-btn ok"   onclick="selectBtn(this,'ok'  ,'rm${n}')">✅ 良好</button>
-      <button class="check-btn warn" onclick="selectBtn(this,'warn','rm${n}')">⚠️ 要確認</button>
-      <button class="check-btn ng"   onclick="selectBtn(this,'ng'  ,'rm${n}')">❌ 問題あり</button>
-      <button class="check-btn note" onclick="toggleNote('rm${n}')">📝 メモ</button>
-    </div>
-    <textarea class="check-note-area" id="note_rm${n}" placeholder="居室のメモ（採光・収納・状態など）"></textarea>
-  `;
+  div.innerHTML =
+    '<div class="room-header">' +
+      '<div class="room-label">🚪 居室 ' + n + '（部屋番号・名称: <input class="room-name-input" style="width:80px;border:none;border-bottom:1px solid #ccc;font-size:13px;outline:none;" placeholder="例:洋室A">）</div>' +
+      '<button class="room-del-btn" onclick="deleteRoom(' + n + ')">削除</button>' +
+    '</div>' +
+    '<div class="room-grid">' +
+      '<div class="room-field"><label>縦（m）</label><input type="number" step="0.01" placeholder="例: 3.5" id="rl' + n + '" oninput="calcArea(' + n + ');autoSave()"></div>' +
+      '<div class="room-field"><label>横（m）</label><input type="number" step="0.01" placeholder="例: 2.7" id="rw' + n + '" oninput="calcArea(' + n + ');autoSave()"></div>' +
+      '<div class="room-field"><label>収納（㎡）</label><input type="number" step="0.01" placeholder="例: 0.5" id="rs' + n + '" oninput="calcArea(' + n + ');autoSave()"></div>' +
+    '</div>' +
+    '<div class="room-area-display" id="ra' + n + '">面積: 入力してください</div>' +
+    '<div class="check-btns" style="margin-top:8px;">' +
+      '<button class="check-btn ok"   onclick="selectBtn(this,\'ok\'  ,\'rm' + n + '\')">✅ 良好</button>' +
+      '<button class="check-btn warn" onclick="selectBtn(this,\'warn\',\'rm' + n + '\')">⚠️ 要確認</button>' +
+      '<button class="check-btn ng"   onclick="selectBtn(this,\'ng\'  ,\'rm' + n + '\')">❌ 問題あり</button>' +
+      '<button class="check-btn note" onclick="toggleNote(\'rm' + n + '\')">📝 メモ</button>' +
+    '</div>' +
+    '<textarea class="check-note-area" id="note_rm' + n + '" placeholder="居室のメモ（採光・収納・状態など）"></textarea>';
+
   document.getElementById('roomList').appendChild(div);
+
+  // 保存データを復元
+  const ni = div.querySelector('.room-name-input');
+  if (ni) {
+    if (savedName) ni.value = savedName;
+    ni.addEventListener('input', autoSave);
+  }
+  const rl = document.getElementById('rl' + n);
+  const rw = document.getElementById('rw' + n);
+  const rs = document.getElementById('rs' + n);
+  if (rl && savedL) rl.value = savedL;
+  if (rw && savedW) rw.value = savedW;
+  if (rs && savedS) rs.value = savedS;
+  if (savedL || savedW) calcArea(n);
+
+  if (savedCheck) {
+    checkState['rm' + n] = savedCheck;
+    const btn = div.querySelector('.check-btn.' + savedCheck);
+    if (btn) btn.classList.add('selected');
+  }
+  const noteEl = document.getElementById('note_rm' + n);
+  if (noteEl) {
+    if (savedNote) { noteEl.value = savedNote; noteEl.classList.add('visible'); }
+    noteEl.addEventListener('input', autoSave);
+  }
+}
+
+function deleteRoom(n) {
+  const room = document.getElementById('room_' + n);
+  if (room) room.remove();
+  delete checkState['rm' + n];
+  autoSave();
 }
 
 function calcArea(n) {
-  const l = parseFloat(document.getElementById('rl'+n)?.value) || 0;
-  const w = parseFloat(document.getElementById('rw'+n)?.value) || 0;
-  const s = parseFloat(document.getElementById('rs'+n)?.value) || 0;
-  const el = document.getElementById('ra'+n);
+  const rl = document.getElementById('rl' + n);
+  const rw = document.getElementById('rw' + n);
+  const rs = document.getElementById('rs' + n);
+  const el = document.getElementById('ra' + n);
+  if (!el) return;
+  const l = parseFloat(rl ? rl.value : '') || 0;
+  const w = parseFloat(rw ? rw.value : '') || 0;
+  const s = parseFloat(rs ? rs.value : '') || 0;
   if (l && w) {
     const gross = (l * w).toFixed(2);
     const net   = (l * w - s).toFixed(2);
     const ok743 = parseFloat(net) >= 7.43;
     el.className = 'room-area-display' + (ok743 ? '' : ' ng');
-    el.textContent = `面積: ${gross}㎡（収納除く: ${net}㎡） → 基準(7.43㎡/人): ${ok743 ? '✅ OK' : '❌ 不足'}`;
+    el.textContent = '面積: ' + gross + '㎡（収納除く: ' + net + '㎡） → 基準(7.43㎡/人): ' + (ok743 ? '✅ OK' : '❌ 不足');
   } else {
     el.className = 'room-area-display';
     el.textContent = '面積: 入力してください';
@@ -696,20 +858,19 @@ function calcArea(n) {
 // ===================================================
 // 星評価
 // ===================================================
-let currentStars = 0;
 function setStars(n) {
   currentStars = n;
-  document.querySelectorAll('.eval-star').forEach((s, i) => {
+  document.querySelectorAll('.eval-star').forEach(function(s, i) {
     s.classList.toggle('active', i < n);
   });
+  autoSave();
 }
 
 // ===================================================
 // 印刷
 // ===================================================
 function printCheck() {
-  // 未入力メモ欄を印刷前に全開
-  document.querySelectorAll('.check-note-area').forEach(el => {
+  document.querySelectorAll('.check-note-area').forEach(function(el) {
     if (el.value) el.classList.add('visible');
   });
   window.print();
@@ -719,23 +880,33 @@ function printCheck() {
 // リセット
 // ===================================================
 function resetAll() {
-  if (!confirm('すべてのチェックをリセットしますか？')) return;
-  document.querySelectorAll('.check-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelectorAll('.check-note-area').forEach(a => { a.value = ''; a.classList.remove('visible'); });
-  document.querySelectorAll('.info-input').forEach(i => i.value = '');
+  if (!confirm('すべてのチェックをリセットしますか？\n（保存データも削除されます）')) return;
+  document.querySelectorAll('.check-btn').forEach(function(b) { b.classList.remove('selected'); });
+  document.querySelectorAll('.check-note-area').forEach(function(a) { a.value = ''; a.classList.remove('visible'); });
+  document.querySelectorAll('.info-input').forEach(function(i) { i.value = ''; });
   document.getElementById('summaryNote').value = '';
-  document.getElementById('roomList').innerHTML = '';
-  roomCount = 0;
-  setStars(0);
+  Object.keys(checkState).forEach(function(k) { delete checkState[k]; });
+  currentStars = 0;
+  document.querySelectorAll('.eval-star').forEach(function(s) { s.classList.remove('active'); });
+  try { localStorage.removeItem(LS_KEY); } catch(e) {}
+  document.getElementById('date').valueAsDate = new Date();
 }
 
 // ===================================================
 // 初期化
 // ===================================================
 buildSections();
-
-// 今日の日付をセット
 document.getElementById('date').valueAsDate = new Date();
+
+// 物件情報フィールドの自動保存
+['addr','date','person','age','struct','price','area','layout','capacity'].forEach(function(id) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', autoSave);
+});
+document.getElementById('summaryNote').addEventListener('input', autoSave);
+
+// 保存データを復元
+loadSaved();
 </script>
 </body>
 </html>

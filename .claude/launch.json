@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "launcher",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["serve_nocache.py", "8765", "."],
+      "port": 8765
+    },
+    {
+      "name": "area-measurement",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8766", "--directory", "area_measurement_app"],
+      "port": 8766
+    }
+  ]
+}
