@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>GH指定基準 事前確認</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:       #1D4ED8;
+  --blue-light: #EFF6FF;
+  --green:      #15803D;
+  --green-bg:   #F0FDF4;
+  --red:        #DC2626;
+  --red-bg:     #FEF2F2;
+  --yellow:     #D97706;
+  --yellow-bg:  #FFFBEB;
+  --gray:       #64748B;
+  --border:     #E2E8F0;
+  --radius:     12px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f4fb;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+#wrap { max-width: 640px; margin: 0 auto; padding: 16px 14px 80px; }
+
+/* ===== ヘッダー ===== */
+.page-header {
+  background: linear-gradient(135deg, #1D4ED8 0%, #7C3AED 100%);
+  color: white;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.page-header h1 { font-size: 19px; font-weight: 700; line-height: 1.4; }
+.page-header p  { font-size: 12px; opacity: 0.85; margin-top: 5px; }
+
+/* ===== 入力カード ===== */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 16px;
+  background: #fafcff;
+  border-bottom: 1.5px solid var(--border);
+  font-size: 15px;
+  font-weight: 700;
+}
+.card-body { padding: 14px 16px; }
+
+/* ===== 入力フォーム ===== */
+.field-group { margin-bottom: 10px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.field-label .req {
+  font-size: 10px;
+  background: var(--red);
+  color: white;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.field-input, .field-select, .field-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fafafa;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.field-input:focus, .field-select:focus, .field-textarea:focus {
+  border-color: var(--blue);
+  background: white;
+}
+.field-textarea { resize: vertical; min-height: 60px; }
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ===== 居室入力 ===== */
+.room-block {
+  background: #fffdf5;
+  border: 1.5px solid #FEF3C7;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.room-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.room-block-title { font-size: 14px; font-weight: 700; }
+.room-del-btn {
+  padding: 3px 10px;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  color: var(--red);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+.room-result {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.room-result.ok   { background: var(--green-bg);  color: var(--green); }
+.room-result.ng   { background: var(--red-bg);    color: var(--red); }
+.room-result.none { background: #f1f5f9;          color: var(--gray); }
+.add-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: #FFFBEB;
+  color: var(--yellow);
+  border: 1.5px dashed #FCD34D;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* ===== 共用設備チェック ===== */
+.facility-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.fac-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.12s;
+  background: white;
+}
+.fac-item.required { border-color: #FCA5A5; }
+.fac-item.checked  { background: var(--green-bg); border-color: #86EFAC; }
+.fac-item.required.checked { background: var(--green-bg); border-color: #86EFAC; }
+.fac-check { font-size: 18px; flex-shrink: 0; }
+.fac-info  { flex: 1; }
+.fac-name  { font-size: 13px; font-weight: 600; }
+.fac-req   { font-size: 10px; color: var(--red); font-weight: 700; }
+.fac-opt   { font-size: 10px; color: var(--gray); }
+
+/* ===== 判定パネル ===== */
+#resultPanel { display: none; }
+.result-header {
+  padding: 16px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  color: white;
+  text-align: center;
+}
+.result-header.pass { background: var(--green); }
+.result-header.fail { background: var(--red); }
+.result-header.warn { background: var(--yellow); }
+.result-header h2 { font-size: 22px; font-weight: 800; }
+.result-header p  { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+
+.result-body { padding: 14px 16px; }
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.result-item:last-child { border-bottom: none; }
+.result-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.result-text { flex: 1; }
+.result-name { font-size: 14px; font-weight: 700; }
+.result-detail { font-size: 12px; color: var(--gray); margin-top: 3px; line-height: 1.5; }
+.result-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.badge-ok   { background: var(--green-bg); color: var(--green); }
+.badge-ng   { background: var(--red-bg);   color: var(--red); }
+.badge-warn { background: var(--yellow-bg);color: var(--yellow); }
+
+/* ===== 書類下書き ===== */
+.doc-area {
+  background: #fafafa;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  word-break: break-all;
+  min-height: 200px;
+}
+.copy-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.judge-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #1D4ED8, #7C3AED);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.print-btn {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+.reset-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: white;
+  color: var(--gray);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== 情報バナー ===== */
+.info-banner {
+  background: var(--blue-light);
+  border: 1.5px solid #BFDBFE;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #1e40af;
+  margin-bottom: 14px;
+  line-height: 1.6;
+}
+.info-banner strong { font-weight: 700; }
+
+/* ===== タブ ===== */
+.tab-bar {
+  display: flex;
+  background: white;
+  border-radius: var(--radius);
+  padding: 4px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  gap: 4px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 9px 4px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--gray);
+  background: transparent;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-btn.active { background: var(--blue); color: white; }
+
+/* ===== 印刷 ===== */
+@media print {
+  @page { margin: 15mm 12mm; size: A4; }
+  body { background: white; font-size: 12px; }
+  #wrap { max-width: 100%; padding: 0; }
+  .judge-btn, .print-btn, .reset-btn, .copy-btn, .add-btn, .room-del-btn, .tab-bar { display: none !important; }
+  .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  .doc-area { border: 1px solid #ccc; background: white; }
+  #resultPanel { display: block !important; }
+  .page-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .result-header { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .badge-ok, .badge-ng, .badge-warn { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .fac-item.checked { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<!-- ヘッダー -->
+<div class="page-header">
+  <h1>📋 障害者GH 指定基準<br>事前確認シート</h1>
+  <p>共同生活援助（障害者総合支援法）物件適合確認</p>
+</div>
+
+<!-- 基準説明 -->
+<div class="info-banner">
+  <strong>📌 主な指定基準（障害者総合支援法 指定基準）</strong><br>
+  ・居室面積：収納・設備除く <strong>7.43㎡/人以上</strong>（1室1名が原則）<br>
+  ・共用設備：居間・食堂・台所（兼用可）、浴室、洗面所、便所が必須<br>
+  ・定員：共同生活住居ごとに <strong>2〜10名</strong>（サテライト型は1名）<br>
+  ・消防設備：消防法・建基法の適合確認が別途必要
+</div>
+
+<!-- タブ -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab1" onclick="switchTab(1)">① 情報入力</button>
+  <button class="tab-btn" id="tab2" onclick="switchTab(2)">② 判定結果</button>
+  <button class="tab-btn" id="tab3" onclick="switchTab(3)">③ 書類下書き</button>
+</div>
+
+<!-- ===== タブ1: 入力 ===== -->
+<div id="panel1">
+
+  <!-- 物件・事業者基本情報 -->
+  <div class="card">
+    <div class="card-header">🏢 物件・事業者基本情報</div>
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field-label">事業者名（法人名） <span class="req">必須</span></div>
+        <input class="field-input" type="text" id="orgName" placeholder="例: 社会福祉法人〇〇会">
+      </div>
+      <div class="field-group">
+        <div class="field-label">申請者氏名（施設管理者等）</div>
+        <input class="field-input" type="text" id="personName" placeholder="例: 田中 太郎">
+      </div>
+      <div class="field-group">
+        <div class="field-label">物件所在地（住所） <span class="req">必須</span></div>
+        <input class="field-input" type="text" id="propAddr" placeholder="例: 〇〇県〇〇市〇〇町1-2-3">
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">建物構造</div>
+          <select class="field-select" id="structure">
+            <option value="">選択してください</option>
+            <option value="木造">木造</option>
+            <option value="軽量鉄骨造">軽量鉄骨造</option>
+            <option value="重量鉄骨造">重量鉄骨造</option>
+            <option value="鉄筋コンクリート造(RC)">RC造（鉄筋コンクリート）</option>
+            <option value="鉄骨鉄筋コンクリート造(SRC)">SRC造</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <div class="field-label">築年数</div>
+          <input class="field-input" type="text" id="buildAge" placeholder="例: 築18年">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">階建て</div>
+          <input class="field-input" type="text" id="floors" placeholder="例: 2階建て">
+        </div>
+        <div class="field-group">
+          <div class="field-label">延床面積（㎡）</div>
+          <input class="field-input" type="number" step="0.01" id="totalArea" placeholder="例: 120">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 想定定員 -->
+  <div class="card">
+    <div class="card-header">👥 想定定員・ユニット</div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field-group">
+          <div class="field-label">想定定員（名） <span class="req">必須</span></div>
+          <input class="field-input" type="number" min="1" max="20" id="capacity" placeholder="例: 4">
+        </div>
+        <div class="field-group">
+          <div class="field-label">ユニット数</div>
+          <select class="field-select" id="unitCount">
+            <option value="1">1ユニット</option>
+            <option value="2">2ユニット</option>
+            <option value="3">3ユニット</option>
+            <option value="other">その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;font-size:12px;color:#92400e;margin-top:4px;">
+        ⚠️ 1ユニット（共同生活住居）の定員は <strong>2〜10名</strong> が原則です。
+        2ユニット以上の場合は住居間の距離等の要件も確認してください。
+      </div>
+    </div>
+  </div>
+
+  <!-- 居室面積入力 -->
+  <div class="card">
+    <div class="card-header">🚪 居室面積の確認</div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;line-height:1.6;">
+        居室ごとに縦・横の内法寸法を入力してください。<br>
+        収納（押入れ・クローゼット）の面積は <strong>居室面積から除外</strong> します（7.43㎡以上/人が必要）。
+      </div>
+      <div id="roomInputList"></div>
+      <button class="add-btn" onclick="addRoomInput()">＋ 居室を追加する</button>
+    </div>
+  </div>
+
+  <!-- 共用設備チェック -->
+  <div class="card">
+    <div class="card-header">🛋 共用設備の確認</div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:12px;">
+        ある設備にタップしてチェックを入れてください（赤枠 = 必須設備）。
+      </div>
+      <div class="facility-grid" id="facGrid"></div>
+    </div>
+  </div>
+
+  <!-- 消防・その他 -->
+  <div class="card">
+    <div class="card-header">🔥 消防・その他確認事項</div>
+    <div class="card-body">
+      <div class="field-group">
+        <div class="field-label">消防設備の状況</div>
+        <select class="field-select" id="fireEquip">
+          <option value="">選択してください</option>
+          <option value="完備">すべて設置済み（報知器・消火器等）</option>
+          <option value="一部">一部設置済み（追加工事が必要）</option>
+          <option value="未設置">未設置（新規設置が必要）</option>
+          <option value="確認中">確認中</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">用途地域</div>
+        <input class="field-input" type="text" id="zoning" placeholder="例: 第1種住居地域・無指定など">
+      </div>
+      <div class="field-group">
+        <div class="field-label">オーナーのGH利用承諾</div>
+        <select class="field-select" id="ownerConsent">
+          <option value="">選択してください</option>
+          <option value="承諾済み">承諾済み（書面あり）</option>
+          <option value="口頭承諾">口頭承諾（書面取得予定）</option>
+          <option value="確認中">確認中</option>
+          <option value="未確認">未確認</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">特記事項・懸念点</div>
+        <textarea class="field-textarea" id="specialNote" placeholder="改修が必要な箇所、確認が必要な事項などを記入してください"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <button class="judge-btn" onclick="runJudge()">🔍 判定する → 結果を確認</button>
+  <button class="reset-btn" onclick="resetAll()">🔄 入力をリセット</button>
+</div>
+
+<!-- ===== タブ2: 判定 ===== -->
+<div id="panel2" style="display:none;">
+  <div id="resultPanel" class="card">
+    <div class="result-header" id="resultHeader">
+      <h2 id="resultTitle">－</h2>
+      <p id="resultSub">判定を実行してください</p>
+    </div>
+    <div class="result-body" id="resultBody"></div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 PDF・印刷する</button>
+  <button class="reset-btn" onclick="switchTab(1)">← 入力に戻る</button>
+</div>
+
+<!-- ===== タブ3: 書類下書き ===== -->
+<div id="panel3" style="display:none;">
+  <div class="card">
+    <div class="card-header">📄 福祉課への事前相談 書類下書き</div>
+    <div class="card-body">
+      <div style="font-size:12px;color:var(--gray);margin-bottom:10px;line-height:1.6;">
+        入力内容をもとに下書きを生成します。<br>
+        コピー後、Word等に貼り付けて加筆・調整してご使用ください。<br>
+        <strong>※ 各県・市町村により書式が異なる場合があります。事前確認の上ご使用ください。</strong>
+      </div>
+      <div class="doc-area" id="docText">まず「① 情報入力」タブで情報を入力し、「判定する」ボタンを押してください。</div>
+      <button class="copy-btn" onclick="copyDoc()">📋 テキストをコピーする</button>
+    </div>
+  </div>
+  <button class="print-btn" onclick="window.print()">🖨 PDF・印刷する</button>
+  <button class="reset-btn" onclick="switchTab(1)">← 入力に戻る</button>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ===================================================
+// 設備定義
+// ===================================================
+const FACILITIES = [
+  { id: "living",   name: "居間（リビング）", req: true,  icon: "🛋", note: "居間と食堂は兼用可" },
+  { id: "dining",   name: "食堂・ダイニング", req: true,  icon: "🍽", note: "居間との兼用可" },
+  { id: "kitchen",  name: "台所・キッチン",   req: true,  icon: "🍳", note: "共同使用できること" },
+  { id: "bath",     name: "浴室・シャワー室", req: true,  icon: "🛁", note: "入浴設備があること" },
+  { id: "wash",     name: "洗面所",           req: true,  icon: "🪥", note: "洗面設備があること" },
+  { id: "toilet",   name: "便所（トイレ）",   req: true,  icon: "🚽", note: "共同使用できること" },
+  { id: "laundry",  name: "洗濯スペース",     req: false, icon: "🧺", note: "洗濯機置き場" },
+  { id: "storage",  name: "収納・物置",       req: false, icon: "📦", note: "共用収納" },
+];
+
+// ===================================================
+// 初期化
+// ===================================================
+let roomInputCount = 0;
+const facChecked = {};
+
+function init() {
+  // 設備グリッド
+  const grid = document.getElementById('facGrid');
+  FACILITIES.forEach(f => {
+    facChecked[f.id] = false;
+    const item = document.createElement('div');
+    item.className = 'fac-item' + (f.req ? ' required' : '');
+    item.id = 'fac_' + f.id;
+    item.innerHTML = `
+      <span class="fac-check">⬜</span>
+      <div class="fac-info">
+        <div class="fac-name">${f.icon} ${f.name}</div>
+        <div class="${f.req ? 'fac-req' : 'fac-opt'}">${f.req ? '必須' : '任意'} · ${f.note}</div>
+      </div>
+    `;
+    item.onclick = () => toggleFac(f.id);
+    grid.appendChild(item);
+  });
+  // 居室を1つ追加
+  addRoomInput();
+}
+
+function toggleFac(id) {
+  facChecked[id] = !facChecked[id];
+  const el = document.getElementById('fac_' + id);
+  const fac = FACILITIES.find(f => f.id === id);
+  el.classList.toggle('checked', facChecked[id]);
+  el.querySelector('.fac-check').textContent = facChecked[id] ? '✅' : '⬜';
+}
+
+// ===================================================
+// 居室入力追加
+// ===================================================
+function addRoomInput() {
+  roomInputCount++;
+  const n = roomInputCount;
+  const div = document.createElement('div');
+  div.className = 'room-block';
+  div.id = 'ri_' + n;
+  div.innerHTML = `
+    <div class="room-block-header">
+      <div class="room-block-title">🚪 居室 ${n}</div>
+      ${n > 1 ? `<button class="room-del-btn" onclick="document.getElementById('ri_${n}').remove()">削除</button>` : ''}
+    </div>
+    <div class="field-row three">
+      <div class="field-group">
+        <div class="field-label">縦（m）</div>
+        <input class="field-input" type="number" step="0.01" id="rl${n}" placeholder="3.5" oninput="calcRoomArea(${n})">
+      </div>
+      <div class="field-group">
+        <div class="field-label">横（m）</div>
+        <input class="field-input" type="number" step="0.01" id="rw${n}" placeholder="2.7" oninput="calcRoomArea(${n})">
+      </div>
+      <div class="field-group">
+        <div class="field-label">収納除外（㎡）</div>
+        <input class="field-input" type="number" step="0.01" id="rs${n}" placeholder="0.5" oninput="calcRoomArea(${n})">
+      </div>
+    </div>
+    <div class="room-result none" id="rr${n}">面積: 縦・横を入力してください</div>
+  `;
+  document.getElementById('roomInputList').appendChild(div);
+}
+
+function calcRoomArea(n) {
+  const l = parseFloat(document.getElementById('rl'+n)?.value) || 0;
+  const w = parseFloat(document.getElementById('rw'+n)?.value) || 0;
+  const s = parseFloat(document.getElementById('rs'+n)?.value) || 0;
+  const el = document.getElementById('rr'+n);
+  if (l > 0 && w > 0) {
+    const gross = (l * w).toFixed(2);
+    const net   = (l * w - s).toFixed(2);
+    const ok    = parseFloat(net) >= 7.43;
+    el.className = 'room-result ' + (ok ? 'ok' : 'ng');
+    el.textContent = `総面積: ${gross}㎡ ／ 有効面積（収納除く）: ${net}㎡ → ${ok ? '✅ 基準クリア（7.43㎡以上）' : '❌ 基準不足（7.43㎡未満）'}`;
+  } else {
+    el.className = 'room-result none';
+    el.textContent = '面積: 縦・横を入力してください';
+  }
+}
+
+// ===================================================
+// 居室データ収集
+// ===================================================
+function getRooms() {
+  const rooms = [];
+  for (let n = 1; n <= roomInputCount; n++) {
+    const el = document.getElementById('ri_'+n);
+    if (!el) continue;
+    const l = parseFloat(document.getElementById('rl'+n)?.value) || 0;
+    const w = parseFloat(document.getElementById('rw'+n)?.value) || 0;
+    const s = parseFloat(document.getElementById('rs'+n)?.value) || 0;
+    rooms.push({ n, l, w, s, gross: l*w, net: l*w-s });
+  }
+  return rooms;
+}
+
+// ===================================================
+// 判定ロジック
+// ===================================================
+function runJudge() {
+  const orgName    = document.getElementById('orgName').value.trim();
+  const propAddr   = document.getElementById('propAddr').value.trim();
+  const capacity   = parseInt(document.getElementById('capacity').value) || 0;
+  const rooms      = getRooms();
+  const unitCount  = document.getElementById('unitCount').value;
+  const fireEquip  = document.getElementById('fireEquip').value;
+  const ownerConsent = document.getElementById('ownerConsent').value;
+
+  const results = [];
+
+  // --- 1. 居室数 vs 定員 ---
+  const hasCapacity = capacity >= 1;
+  results.push({
+    name: '定員設定',
+    ok: hasCapacity && capacity >= 2 && capacity <= 10,
+    warn: hasCapacity && (capacity < 2 || capacity > 10),
+    detail: capacity
+      ? `設定定員: ${capacity}名 → ${capacity >= 2 && capacity <= 10 ? '基準内（2〜10名）' : capacity < 2 ? '2名未満（サテライト型以外は不可）' : '10名超（要ユニット分割検討）'}`
+      : '定員が未入力です',
+  });
+
+  // --- 2. 居室数の一致 ---
+  const validRooms = rooms.filter(r => r.l > 0 && r.w > 0);
+  results.push({
+    name: '居室数と定員の一致',
+    ok: validRooms.length >= capacity && capacity > 0,
+    warn: false,
+    detail: `入力居室数: ${validRooms.length}室 ／ 定員: ${capacity}名 → ${validRooms.length >= capacity && capacity > 0 ? '✅ 居室数 ≥ 定員（OK）' : '❌ 居室が定員に対して不足しています'}`,
+  });
+
+  // --- 3. 各居室面積 ---
+  const ngRooms = validRooms.filter(r => r.net < 7.43);
+  results.push({
+    name: '居室面積（7.43㎡/人以上）',
+    ok: ngRooms.length === 0 && validRooms.length > 0,
+    warn: false,
+    detail: validRooms.length === 0
+      ? '居室面積が未入力です'
+      : ngRooms.length === 0
+        ? `全${validRooms.length}室が基準（7.43㎡）をクリアしています`
+        : `${ngRooms.length}室が基準未満です: 居室${ngRooms.map(r=>r.n+'（'+r.net.toFixed(2)+'㎡）').join('、')}`,
+  });
+
+  // --- 4. 必須共用設備 ---
+  const reqFacs = FACILITIES.filter(f => f.req);
+  const missingFacs = reqFacs.filter(f => !facChecked[f.id]);
+  results.push({
+    name: '必須共用設備（居間・食堂・台所・浴室・洗面・便所）',
+    ok: missingFacs.length === 0,
+    warn: false,
+    detail: missingFacs.length === 0
+      ? '必須設備がすべて確認されています'
+      : `未確認の必須設備: ${missingFacs.map(f=>f.name).join('、')}`,
+  });
+
+  // --- 5. 消防設備 ---
+  results.push({
+    name: '消防設備',
+    ok: fireEquip === '完備',
+    warn: fireEquip === '一部' || fireEquip === '確認中',
+    detail: fireEquip
+      ? `状況: ${fireEquip} → ${fireEquip==='完備' ? '✅ 問題なし' : fireEquip==='一部' ? '⚠️ 追加設置が必要です' : fireEquip==='確認中' ? '⚠️ 確認が必要です' : '❌ 新規設置が必要です'}`
+      : '消防設備の状況が未入力です',
+  });
+
+  // --- 6. オーナー承諾 ---
+  results.push({
+    name: 'オーナー・管理会社の承諾',
+    ok: ownerConsent === '承諾済み（書面あり）' || ownerConsent === '承諾済み',
+    warn: ownerConsent === '口頭承諾' || ownerConsent === '確認中',
+    detail: ownerConsent
+      ? `状況: ${ownerConsent} → ${ownerConsent==='承諾済み（書面あり）'||ownerConsent==='承諾済み' ? '✅ OK' : ownerConsent==='口頭承諾' ? '⚠️ 書面による確認を取得してください' : '⚠️ 確認が必要です'}`
+      : 'オーナー承諾の確認が未入力です',
+  });
+
+  // --- 総合判定 ---
+  const ngCount   = results.filter(r => !r.ok && !r.warn).length;
+  const warnCount = results.filter(r => r.warn).length;
+  let overallClass, overallTitle, overallSub;
+  if (ngCount === 0 && warnCount === 0) {
+    overallClass = 'pass';
+    overallTitle = '✅ 基準クリア見込み';
+    overallSub   = '入力された情報では基準を満たしています。正式申請に進んでください。';
+  } else if (ngCount === 0) {
+    overallClass = 'warn';
+    overallTitle = '⚠️ 要確認事項あり';
+    overallSub   = `${warnCount}件の確認・調整が必要です。担当窓口と相談してください。`;
+  } else {
+    overallClass = 'fail';
+    overallTitle = '❌ 基準を満たしていない項目あり';
+    overallSub   = `${ngCount}件の改善が必要です。物件・設計の見直しを検討してください。`;
+  }
+
+  // --- 結果表示 ---
+  const header = document.getElementById('resultHeader');
+  header.className = 'result-header ' + overallClass;
+  document.getElementById('resultTitle').textContent = overallTitle;
+  document.getElementById('resultSub').textContent   = overallSub;
+
+  const body = document.getElementById('resultBody');
+  body.innerHTML = '';
+  results.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'result-item';
+    const icon  = r.ok ? '✅' : r.warn ? '⚠️' : '❌';
+    const badge = r.ok ? '<span class="result-badge badge-ok">OK</span>' :
+                  r.warn ? '<span class="result-badge badge-warn">要確認</span>' :
+                           '<span class="result-badge badge-ng">NG</span>';
+    row.innerHTML = `
+      <span class="result-icon">${icon}</span>
+      <div class="result-text">
+        <div class="result-name">${r.name}</div>
+        <div class="result-detail">${r.detail}</div>
+      </div>
+      ${badge}
+    `;
+    body.appendChild(row);
+  });
+  document.getElementById('resultPanel').style.display = 'block';
+
+  // --- 書類下書き生成 ---
+  generateDoc(results, overallTitle);
+
+  switchTab(2);
+}
+
+// ===================================================
+// 書類下書き生成
+// ===================================================
+function generateDoc(results, overallTitle) {
+  const now    = new Date();
+  const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+  const orgName  = document.getElementById('orgName').value || '（事業者名）';
+  const person   = document.getElementById('personName').value || '';
+  const addr     = document.getElementById('propAddr').value || '（住所）';
+  const capacity = document.getElementById('capacity').value || '';
+  const struct   = document.getElementById('structure').value || '';
+  const age      = document.getElementById('buildAge').value || '';
+  const floors   = document.getElementById('floors').value || '';
+  const totalArea= document.getElementById('totalArea').value ? document.getElementById('totalArea').value + '㎡' : '';
+  const special  = document.getElementById('specialNote').value || 'なし';
+  const rooms    = getRooms().filter(r => r.l > 0 && r.w > 0);
+
+  const roomLines = rooms.map(r =>
+    `      ・居室${r.n}: 縦${r.l}m × 横${r.w}m ＝ 総面積${r.gross.toFixed(2)}㎡（有効面積: ${r.net.toFixed(2)}㎡）` +
+    (r.net >= 7.43 ? '' : ' ※基準未満')
+  ).join('\n');
+
+  const facLines = FACILITIES.filter(f => facChecked[f.id])
+    .map(f => `      ・${f.name}`).join('\n') || '      （確認中）';
+
+  const text = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+障害者グループホーム 物件事前確認シート
+（共同生活援助 指定基準確認用）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+作成日：${dateStr}
+事業者名：${orgName}
+担当者：${person}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+１．物件概要
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  所在地    ：${addr}
+  建物構造  ：${struct}
+  築年数    ：${age}
+  階建て    ：${floors}
+  延床面積  ：${totalArea}
+  想定定員  ：${capacity}名
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+２．居室面積（基準：7.43㎡/人以上）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${roomLines || '      （未入力）'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+３．共用設備の確認状況
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+【確認済みの設備】
+${facLines}
+
+  ＊必須設備：居間・食堂・台所（兼用可）・浴室・洗面所・便所
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+４．消防・安全設備
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  消防設備の状況：${document.getElementById('fireEquip').value || '（確認中）'}
+  用途地域      ：${document.getElementById('zoning').value || '（確認中）'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+５．オーナー・管理会社との調整
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  承諾状況：${document.getElementById('ownerConsent').value || '（確認中）'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+６．総合判定
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ${overallTitle}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+７．特記事項・確認が必要な事項
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${special}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+※ 本シートは事前相談用の参考資料です。
+  正式な指定基準は各都道府県の担当窓口に
+  必ずご確認ください。
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+  document.getElementById('docText').textContent = text;
+}
+
+// ===================================================
+// コピー
+// ===================================================
+function copyDoc() {
+  const text = document.getElementById('docText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    const orig = btn.textContent;
+    btn.textContent = '✅ コピーしました！';
+    setTimeout(() => btn.textContent = orig, 2000);
+  }).catch(() => {
+    alert('コピーに失敗しました。テキストを手動で選択してコピーしてください。');
+  });
+}
+
+// ===================================================
+// タブ切替
+// ===================================================
+function switchTab(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('panel'+i).style.display = i === n ? '' : 'none';
+    document.getElementById('tab'+i).classList.toggle('active', i === n);
+  });
+  window.scrollTo(0,0);
+}
+
+// ===================================================
+// リセット
+// ===================================================
+function resetAll() {
+  if (!confirm('すべての入力をリセットしますか？')) return;
+  document.querySelectorAll('.field-input, .field-textarea').forEach(el => el.value = '');
+  document.querySelectorAll('.field-select').forEach(el => el.selectedIndex = 0);
+  FACILITIES.forEach(f => {
+    facChecked[f.id] = false;
+    const el = document.getElementById('fac_' + f.id);
+    if (el) { el.classList.remove('checked'); el.querySelector('.fac-check').textContent = '⬜'; }
+  });
+  document.getElementById('roomInputList').innerHTML = '';
+  roomInputCount = 0;
+  addRoomInput();
+  document.getElementById('docText').textContent = 'まず「① 情報入力」タブで情報を入力し、「判定する」ボタンを押してください。';
+  switchTab(1);
+}
+
+// ===================================================
+// 初期化実行
+// ===================================================
+init();
+</script>
+</body>
+</html>

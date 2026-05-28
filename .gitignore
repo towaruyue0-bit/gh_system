@@ -33,3 +33,14 @@ desktop.ini
 
 # ランチャー設定（ローカル環境依存）
 launcher_settings.json
+
+# デバッグログ
+*.log
+*_debug.txt
+*_test.txt
+
+# Netlify設定
+.netlify/
+
+# スケジュール受信フォルダ（ローカル専用）
+schedule_inbox/

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>運営方針ツール</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f4fb;
+  min-height: 100vh;
+}
+
+:root {
+  --blue:         #1D4ED8;
+  --blue-light:   #EFF6FF;
+  --green:        #15803D;
+  --green-light:  #F0FDF4;
+  --purple:       #7C3AED;
+  --purple-light: #F5F3FF;
+  --orange:       #C2410C;
+  --orange-light: #FFF7ED;
+  --teal:         #0F766E;
+  --teal-light:   #F0FDFA;
+  --gray:         #64748B;
+  --bg:           #ffffff;
+  --bg2:          #f8f8f6;
+  --text:         #1a1a1a;
+  --text2:        #64748B;
+  --text3:        #94A3B8;
+  --border:       rgba(0,0,0,0.09);
+  --radius:       16px;
+  --radius-sm:    10px;
+}
+
+/* ========== レイアウト ========== */
+#app {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* ========== ヘッダー ========== */
+.app-header {
+  text-align: center;
+  padding: 28px 0 24px;
+}
+.app-header-icon {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+.app-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.app-sub {
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 4px;
+}
+
+/* ========== 戻るリンク ========== */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text3);
+  text-decoration: none;
+  padding: 6px 4px;
+  margin-bottom: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-link:active { opacity: 0.6; }
+
+/* ========== グループ ========== */
+.group {
+  margin-bottom: 20px;
+}
+.group-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+/* ========== カード ========== */
+.card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ========== アプリ行 ========== */
+.app-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+.app-link:last-child {
+  border-bottom: none;
+}
+.app-link:active {
+  background: var(--bg2);
+}
+
+/* 準備中リンク */
+.app-link.coming-soon {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+.app-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-blue   { background: var(--blue-light); }
+.icon-green  { background: var(--green-light); }
+.icon-purple { background: var(--purple-light); }
+.icon-orange { background: var(--orange-light); }
+.icon-teal   { background: var(--teal-light); }
+
+.app-info {
+  flex: 1;
+}
+.app-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge-new {
+  font-size: 10px;
+  font-weight: 700;
+  background: #DCFCE7;
+  color: #15803D;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+.badge-coming {
+  font-size: 10px;
+  font-weight: 700;
+  background: #F1F5F9;
+  color: #94A3B8;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.app-desc {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+.app-arrow {
+  font-size: 18px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+/* ========== フッター ========== */
+.footer {
+  text-align: center;
+  padding-top: 24px;
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- 戻るリンク -->
+  <a class="back-link" href="../index.html">‹ ホーム管理メニューへ戻る</a>
+
+  <!-- ヘッダー -->
+  <div class="app-header">
+    <div class="app-header-icon">📊</div>
+    <div class="app-title">運営方針ツール</div>
+    <div class="app-sub">GH経営の判断・計画に使うシミュレーターを集めました</div>
+  </div>
+
+  <!-- ===== 収支・資金計画 ===== -->
+  <div class="group">
+    <div class="group-label">💰 収支・資金計画</div>
+    <div class="card">
+
+      <a class="app-link" href="expansion_plan.html">
+        <div class="app-icon icon-purple">🏗</div>
+        <div class="app-info">
+          <div class="app-name">GH拡大プラン <span class="badge-new">NEW</span></div>
+          <div class="app-desc">新規ホームの開設タイミングと複数年の収支を計画する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-link" href="cashflow_planner.html">
+        <div class="app-icon icon-green">📅</div>
+        <div class="app-info">
+          <div class="app-name">月次キャッシュフロー計画</div>
+          <div class="app-desc">月ごとの収支・資金繰りを計画・確認する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-link" href="real_estate_simulator.html">
+        <div class="app-icon icon-blue">🏠</div>
+        <div class="app-info">
+          <div class="app-name">GH不動産投資シミュレーター</div>
+          <div class="app-desc">新築GHの採算性・収支・固定資産税を総合シミュレーション</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== 合同会社・不動産 ===== -->
+  <div class="group">
+    <div class="group-label">🏢 合同会社・不動産取得</div>
+    <div class="card">
+
+      <a class="app-link" href="property_plan.html">
+        <div class="app-icon icon-teal">🏢</div>
+        <div class="app-info">
+          <div class="app-name">不動産取得プラン（合同会社）<span class="badge-new">NEW</span></div>
+          <div class="app-desc">自己資金・頭金・借入から物件取得タイミングと手元資金を計画する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== 定員・稼働計画（今後追加） ===== -->
+  <div class="group">
+    <div class="group-label">🏡 定員・稼働計画</div>
+    <div class="card">
+
+      <a class="app-link coming-soon" href="#">
+        <div class="app-icon icon-purple">👥</div>
+        <div class="app-info">
+          <div class="app-name">入居率・稼働シミュレーター <span class="badge-coming">準備中</span></div>
+          <div class="app-desc">入居率の変化が収支に与える影響を試算する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-link coming-soon" href="#">
+        <div class="app-icon icon-orange">📈</div>
+        <div class="app-info">
+          <div class="app-name">加算シミュレーター <span class="badge-coming">準備中</span></div>
+          <div class="app-desc">体制加算・処遇改善加算を試算して収入を最適化する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== 人件費計画（今後追加） ===== -->
+  <div class="group">
+    <div class="group-label">👤 人件費・労務計画</div>
+    <div class="card">
+
+      <a class="app-link coming-soon" href="#">
+        <div class="app-icon icon-teal">💼</div>
+        <div class="app-info">
+          <div class="app-name">人件費率シミュレーター <span class="badge-coming">準備中</span></div>
+          <div class="app-desc">職員構成・シフトと人件費率の関係を可視化する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+    新しいツールを追加するときは<br>
+    management_app/index.html にリンクを1行足してください
+  </div>
+
+</div>
+
+</body>
+</html>

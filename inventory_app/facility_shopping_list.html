@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ホーム備品 買い物リスト</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f4fb;
+  min-height: 100vh;
+}
+
+:root {
+  --blue:         #1D4ED8;
+  --blue-light:   #EFF6FF;
+  --blue-mid:     #3B82F6;
+  --red:          #C0392B;
+  --red-light:    #FDECEA;
+  --orange:       #D35400;
+  --orange-light: #FEF3EB;
+  --gray:         #666;
+  --bg:           #ffffff;
+  --bg2:          #f8f8f6;
+  --bg3:          #eeeee9;
+  --text:         #1a1a1a;
+  --text2:        #666660;
+  --text3:        #999990;
+  --border:       rgba(0,0,0,0.1);
+  --border2:      rgba(0,0,0,0.18);
+  --radius:       14px;
+  --radius-sm:    8px;
+}
+
+/* ========== レイアウト ========== */
+#app { max-width: 860px; margin: 0 auto; padding: 16px; }
+
+/* ========== ヘッダー ========== */
+.app-header {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.header-left { flex: 1; }
+.app-title { font-size: 20px; font-weight: 600; color: var(--text); }
+.app-sub { font-size: 13px; color: var(--text2); margin-top: 3px; }
+.header-btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ========== ボタン ========== */
+.btn {
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.8; }
+.btn-primary { background: var(--blue); color: white; }
+.btn-outline {
+  background: none;
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.btn-outline:hover { background: var(--bg2); }
+.btn-sm { padding: 8px 14px; font-size: 13px; }
+
+/* ========== URL設定パネル ========== */
+.setup-card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  text-align: center;
+}
+.setup-icon { font-size: 36px; margin-bottom: 12px; }
+.setup-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.setup-desc { font-size: 13px; color: var(--text2); margin-bottom: 18px; line-height: 1.6; }
+.url-input-row { display: flex; gap: 8px; }
+.url-input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+}
+.url-input:focus { outline: 2px solid var(--blue); border-color: transparent; }
+
+/* ========== ステータスバー ========== */
+.status-bar {
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--text3);
+}
+.status-dot.ok { background: #27AE60; }
+.status-dot.loading {
+  background: var(--blue);
+  animation: pulse 1s infinite;
+}
+.status-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+/* ========== タブ ========== */
+.tab-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 11px 8px;
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+#tab-high {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--red-light);
+}
+#tab-high.active {
+  background: var(--red);
+  color: white;
+}
+#tab-mid {
+  border-color: var(--orange);
+  color: var(--orange);
+  background: var(--orange-light);
+}
+#tab-mid.active {
+  background: var(--orange);
+  color: white;
+}
+#tab-all {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-light);
+}
+#tab-all.active {
+  background: var(--blue);
+  color: white;
+}
+.tab-count {
+  display: inline-block;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 99px;
+  padding: 1px 7px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+#tab-high .tab-count { background: var(--red); }
+#tab-mid  .tab-count { background: var(--orange); }
+#tab-all  .tab-count { background: var(--blue); }
+#tab-high.active .tab-count { background: white; color: var(--red); }
+#tab-mid.active  .tab-count { background: white; color: var(--orange); }
+#tab-all.active  .tab-count { background: white; color: var(--blue); }
+
+.tab-btn.active {
+  background: #2D3748;
+  border-color: #2D3748;
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== 店舗カード ========== */
+.store-card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+.store-header {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.store-header:active { opacity: 0.85; }
+.store-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+.store-badge {
+  font-size: 13px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.count-high {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--red);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.count-mid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--orange);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.count-low {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  border-radius: 99px;
+  background: var(--blue);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 8px;
+}
+.chevron { font-size: 16px; color: var(--text3); transition: transform 0.2s; }
+.chevron.open { transform: rotate(90deg); }
+
+.store-body { display: none; border-top: 1px solid var(--border); }
+.store-body.open { display: block; }
+
+/* ========== カテゴリ区切り ========== */
+.cat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 10px 20px 4px;
+}
+
+/* ========== 品目行 ========== */
+.item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.item-row:last-child { border-bottom: none; }
+.item-row:active { background: #F7FAFC; }
+.item-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+.item-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+/* ========== バッジ ========== */
+.badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+.badge-high  { background: var(--red-light);    color: var(--red); }
+.badge-mid   { background: var(--orange-light); color: var(--orange); }
+.badge-low   { background: var(--blue-light);   color: var(--blue); }
+.badge-skip  { background: var(--bg3);          color: var(--text3); }
+
+/* ========== 空状態 ========== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--text2);
+}
+.empty-icon { font-size: 44px; margin-bottom: 12px; }
+.empty-title { font-size: 17px; font-weight: 500; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; line-height: 1.6; }
+
+/* ========== 備考 ========== */
+.memo-card {
+  background: #FFFBEB;
+  border: 1px solid #F9C74F;
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #7D6008;
+  display: none;
+}
+.memo-card.show { display: block; }
+.memo-label { font-size: 11px; font-weight: 600; color: #9A7D0A; margin-bottom: 4px; }
+
+/* ========== ローディングスピナー ========== */
+.spinner {
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== 買い済みバー ========== */
+.bought-bar {
+  background: var(--blue-light);
+  border: 1px solid #BFDBFE;
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--blue);
+}
+.bought-bar-btns {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.bought-submit-btn {
+  background: var(--blue);
+  border: none;
+  border-radius: 99px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.bought-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.bought-reset-btn {
+  background: none;
+  border: 1px solid var(--blue);
+  border-radius: 99px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========== 設定リンク ========== */
+.settings-link {
+  font-size: 12px;
+  color: var(--text3);
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.settings-link:hover { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ヘッダー -->
+  <div class="app-header">
+    <div class="header-left">
+      <div class="app-title">ホーム備品 買い物リスト</div>
+      <div class="app-sub" id="header-sub">データを取得してください</div>
+    </div>
+    <div class="header-btns">
+      <button class="btn btn-outline btn-sm" onclick="showSetup()">⚙ URL設定</button>
+      <button class="btn btn-primary btn-sm" id="refresh-btn" onclick="fetchData()">データを取得</button>
+    </div>
+  </div>
+
+  <!-- URL設定パネル（初回表示） -->
+  <div id="setup-panel" style="display:none;">
+    <div class="setup-card">
+      <div class="setup-icon">🔗</div>
+      <div class="setup-title">GAS URLを設定してください</div>
+      <div class="setup-desc">
+        ホーム備品 在庫チェックアプリと同じ<br>
+        「GAS ウェブアプリURL」を貼り付けてください。<br>
+        備品専用シートのデータが自動で読み込まれます。<br>
+        （一度設定すれば次回から自動で読み込まれます）
+      </div>
+      <div class="url-input-row">
+        <input type="url" id="gas-url-input" class="url-input"
+               placeholder="https://script.google.com/macros/s/...">
+        <button class="btn btn-primary" onclick="saveUrl()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ステータスバー -->
+  <div class="status-bar" id="status-bar" style="display:none;">
+    <div>
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">-</span>
+    </div>
+    <button class="settings-link" onclick="showSetup()">URLを変更</button>
+  </div>
+
+  <!-- 備考 -->
+  <div class="memo-card" id="memo-card">
+    <div class="memo-label">備考・申し送り</div>
+    <div id="memo-text"></div>
+  </div>
+
+  <!-- タブ：優先度で表示を切り替える -->
+  <div class="tab-bar" id="tab-bar" style="display:none;">
+    <button class="tab-btn active" id="tab-high" onclick="switchTab('high')">
+      急ぎ <span class="tab-count" id="count-high">0</span>
+    </button>
+    <button class="tab-btn" id="tab-mid" onclick="switchTab('mid')">
+      余裕あり <span class="tab-count" id="count-mid">0</span>
+    </button>
+    <button class="tab-btn" id="tab-all" onclick="switchTab('all')">
+      全て
+    </button>
+  </div>
+
+  <!-- 店舗タブ（2店舗以上あるときだけ表示） -->
+  <div class="tab-bar" id="store-tab-bar" style="display:none;"></div>
+
+  <!-- 買い済みバー（1件以上買い済みのときだけ表示） -->
+  <div class="bought-bar" id="bought-bar" style="display:none;">
+    <span id="bought-count-text">0件 買い済み</span>
+    <div class="bought-bar-btns">
+      <button class="bought-submit-btn" id="submit-bought-btn" onclick="submitBought()">📤 スプレッドシートに送信</button>
+      <button class="bought-reset-btn" onclick="resetBought()">🔄 リセット</button>
+    </div>
+  </div>
+
+  <!-- リスト本体 -->
+  <div id="list-area"></div>
+
+</div>
+
+<script>
+'use strict';
+
+// 備品専用のlocalStorageキー（食材・個人用品と混ざらないように分ける）
+var STORAGE_KEY       = 'facility_shopping_list_state';
+var BOUGHT_STORAGE_KEY = 'facility_shopping_list_bought';
+
+// 備品在庫チェックアプリが書き込む GAS シート名
+var FACILITY_SHEET_TYPE = 'facility';
+
+var boughtKeys = new Set(
+  JSON.parse(localStorage.getItem(BOUGHT_STORAGE_KEY) || '[]')
+);
+
+function itemKey(r) {
+  return (r.name || '') + '|' + (r.tab || '');
+}
+
+function saveBought() {
+  localStorage.setItem(BOUGHT_STORAGE_KEY, JSON.stringify(Array.from(boughtKeys)));
+}
+
+function markAsBought(idx) {
+  boughtKeys.add(_buyableItems[idx]);
+  saveBought();
+  renderAll();
+}
+
+function resetBought() {
+  boughtKeys.clear();
+  saveBought();
+  renderAll();
+}
+
+function submitBought() {
+  if (boughtKeys.size === 0) {
+    alert('まだ何も買い済みにしていません。');
+    return;
+  }
+  if (!state.gasUrl) {
+    alert('GAS URLが設定されていません。');
+    return;
+  }
+
+  // boughtKeys に一致するアイテムの詳細情報を state.rows から取得
+  var boughtItems = state.rows.filter(function(r) {
+    return boughtKeys.has(itemKey(r));
+  }).map(function(r) {
+    return { name: r.name, tab: r.tab };
+  });
+
+  if (boughtItems.length === 0) {
+    alert('送信できる買い済みデータがありません。');
+    return;
+  }
+
+  var btn = document.getElementById('submit-bought-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>送信中…';
+
+  fetch(state.gasUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action: 'markBought',
+      items: boughtItems
+    }),
+    redirect: 'follow'
+  })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.status === 'success') {
+        boughtKeys.clear();
+        saveBought();
+        // 送信完了後すぐにデータ取得して表示を更新する。
+        // GASはPOSTが完了してからレスポンスを返すため、
+        // 続けてGETしても bought 反映済みのデータが取れる。
+        fetchData();
+      } else {
+        alert('送信に失敗しました：' + (data.message || '不明なエラー'));
+        btn.disabled = false;
+        btn.innerHTML = '📤 スプレッドシートに送信';
+      }
+    })
+    .catch(function() {
+      alert('送信に失敗しました。GAS URLを確認してください。');
+      btn.disabled = false;
+      btn.innerHTML = '📤 スプレッドシートに送信';
+    });
+}
+
+var _buyableItems = [];
+
+var state = {
+  gasUrl: '',
+  lastDate: null,
+  lastMemo: '',
+  rows: [],
+  tab: 'high',
+  storeTab: 'all'
+};
+
+function init() {
+  var saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      var p = JSON.parse(saved);
+      state.gasUrl   = p.gasUrl   || '';
+      state.lastDate = p.lastDate || null;
+      state.lastMemo = p.lastMemo || '';
+      state.rows     = p.rows     || [];
+      var tab = p.tab || 'high';
+      if (tab === 'buy') tab = 'high';
+      if (tab === 'low') tab = 'mid';
+      if (tab !== 'high' && tab !== 'mid' && tab !== 'all') tab = 'high';
+      state.tab = tab;
+    } catch(e) {}
+  }
+
+  if (state.gasUrl) {
+    document.getElementById('setup-panel').style.display = 'none';
+    document.getElementById('status-bar').style.display = '';
+    if (state.rows.length > 0) {
+      updateHeaderSub();
+      renderAll();
+    }
+    fetchData();
+  } else {
+    document.getElementById('setup-panel').style.display = '';
+    document.getElementById('status-bar').style.display = 'none';
+  }
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    gasUrl:   state.gasUrl,
+    lastDate:  state.lastDate,
+    lastMemo:  state.lastMemo,
+    rows:     state.rows,
+    tab:      state.tab
+  }));
+}
+
+function showSetup() {
+  var panel = document.getElementById('setup-panel');
+  var isHidden = panel.style.display === 'none';
+  panel.style.display = isHidden ? '' : 'none';
+  if (isHidden && state.gasUrl) {
+    document.getElementById('gas-url-input').value = state.gasUrl;
+  }
+}
+
+function saveUrl() {
+  var input = document.getElementById('gas-url-input');
+  var url = input.value.trim().replace(/\/+$/, '');
+  if (!url.startsWith('http')) {
+    alert('正しいURLを入力してください。\n例：https://script.google.com/macros/s/...');
+    return;
+  }
+  state.gasUrl = url;
+  saveState();
+  document.getElementById('setup-panel').style.display = 'none';
+  document.getElementById('status-bar').style.display = '';
+  fetchData();
+}
+
+// GASから備品専用シートのデータを取得する
+// ?type=facility を付けることで GAS 側が「備品在庫記録」シートを返す
+function fetchData() {
+  if (!state.gasUrl) {
+    document.getElementById('setup-panel').style.display = '';
+    return;
+  }
+
+  setStatus('loading', '取得中...');
+  var btn = document.getElementById('refresh-btn');
+  btn.innerHTML = '<span class="spinner"></span>取得中';
+  btn.disabled = true;
+
+  var sep = state.gasUrl.indexOf('?') >= 0 ? '&' : '?';
+  var url = state.gasUrl + sep + 'type=facility&_=' + Date.now();
+  fetch(url, { redirect: 'follow', cache: 'no-store' })
+    .then(function(response) { return response.text(); })
+    .then(function(text) {
+      var data;
+      try {
+        var match = text.match(/^[^(]*\((.+)\)\s*;?\s*$/s);
+        data = JSON.parse(match ? match[1] : text);
+      } catch(e) {
+        throw new Error('データの形式が正しくありません');
+      }
+      if (data.error) {
+        setStatus('error', '取得失敗：' + data.error);
+      } else {
+        state.lastDate = data.date || null;
+        state.lastMemo = data.memo || '';
+        state.rows = deduplicateRows(data.rows || []);
+        saveState();
+        setStatus('ok', '取得完了 ' + nowTime());
+        updateHeaderSub();
+        renderAll();
+      }
+      btn.innerHTML = 'データを取得';
+      btn.disabled = false;
+    })
+    .catch(function(error) {
+      setStatus('error', '取得失敗：GAS URLを確認してください。');
+      btn.innerHTML = 'データを取得';
+      btn.disabled = false;
+    });
+}
+
+function setStatus(type, label) {
+  var dot  = document.getElementById('status-dot');
+  var text = document.getElementById('status-text');
+  dot.className  = 'status-dot ' + type;
+  text.textContent = label;
+}
+
+function nowTime() {
+  var d = new Date();
+  var h = String(d.getHours()).padStart(2, '0');
+  var m = String(d.getMinutes()).padStart(2, '0');
+  return h + ':' + m;
+}
+
+function updateHeaderSub() {
+  var sub = document.getElementById('header-sub');
+  if (state.lastDate) {
+    sub.textContent = 'チェック日：' + state.lastDate;
+  } else {
+    sub.textContent = 'データなし';
+  }
+}
+
+function priorityOf(row) {
+  if (row && row.level) {
+    var lv = String(row.level).trim().toLowerCase();
+    if (lv === 'high' || lv === 'mid' || lv === 'low') return lv;
+    if (lv === 'none' || lv === '') return 'skip';
+    return 'skip';
+  }
+  var r = row && row.result ? String(row.result).trim() : '';
+  if (!r || r === '－' || r === '未チェック') return 'skip';
+  if (r === 'ない' || r === 'なし' || r === '0個') return 'high';
+  if (r === '少し' || r === '1個' || r === '2個') return 'mid';
+  if (r === 'ある' || r === 'たっぷり') return 'low';
+  var m = r.match(/^(\d+)個$/);
+  if (m && parseInt(m[1]) >= 3) return 'low';
+  return 'skip';
+}
+
+function badgeHtml(level, result) {
+  var map = { high: 'badge-high', mid: 'badge-mid', low: 'badge-low', skip: 'badge-skip' };
+  var label = result || '未';
+  return '<span class="badge ' + (map[level] || 'badge-skip') + '">' + label + '</span>';
+}
+
+function deduplicateRows(rows) {
+  var priorityOrder = { high: 1, mid: 2, low: 3, skip: 4 };
+  var seen = {};
+  var result = [];
+  rows.forEach(function(r) {
+    var key = (r.name || '') + '|' + (r.tab || '');
+    var p = priorityOrder[priorityOf(r)] || 9;
+    if (!seen[key]) {
+      seen[key] = { idx: result.length, priority: p };
+      result.push(r);
+    } else if (p < seen[key].priority) {
+      result[seen[key].idx] = r;
+      seen[key].priority = p;
+    }
+  });
+  return result;
+}
+
+function renderAll() {
+  updateTabCounts();
+  ['high', 'mid', 'all'].forEach(function(t) {
+    var el = document.getElementById('tab-' + t);
+    if (el) el.classList.toggle('active', t === state.tab);
+  });
+  renderList();
+  renderMemo();
+  document.getElementById('tab-bar').style.display = '';
+  var bar = document.getElementById('bought-bar');
+  if (boughtKeys.size > 0) {
+    document.getElementById('bought-count-text').textContent = boughtKeys.size + '件 買い済み';
+    bar.style.display = '';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function updateTabCounts() {
+  var highCount = 0;
+  var midCount  = 0;
+  state.rows.forEach(function(r) {
+    var p = priorityOf(r);
+    if (p === 'high') highCount++;
+    if (p === 'mid')  midCount++;
+  });
+  document.getElementById('count-high').textContent = highCount;
+  document.getElementById('count-mid').textContent  = midCount;
+}
+
+function renderMemo() {
+  var card = document.getElementById('memo-card');
+  if (state.lastMemo) {
+    document.getElementById('memo-text').textContent = state.lastMemo;
+    card.classList.add('show');
+  } else {
+    card.classList.remove('show');
+  }
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  state.storeTab = 'all';
+  saveState();
+  ['high', 'mid', 'all'].forEach(function(t) {
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  renderList();
+}
+
+function renderStoreTabs(rows) {
+  var bar = document.getElementById('store-tab-bar');
+  var stores = [];
+  rows.forEach(function(r) {
+    var s = r.store || '店舗未設定';
+    if (stores.indexOf(s) === -1) stores.push(s);
+  });
+  if (stores.length <= 1) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = '';
+  bar.innerHTML = '';
+  var allBtn = document.createElement('button');
+  allBtn.className = 'tab-btn' + (state.storeTab === 'all' ? ' active' : '');
+  allBtn.textContent = '全て';
+  allBtn.onclick = function() { switchStoreTab('all'); };
+  bar.appendChild(allBtn);
+  stores.forEach(function(store) {
+    var btn = document.createElement('button');
+    btn.className = 'tab-btn' + (state.storeTab === store ? ' active' : '');
+    btn.textContent = store;
+    btn.onclick = function() { switchStoreTab(store); };
+    bar.appendChild(btn);
+  });
+}
+
+function switchStoreTab(store) {
+  state.storeTab = store;
+  renderList();
+}
+
+function renderFlatList(area, filtered) {
+  filtered = filtered.filter(function(r) { return !boughtKeys.has(itemKey(r)); });
+
+  if (filtered.length === 0) {
+    area.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">✅</div>' +
+        '<div class="empty-title">全て買い済みです</div>' +
+        '<div class="empty-sub">お疲れさまでした！</div>' +
+      '</div>';
+    return;
+  }
+
+  var byCat = {};
+  var catOrder = [];
+  filtered.forEach(function(r) {
+    var cat = r.cat || 'その他';
+    if (!byCat[cat]) {
+      byCat[cat] = [];
+      catOrder.push(cat);
+    }
+    byCat[cat].push(r);
+  });
+
+  var html = '<div class="store-card">';
+  catOrder.forEach(function(cat) {
+    html += '<div class="cat-label">' + escHtml(cat) + '</div>';
+    var sorted = byCat[cat].slice().sort(function(a, b) {
+      var order = { high: 1, mid: 2, low: 3, skip: 4 };
+      return (order[priorityOf(a)] || 99) - (order[priorityOf(b)] || 99);
+    });
+    sorted.forEach(function(r) {
+      var p = priorityOf(r);
+      var storeSub = r.store ? escHtml(r.store) : '';
+      var tabSub   = r.tab  ? escHtml(r.tab)   : '';
+      var sub = [tabSub, storeSub].filter(Boolean).join(' ／ ');
+      var idx = _buyableItems.length;
+      _buyableItems.push(itemKey(r));
+      html += '<div class="item-row" onclick="markAsBought(' + idx + ')">';
+      html += '<div>';
+      html += '<div class="item-name">' + escHtml(r.name) + '</div>';
+      if (sub) html += '<div class="item-sub">' + sub + '</div>';
+      html += '</div>';
+      html += badgeHtml(p, r.result);
+      html += '</div>';
+    });
+  });
+  html += '</div>';
+
+  area.innerHTML = html;
+}
+
+function renderList() {
+  var area = document.getElementById('list-area');
+  _buyableItems = [];
+
+  var filtered = state.rows.filter(function(r) {
+    var p = priorityOf(r);
+    if (state.tab === 'high') return p === 'high';
+    if (state.tab === 'mid')  return p === 'mid';
+    return true;
+  });
+
+  renderStoreTabs(filtered);
+
+  if (state.storeTab !== 'all') {
+    filtered = filtered.filter(function(r) {
+      return (r.store || '店舗未設定') === state.storeTab;
+    });
+  } else {
+    renderFlatList(area, filtered);
+    return;
+  }
+
+  filtered = filtered.filter(function(r) { return !boughtKeys.has(itemKey(r)); });
+
+  if (filtered.length === 0) {
+    area.innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon">✅</div>' +
+        '<div class="empty-title">全て買い済みです</div>' +
+        '<div class="empty-sub">お疲れさまでした！</div>' +
+      '</div>';
+    return;
+  }
+
+  var byStore = {};
+  var storeOrder = [];
+  filtered.forEach(function(r) {
+    var store = r.store || '店舗未設定';
+    if (!byStore[store]) {
+      byStore[store] = {};
+      storeOrder.push(store);
+    }
+    var cat = r.cat || 'その他';
+    if (!byStore[store][cat]) byStore[store][cat] = [];
+    byStore[store][cat].push(r);
+  });
+
+  var uniqueStores = storeOrder.filter(function(s, i) { return storeOrder.indexOf(s) === i; });
+
+  var html = '';
+  uniqueStores.forEach(function(store, idx) {
+    var cats = byStore[store];
+    var allItems = Object.values(cats).reduce(function(a, b) { return a.concat(b); }, []);
+
+    var highCount = allItems.filter(function(r) { return priorityOf(r) === 'high'; }).length;
+    var midCount  = allItems.filter(function(r) { return priorityOf(r) === 'mid';  }).length;
+    var lowCount  = allItems.filter(function(r) { return priorityOf(r) === 'low';  }).length;
+
+    var isOpen = idx === 0;
+
+    html += '<div class="store-card">';
+    html += '<div class="store-header" onclick="toggleStore(this)">';
+    html += '<div class="store-name">' + escHtml(store) + '</div>';
+    html += '<div class="store-badge">';
+    if (highCount > 0) html += '<span class="count-high">' + highCount + '</span>';
+    if (midCount  > 0) html += '<span class="count-mid">'  + midCount  + '</span>';
+    if (lowCount  > 0) html += '<span class="count-low">'  + lowCount  + '</span>';
+    html += '<span class="chevron' + (isOpen ? ' open' : '') + '">›</span>';
+    html += '</div></div>';
+
+    html += '<div class="store-body' + (isOpen ? ' open' : '') + '">';
+
+    Object.keys(cats).forEach(function(cat) {
+      html += '<div class="cat-label">' + escHtml(cat) + '</div>';
+      var sorted = cats[cat].slice().sort(function(a, b) {
+        var order = { high: 1, mid: 2, low: 3, skip: 4 };
+        return (order[priorityOf(a)] || 99) - (order[priorityOf(b)] || 99);
+      });
+      sorted.forEach(function(r) {
+        var p = priorityOf(r);
+        var bidx = _buyableItems.length;
+        _buyableItems.push(itemKey(r));
+        html += '<div class="item-row" onclick="markAsBought(' + bidx + ')">';
+        html += '<div>';
+        html += '<div class="item-name">' + escHtml(r.name) + '</div>';
+        html += '<div class="item-sub">'  + escHtml(r.tab)  + '</div>';
+        html += '</div>';
+        html += badgeHtml(p, r.result);
+        html += '</div>';
+      });
+    });
+
+    html += '</div></div>';
+  });
+
+  area.innerHTML = html;
+}
+
+function toggleStore(headerEl) {
+  var body    = headerEl.nextElementSibling;
+  var chevron = headerEl.querySelector('.chevron');
+  var isOpen  = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+init();
+</script>
+</body>
+</html>

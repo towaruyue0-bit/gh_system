@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>間取り図 書き込みツール</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:      #1D4ED8;
+  --green:     #15803D;
+  --orange:    #D97706;
+  --red:       #DC2626;
+  --gray:      #64748B;
+  --border:    #E2E8F0;
+  --radius:    12px;
+  --bar-h:     52px;
+  --panel-h:   200px;
+}
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #1a1a2e;
+  color: #1a1a1a;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ===== トップバー ===== */
+#topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--bar-h);
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  gap: 8px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.topbar-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.topbar-btn.photo  { background: #3B82F6; color: white; }
+.topbar-btn.export { background: #10B981; color: white; }
+.topbar-btn.back   { background: #374151; color: white; }
+
+/* ===== モードバー ===== */
+#modebar {
+  position: fixed;
+  top: var(--bar-h);
+  left: 0; right: 0;
+  height: 42px;
+  background: #0f172a;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 6px;
+  z-index: 99;
+  border-bottom: 1px solid #334155;
+}
+.mode-btn {
+  flex: 1;
+  padding: 6px 4px;
+  border: 1.5px solid #334155;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  color: #94A3B8;
+  background: transparent;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.mode-btn.active-add  { background: #1D4ED8; color: white; border-color: #1D4ED8; }
+.mode-btn.active-move { background: #D97706; color: white; border-color: #D97706; }
+.mode-btn.active-del  { background: #DC2626; color: white; border-color: #DC2626; }
+
+/* ===== キャンバスエリア ===== */
+#canvasWrap {
+  position: fixed;
+  top: calc(var(--bar-h) + 42px);
+  left: 0; right: 0;
+  bottom: var(--panel-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+  overflow: hidden;
+  touch-action: none;
+}
+#floorCanvas {
+  display: block;
+  cursor: crosshair;
+  touch-action: none;
+}
+#noImageMsg {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #475569;
+  pointer-events: none;
+}
+#noImageMsg .big { font-size: 48px; margin-bottom: 8px; }
+#noImageMsg p    { font-size: 13px; line-height: 1.8; }
+
+/* ===== 下パネル ===== */
+#bottomPanel {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: var(--panel-h);
+  background: #1e293b;
+  border-top: 1px solid #334155;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 10px;
+  gap: 7px;
+  overflow-y: auto;
+}
+
+/* タイプ選択 */
+.type-row {
+  display: flex;
+  gap: 6px;
+}
+.type-btn {
+  flex: 1;
+  padding: 7px 4px;
+  border: 1.5px solid;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.12s;
+}
+.type-btn.room { border-color: #3B82F6; color: #3B82F6; background: transparent; }
+.type-btn.area { border-color: #10B981; color: #10B981; background: transparent; }
+.type-btn.memo { border-color: #F59E0B; color: #F59E0B; background: transparent; }
+.type-btn.active.room { background: #1D4ED8; color: white; border-color: #1D4ED8; }
+.type-btn.active.area { background: #15803D; color: white; border-color: #15803D; }
+.type-btn.active.memo { background: #D97706; color: white; border-color: #D97706; }
+
+/* プリセットボタン */
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  overflow-x: auto;
+}
+.preset-btn {
+  padding: 5px 10px;
+  background: #334155;
+  color: #CBD5E1;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.preset-btn:active { background: #3B82F6; color: white; }
+
+/* カスタム入力 */
+.custom-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.custom-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #334155;
+  border-radius: 8px;
+  background: #0f172a;
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+.custom-input::placeholder { color: #475569; }
+.custom-input:focus { border-color: #3B82F6; }
+.add-label-btn {
+  padding: 8px 14px;
+  background: #3B82F6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== 選択時ツールチップ ===== */
+#selectionBar {
+  position: fixed;
+  left: 50%; transform: translateX(-50%);
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  display: none;
+  gap: 0;
+  z-index: 200;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+#selectionBar.visible { display: flex; }
+.sel-btn {
+  padding: 9px 14px;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-right: 1px solid #334155;
+  -webkit-tap-highlight-color: transparent;
+}
+.sel-btn:last-child { border-right: none; }
+.sel-btn.del { color: #EF4444; }
+.sel-btn:active { background: #334155; }
+
+/* ===== 非表示ファイル入力 ===== */
+#fileInput { display: none; }
+
+/* ===== 印刷 ===== */
+@media print {
+  #topbar, #modebar, #bottomPanel, #selectionBar { display: none !important; }
+  #canvasWrap {
+    position: static;
+    width: 100vw; height: 100vh;
+    background: white;
+  }
+  #floorCanvas { max-width: 100%; max-height: 100%; }
+}
+
+/* ===== ピンチズーム対応ヒント ===== */
+#hint {
+  position: fixed;
+  top: calc(var(--bar-h) + 42px + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.7);
+  color: white;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  z-index: 150;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#hint.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<input type="file" id="fileInput" accept="image/*" capture="environment">
+
+<!-- ヒント -->
+<div id="hint">追加モードで図面をタップするとラベルを貼れます</div>
+
+<!-- トップバー -->
+<div id="topbar">
+  <button class="topbar-btn back" onclick="location.href='../index.html'">← 戻る</button>
+  <span class="topbar-title">🏠 間取り図 書き込みツール</span>
+  <button class="topbar-btn photo" onclick="document.getElementById('fileInput').click()">📷 写真</button>
+  <button class="topbar-btn export" onclick="exportImage()">💾 保存</button>
+</div>
+
+<!-- モードバー -->
+<div id="modebar">
+  <button class="mode-btn active-add" id="btn-add"  onclick="setMode('add')">＋ 追加</button>
+  <button class="mode-btn"            id="btn-move" onclick="setMode('move')">↔ 移動</button>
+  <button class="mode-btn"            id="btn-del"  onclick="setMode('delete')">🗑 削除</button>
+  <button class="mode-btn"            id="btn-undo" onclick="undoLast()" style="flex:0.6;">↩ 戻す</button>
+</div>
+
+<!-- キャンバス -->
+<div id="canvasWrap">
+  <canvas id="floorCanvas"></canvas>
+  <div id="noImageMsg">
+    <div class="big">🏠</div>
+    <p>「📷 写真」ボタンを押して<br>間取り図の写真を読み込んでください<br><br>スマホで撮影した写真も使えます</p>
+  </div>
+</div>
+
+<!-- 選択ツールバー -->
+<div id="selectionBar">
+  <button class="sel-btn" onclick="editSelected()">✏️ 編集</button>
+  <button class="sel-btn del" onclick="deleteSelected()">🗑 削除</button>
+  <button class="sel-btn" onclick="deselectAll()">✕ 解除</button>
+</div>
+
+<!-- 下パネル -->
+<div id="bottomPanel">
+  <!-- タイプ選択 -->
+  <div class="type-row">
+    <button class="type-btn room active" id="type-room" onclick="setType('room')">🚪 部屋名</button>
+    <button class="type-btn area"        id="type-area" onclick="setType('area')">📐 面積</button>
+    <button class="type-btn memo"        id="type-memo" onclick="setType('memo')">📝 メモ</button>
+  </div>
+
+  <!-- プリセット -->
+  <div class="preset-row" id="presetRow">
+    <!-- JS で生成 -->
+  </div>
+
+  <!-- カスタム入力 -->
+  <div class="custom-row">
+    <input class="custom-input" type="text" id="customInput" placeholder="ラベルを入力（例: 居室①）">
+    <button class="add-label-btn" id="waitingAddBtn" onclick="pendingAdd()">追加待機</button>
+  </div>
+</div>
+
+<script>
+// =====================================================
+// プリセット定義
+// =====================================================
+const PRESETS = {
+  room: ['居室①','居室②','居室③','居室④','居室⑤','居室⑥',
+         '談話室','食堂','台所','浴室','脱衣室','洗面所','便所',
+         '廊下','玄関','収納','管理人室','共用部'],
+  area: ['7.43㎡','8㎡','9㎡','10㎡','12㎡','15㎡','20㎡','25㎡','入力'],
+  memo: ['基準OK','要確認','改修必要','採光あり','採光なし','換気良好','窓なし'],
+};
+
+// =====================================================
+// 状態
+// =====================================================
+let mode         = 'add';       // 'add' | 'move' | 'delete'
+let currentType  = 'room';      // 'room' | 'area' | 'memo'
+let annotations  = [];
+let selectedIdx  = -1;
+let isDragging   = false;
+let dragOffset   = {x:0, y:0};
+let pendingPlace = false;        // 次のタップでラベルを置く状態
+let idCounter    = 0;
+let undoStack    = [];
+
+// =====================================================
+// Canvas セットアップ
+// =====================================================
+const canvas  = document.getElementById('floorCanvas');
+const ctx     = canvas.getContext('2d');
+const wrap    = document.getElementById('canvasWrap');
+let img       = null;
+let imgRect   = {x:0,y:0,w:0,h:0};
+const DPR     = window.devicePixelRatio || 1;
+
+function resizeCanvas() {
+  const ww = wrap.clientWidth;
+  const wh = wrap.clientHeight;
+  canvas.width  = ww * DPR;
+  canvas.height = wh * DPR;
+  canvas.style.width  = ww + 'px';
+  canvas.style.height = wh + 'px';
+  ctx.scale(DPR, DPR);
+  if (img) fitImage();
+  redraw();
+}
+
+function fitImage() {
+  const cw = wrap.clientWidth;
+  const ch = wrap.clientHeight;
+  const iw = img.naturalWidth;
+  const ih = img.naturalHeight;
+  const scale = Math.min(cw / iw, ch / ih) * 0.95;
+  const w = iw * scale;
+  const h = ih * scale;
+  imgRect = { x: (cw-w)/2, y: (ch-h)/2, w, h, scale };
+}
+
+window.addEventListener('resize', resizeCanvas);
+setTimeout(resizeCanvas, 50);
+
+// =====================================================
+// 描画
+// =====================================================
+const TYPE_STYLE = {
+  room: { bg:'#1D4ED8', text:'white', dot:'#93C5FD' },
+  area: { bg:'#15803D', text:'white', dot:'#86EFAC' },
+  memo: { bg:'#D97706', text:'white', dot:'#FCD34D' },
+};
+
+function redraw() {
+  const cw = wrap.clientWidth;
+  const ch = wrap.clientHeight;
+  ctx.clearRect(0, 0, cw, ch);
+
+  // 背景
+  ctx.fillStyle = '#0f172a';
+  ctx.fillRect(0, 0, cw, ch);
+
+  // 画像
+  if (img) {
+    ctx.drawImage(img, imgRect.x, imgRect.y, imgRect.w, imgRect.h);
+  }
+
+  // ラベル
+  annotations.forEach((ann, i) => drawLabel(ann, i === selectedIdx));
+}
+
+function drawLabel(ann, selected) {
+  const st = TYPE_STYLE[ann.type] || TYPE_STYLE.room;
+  const { x, y, text } = ann;
+
+  ctx.save();
+  ctx.font = 'bold 13px -apple-system, sans-serif';
+  const tw = ctx.measureText(text).width;
+  const pw = tw + 18;
+  const ph = 26;
+  const px = x - pw/2;
+  const py = y - ph - 10;
+
+  // 影
+  if (selected) {
+    ctx.shadowColor = 'rgba(255,255,255,0.5)';
+    ctx.shadowBlur = 10;
+  }
+
+  // 背景
+  ctx.fillStyle = selected ? lighten(st.bg) : st.bg;
+  roundRect(ctx, px, py, pw, ph, 7);
+  ctx.fill();
+
+  // 枠（選択時）
+  if (selected) {
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    roundRect(ctx, px, py, pw, ph, 7);
+    ctx.stroke();
+  }
+
+  // テキスト
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = st.text;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, py + ph/2);
+
+  // 吹き出し三角
+  ctx.fillStyle = selected ? lighten(st.bg) : st.bg;
+  ctx.beginPath();
+  ctx.moveTo(x - 5, py + ph);
+  ctx.lineTo(x + 5, py + ph);
+  ctx.lineTo(x, py + ph + 6);
+  ctx.closePath();
+  ctx.fill();
+
+  // ピン
+  ctx.fillStyle = st.dot;
+  ctx.beginPath();
+  ctx.arc(x, y, selected ? 7 : 5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = selected ? 2.5 : 1.5;
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function lighten(hex) {
+  // hex → slightly brighter
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, ((n>>16)&0xff)+50);
+  const g = Math.min(255, ((n>>8)&0xff)+50);
+  const b = Math.min(255, (n&0xff)+50);
+  return `rgb(${r},${g},${b})`;
+}
+
+function roundRect(c, x, y, w, h, r) {
+  c.beginPath();
+  c.moveTo(x+r, y);
+  c.lineTo(x+w-r, y);
+  c.quadraticCurveTo(x+w, y, x+w, y+r);
+  c.lineTo(x+w, y+h-r);
+  c.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  c.lineTo(x+r, y+h);
+  c.quadraticCurveTo(x, y+h, x, y+h-r);
+  c.lineTo(x, y+r);
+  c.quadraticCurveTo(x, y, x+r, y);
+  c.closePath();
+}
+
+// =====================================================
+// ヒットテスト
+// =====================================================
+function hitTest(cx, cy) {
+  for (let i = annotations.length - 1; i >= 0; i--) {
+    const a = annotations[i];
+    ctx.font = 'bold 13px sans-serif';
+    const tw = ctx.measureText(a.text).width;
+    const pw = tw + 18;
+    const ph = 26;
+    const px = a.x - pw/2;
+    const py = a.y - ph - 10;
+    const pad = 8;
+    if (cx >= px-pad && cx <= px+pw+pad && cy >= py-pad && cy <= py+ph+pad+10) {
+      return i;
+    }
+    // ピン
+    const dx = cx - a.x;
+    const dy = cy - a.y;
+    if (dx*dx + dy*dy <= 15*15) return i;
+  }
+  return -1;
+}
+
+// =====================================================
+// イベント共通処理
+// =====================================================
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+  }
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function onPointerDown(e) {
+  e.preventDefault();
+  const pos = getPos(e);
+
+  if (mode === 'delete') {
+    const idx = hitTest(pos.x, pos.y);
+    if (idx >= 0) {
+      saveUndo();
+      annotations.splice(idx, 1);
+      selectedIdx = -1;
+      redraw();
+      showSelBar(false);
+    }
+    return;
+  }
+
+  if (mode === 'move') {
+    const idx = hitTest(pos.x, pos.y);
+    if (idx >= 0) {
+      selectedIdx = idx;
+      isDragging = true;
+      dragOffset = { x: pos.x - annotations[idx].x, y: pos.y - annotations[idx].y };
+      redraw();
+    } else {
+      selectedIdx = -1;
+      showSelBar(false);
+      redraw();
+    }
+    return;
+  }
+
+  // addモード
+  if (pendingPlace) {
+    placeLabel(pos.x, pos.y);
+    return;
+  }
+
+  const idx = hitTest(pos.x, pos.y);
+  if (idx >= 0) {
+    selectedIdx = idx;
+    redraw();
+    showSelBar(true);
+  } else {
+    selectedIdx = -1;
+    showSelBar(false);
+    redraw();
+  }
+}
+
+function onPointerMove(e) {
+  if (!isDragging || selectedIdx < 0) return;
+  e.preventDefault();
+  const pos = getPos(e);
+  saveUndoOnce();
+  annotations[selectedIdx].x = pos.x - dragOffset.x;
+  annotations[selectedIdx].y = pos.y - dragOffset.y;
+  redraw();
+}
+
+function onPointerUp(e) {
+  isDragging = false;
+  undoOnce = false;
+}
+
+canvas.addEventListener('mousedown',  onPointerDown);
+canvas.addEventListener('mousemove',  onPointerMove);
+canvas.addEventListener('mouseup',    onPointerUp);
+canvas.addEventListener('touchstart', onPointerDown, {passive:false});
+canvas.addEventListener('touchmove',  onPointerMove, {passive:false});
+canvas.addEventListener('touchend',   onPointerUp);
+
+// =====================================================
+// ラベル配置
+// =====================================================
+let undoOnce = false;
+function saveUndoOnce() {
+  if (!undoOnce) { saveUndo(); undoOnce = true; }
+}
+
+function placeLabel(x, y) {
+  const text = document.getElementById('customInput').value.trim();
+  if (!text) {
+    flashHint('ラベルのテキストを入力してください');
+    return;
+  }
+  saveUndo();
+  annotations.push({ id: ++idCounter, type: currentType, x, y, text });
+  pendingPlace = false;
+  updateAddBtn(false);
+  redraw();
+  flashHint('ラベルを追加しました');
+}
+
+function pendingAdd() {
+  const text = document.getElementById('customInput').value.trim();
+  if (!text) {
+    document.getElementById('customInput').focus();
+    flashHint('テキストを入力してから「追加待機」を押してください');
+    return;
+  }
+  pendingPlace = !pendingPlace;
+  updateAddBtn(pendingPlace);
+  if (pendingPlace) flashHint('図面をタップするとラベルを貼ります');
+}
+
+function updateAddBtn(active) {
+  const btn = document.getElementById('waitingAddBtn');
+  if (active) {
+    btn.textContent = '📍 タップして配置';
+    btn.style.background = '#D97706';
+  } else {
+    btn.textContent = '追加待機';
+    btn.style.background = '#3B82F6';
+  }
+}
+
+// プリセット押下 → customInputに設定 → 追加待機
+function applyPreset(text) {
+  if (text === '入力') {
+    document.getElementById('customInput').value = '';
+    document.getElementById('customInput').focus();
+    return;
+  }
+  document.getElementById('customInput').value = text;
+  if (mode === 'add') {
+    pendingPlace = true;
+    updateAddBtn(true);
+    flashHint('図面をタップするとラベルを貼ります');
+  }
+}
+
+// =====================================================
+// モード / タイプ切替
+// =====================================================
+function setMode(m) {
+  mode = m;
+  pendingPlace = false;
+  updateAddBtn(false);
+  ['add','move','del'].forEach(id => {
+    const el = document.getElementById('btn-'+id);
+    el.className = 'mode-btn';
+  });
+  const btnMap = {add:'btn-add', move:'btn-move', delete:'btn-del'};
+  const clsMap = {add:'active-add', move:'active-move', delete:'active-del'};
+  document.getElementById(btnMap[m]).className = 'mode-btn ' + clsMap[m];
+  canvas.style.cursor = m === 'add' ? 'crosshair' : m === 'move' ? 'grab' : 'pointer';
+  // ヒント
+  const hints = {add:'追加モード：タップでラベルを配置', move:'移動モード：ラベルをドラッグして移動', delete:'削除モード：ラベルをタップして削除'};
+  flashHint(hints[m]);
+}
+
+function setType(t) {
+  currentType = t;
+  ['room','area','memo'].forEach(tp => {
+    const el = document.getElementById('type-'+tp);
+    el.className = 'type-btn ' + tp + (tp === t ? ' active' : '');
+  });
+  buildPresets();
+}
+
+// =====================================================
+// プリセット構築
+// =====================================================
+function buildPresets() {
+  const row = document.getElementById('presetRow');
+  row.innerHTML = '';
+  const list = PRESETS[currentType] || [];
+  list.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.textContent = p;
+    btn.onclick = () => applyPreset(p);
+    row.appendChild(btn);
+  });
+}
+
+// =====================================================
+// 選択バー
+// =====================================================
+function showSelBar(visible) {
+  const bar = document.getElementById('selectionBar');
+  if (!visible) { bar.classList.remove('visible'); return; }
+  bar.classList.add('visible');
+  const ann = annotations[selectedIdx];
+  if (!ann) return;
+  // ラベル位置に近づける
+  const ctx2 = ctx;
+  ctx2.font = 'bold 13px sans-serif';
+  const tw = ctx2.measureText(ann.text).width;
+  const ph = 26;
+  const py = ann.y - ph - 10;
+  const panelH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--panel-h'));
+  const barH   = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--bar-h'));
+  const modeH  = 42;
+  const wrapTop = barH + modeH;
+  const wrapBot = window.innerHeight - panelH;
+  const absY = wrapTop + py;
+  let topPos = absY - 40;
+  if (topPos < wrapTop + 4) topPos = wrapTop + 4;
+  if (topPos > wrapBot - 50) topPos = wrapBot - 60;
+  bar.style.top = topPos + 'px';
+  bar.style.bottom = 'auto';
+}
+
+function editSelected() {
+  if (selectedIdx < 0) return;
+  const ann = annotations[selectedIdx];
+  const newText = prompt('ラベルを編集してください:', ann.text);
+  if (newText !== null && newText.trim()) {
+    saveUndo();
+    ann.text = newText.trim();
+    redraw();
+  }
+}
+
+function deleteSelected() {
+  if (selectedIdx < 0) return;
+  saveUndo();
+  annotations.splice(selectedIdx, 1);
+  selectedIdx = -1;
+  showSelBar(false);
+  redraw();
+}
+
+function deselectAll() {
+  selectedIdx = -1;
+  showSelBar(false);
+  redraw();
+}
+
+// =====================================================
+// Undo
+// =====================================================
+function saveUndo() {
+  undoStack.push(JSON.stringify(annotations));
+  if (undoStack.length > 30) undoStack.shift();
+}
+
+function undoLast() {
+  if (undoStack.length === 0) { flashHint('これ以上戻せません'); return; }
+  const prev = undoStack.pop();
+  annotations = JSON.parse(prev);
+  selectedIdx = -1;
+  showSelBar(false);
+  redraw();
+  flashHint('元に戻しました');
+}
+
+// =====================================================
+// 画像読み込み
+// =====================================================
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const image = new Image();
+    image.onload = function() {
+      img = image;
+      document.getElementById('noImageMsg').style.display = 'none';
+      fitImage();
+      redraw();
+      flashHint('写真を読み込みました。ラベルを追加してください');
+    };
+    image.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+// =====================================================
+// エクスポート
+// =====================================================
+function exportImage() {
+  if (!img) { flashHint('先に写真を読み込んでください'); return; }
+
+  // 元画像サイズでオフスクリーン描画
+  const oc = document.createElement('canvas');
+  oc.width  = img.naturalWidth;
+  oc.height = img.naturalHeight;
+  const octx = oc.getContext('2d');
+  octx.drawImage(img, 0, 0);
+
+  // ラベルをオリジナルスケールで描画
+  const scaleX = img.naturalWidth  / imgRect.w;
+  const scaleY = img.naturalHeight / imgRect.h;
+
+  annotations.forEach(ann => {
+    const ax = (ann.x - imgRect.x) * scaleX;
+    const ay = (ann.y - imgRect.y) * scaleY;
+    drawLabelOnCtx(octx, {...ann, x:ax, y:ay}, false, Math.max(scaleX, scaleY));
+  });
+
+  // ダウンロード
+  const a = document.createElement('a');
+  a.download = '間取り図_書き込み済み.png';
+  a.href = oc.toDataURL('image/png');
+  a.click();
+}
+
+function drawLabelOnCtx(c, ann, selected, scale) {
+  const fs = Math.round(14 * scale);
+  const st = TYPE_STYLE[ann.type] || TYPE_STYLE.room;
+  const { x, y, text } = ann;
+
+  c.save();
+  c.font = `bold ${fs}px sans-serif`;
+  const tw = c.measureText(text).width;
+  const pw = tw + 20 * scale;
+  const ph = 28 * scale;
+  const px = x - pw/2;
+  const py = y - ph - 12 * scale;
+
+  c.fillStyle = st.bg;
+  roundRect(c, px, py, pw, ph, 8 * scale);
+  c.fill();
+
+  c.fillStyle = st.text;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(text, x, py + ph/2);
+
+  // 三角
+  c.fillStyle = st.bg;
+  c.beginPath();
+  c.moveTo(x - 6*scale, py+ph);
+  c.lineTo(x + 6*scale, py+ph);
+  c.lineTo(x, py+ph+8*scale);
+  c.closePath();
+  c.fill();
+
+  // ピン
+  c.fillStyle = st.dot;
+  c.beginPath();
+  c.arc(x, y, 7*scale, 0, Math.PI*2);
+  c.fill();
+  c.strokeStyle = 'white';
+  c.lineWidth = 2*scale;
+  c.stroke();
+
+  c.restore();
+}
+
+// =====================================================
+// ヒント表示
+// =====================================================
+let hintTimer = null;
+function flashHint(msg) {
+  const el = document.getElementById('hint');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// =====================================================
+// 初期化
+// =====================================================
+buildPresets();
+setTimeout(() => flashHint('「📷 写真」ボタンで間取り図を読み込んでください'), 800);
+</script>
+</body>
+</html>

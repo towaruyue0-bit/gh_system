@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GH拡大プラン | GH管理システム</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary:    #1e40af;
+      --primary-l:  #3b82f6;
+      --green:      #059669;
+      --green-l:    #d1fae5;
+      --red:        #dc2626;
+      --red-l:      #fee2e2;
+      --amber:      #d97706;
+      --amber-l:    #fef3c7;
+      --purple:     #7c3aed;
+      --purple-l:   #ede9fe;
+      --bg:         #f1f5f9;
+      --card:       #ffffff;
+      --text:       #1e293b;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --sh:         0 1px 3px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Hiragino Sans','Meiryo','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+    /* ─── Header ─── */
+    .hdr{background:linear-gradient(135deg,#0f2462 0%,#1e40af 55%,#2563eb 100%);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .hdr-left h1{font-size:1.3rem;font-weight:800;letter-spacing:.02em}
+    .hdr-left p{color:rgba(255,255,255,.7);font-size:.75rem;margin-top:2px}
+    .hdr-right{display:flex;gap:8px;align-items:center}
+    .hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.76rem;font-family:inherit;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+    .hdr-btn:hover{background:rgba(255,255,255,.28)}
+
+    /* ─── Summary Bar ─── */
+    .sum-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+    .sum-item{display:flex;flex-direction:column;gap:1px;min-width:90px}
+    .sum-item .lbl{font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .sum-item .val{font-size:1.05rem;font-weight:800;color:var(--primary);letter-spacing:-.02em}
+    .sum-item .val.pos{color:var(--green)}
+    .sum-item .val.neg{color:var(--red)}
+    .sum-item .val.warn{color:var(--amber)}
+
+    /* ─── Layout ─── */
+    .layout{display:grid;grid-template-columns:360px 1fr;min-height:calc(100vh - 96px)}
+    .inp-panel{background:#fff;border-right:1px solid var(--border);overflow-y:auto;position:sticky;top:52px;height:calc(100vh - 52px)}
+    .inp-panel::-webkit-scrollbar{width:3px}
+    .inp-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .res-panel{padding:20px;overflow-y:auto}
+
+    /* ─── Accordion ─── */
+    .sec{border-bottom:1px solid var(--border)}
+    .sec-hdr{padding:11px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background .15s}
+    .sec-hdr:hover{background:#f8faff}
+    .sec-title{font-size:.85rem;font-weight:700;color:var(--text)}
+    .chevron{font-size:.8rem;color:var(--muted);transition:transform .2s}
+    .sec-hdr.open .chevron{transform:rotate(90deg)}
+    .sec-body{padding:10px 16px 14px;display:none}
+    .sec-body.open{display:block}
+
+    /* ─── Input ─── */
+    .inp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .inp-row label{font-size:.8rem;color:var(--text);flex:1;line-height:1.3}
+    .inp-unit{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .inp-unit input[type=number]{width:90px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.88rem;font-family:inherit;text-align:right;background:#fafbfc;outline:none;transition:border-color .15s}
+    .inp-unit input[type=number]:focus{border-color:var(--primary-l);background:#fff}
+    .inp-unit .unit{font-size:.75rem;color:var(--muted);white-space:nowrap}
+    .inp-unit select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.82rem;font-family:inherit;background:#fafbfc;outline:none}
+    .inp-unit select:focus{border-color:var(--primary-l)}
+    .sec-note{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.5;padding:6px 8px;background:var(--bg);border-radius:6px}
+
+    /* ─── Home cards ─── */
+    .home-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+    .home-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .home-badge{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+    .badge-exist{background:#dbeafe;color:#1e40af}
+    .badge-new{background:#d1fae5;color:#065f46}
+    .home-card-name{font-size:.9rem;font-weight:700;flex:1;color:var(--text)}
+    .home-del-btn{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:4px;transition:.15s}
+    .home-del-btn:hover{background:#fee2e2;color:var(--red)}
+    .home-card .inp-row label{font-size:.76rem}
+    .home-card .inp-unit input[type=number]{width:80px;font-size:.82rem}
+    .home-card .inp-unit select{font-size:.76rem}
+
+    /* ─── Add button ─── */
+    .add-btn{width:100%;padding:8px;background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;transition:.15s;margin-top:4px}
+    .add-btn:hover{border-color:var(--primary-l);color:var(--primary);background:#f0f4ff}
+
+    /* ─── Result cards ─── */
+    .res-card{background:var(--card);border-radius:12px;box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+    .res-card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .res-card-hdr h3{font-size:.9rem;font-weight:700}
+    .res-card-body{padding:16px}
+    .chart-wrap{position:relative;height:280px}
+
+    /* ─── Timeline table ─── */
+    .tl-wrap{overflow-x:auto}
+    .tl-table{border-collapse:collapse;font-size:.78rem;min-width:100%}
+    .tl-table th{padding:6px 12px;background:#f1f5f9;font-weight:700;color:var(--muted);text-align:center;white-space:nowrap;border:1px solid var(--border)}
+    .tl-table th:first-child{text-align:left;min-width:140px}
+    .tl-table td{padding:6px 12px;border:1px solid var(--border);text-align:center;white-space:nowrap}
+    .tl-table td:first-child{text-align:left;font-weight:600;color:var(--text)}
+    .tl-cell-run{background:#d1fae5;color:#065f46;font-weight:700;font-size:.7rem}
+    .tl-cell-ramp{background:#fef3c7;color:#92400e;font-weight:600;font-size:.7rem}
+    .tl-cell-pre{background:#f1f5f9;color:#94a3b8;font-size:.7rem}
+    .tl-cell-open{background:#bfdbfe;color:#1e40af;font-weight:800;font-size:.7rem;outline:2px solid #3b82f6;outline-offset:-2px}
+
+    /* ─── Financial table ─── */
+    .tbl-wrap{overflow-x:auto}
+    table.fin-tbl{width:100%;border-collapse:collapse;font-size:.78rem}
+    table.fin-tbl thead th{position:sticky;top:0;background:#f1f5f9;padding:8px 10px;text-align:right;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+    table.fin-tbl thead th:first-child{text-align:left;min-width:90px}
+    table.fin-tbl tbody tr:nth-child(even){background:#fafbfc}
+    table.fin-tbl tbody tr:hover{background:#eef4ff}
+    table.fin-tbl tbody td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+    table.fin-tbl tbody td:first-child{text-align:left;font-weight:700;color:var(--text)}
+    .cell-pos{color:var(--green);font-weight:700}
+    .cell-neg{color:var(--red);font-weight:700}
+    .row-total td{background:#e8f0fe!important;font-weight:800;color:var(--primary)}
+
+    @media(max-width:800px){
+      .layout{grid-template-columns:1fr}
+      .inp-panel{position:static;height:auto;max-height:55vh;overflow-y:auto}
+    }
+    @media print{.inp-panel,.hdr-right{display:none}.layout{grid-template-columns:1fr}.sum-bar{position:static}}
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>🏗 GH拡大プラン</h1>
+    <p>既存ホームをベースに新規開設のタイミング・収支を複数年で計画する</p>
+  </div>
+  <div class="hdr-right">
+    <a class="hdr-btn" href="index.html">‹ 運営方針ツール</a>
+    <button class="hdr-btn" onclick="window.print()">🖨 印刷</button>
+  </div>
+</div>
+
+<!-- ===== Summary Bar ===== -->
+<div class="sum-bar">
+  <div class="sum-item">
+    <div class="lbl">計画終了時 総ホーム数</div>
+    <div class="val" id="sb-homes">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">計画終了時 総定員</div>
+    <div class="val" id="sb-cap">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">安定時 月次収支（全体）</div>
+    <div class="val" id="sb-monthly">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">累積初期投資</div>
+    <div class="val warn" id="sb-invest">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">計画末 累積収支</div>
+    <div class="val" id="sb-final">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">最終年 年間収支</div>
+    <div class="val" id="sb-lastyear">—</div>
+  </div>
+</div>
+
+<!-- ===== Main Layout ===== -->
+<div class="layout">
+
+  <!-- ========== Input Panel ========== -->
+  <div class="inp-panel">
+
+    <!-- 基本設定 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">⚙ 基本設定</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="inp-row">
+          <label>計画名（表示用）</label>
+          <div class="inp-unit">
+            <input type="text" id="planName" value="GH拡大計画" style="width:130px;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-size:.85rem;font-family:inherit">
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>計画期間</label>
+          <div class="inp-unit">
+            <select id="years">
+              <option value="3">3 年</option>
+              <option value="5" selected>5 年</option>
+              <option value="7">7 年</option>
+              <option value="10">10 年</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>計画開始年月</label>
+          <div class="inp-unit">
+            <select id="startYear" style="width:70px"></select>
+            <span class="unit">年</span>
+            <select id="startMonth" style="width:55px">
+              <option value="1" selected>1月</option><option value="2">2月</option><option value="3">3月</option>
+              <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+              <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+              <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 既存ホーム -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">🏠 既存ホーム（現在運営中）</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="sec-note" style="margin-bottom:10px">計画開始時点で既に運営中のホームを入力してください。</div>
+        <div id="existingList"></div>
+        <button class="add-btn" id="addExistingBtn" onclick="addExistingHome()">＋ 既存ホームを追加</button>
+      </div>
+    </div>
+
+    <!-- 新規開設計画 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">🏗 新規開設計画</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="sec-note" style="margin-bottom:10px">これから開設するホームを追加してください（最大5棟）。</div>
+        <div id="newHomeList"></div>
+        <button class="add-btn" id="addNewBtn" onclick="addNewHome()">＋ 新規ホームを追加</button>
+      </div>
+    </div>
+
+  </div><!-- /inp-panel -->
+
+  <!-- ========== Result Panel ========== -->
+  <div class="res-panel">
+
+    <!-- 開設タイムライン -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📅 開設タイムライン</h3>
+        <span style="font-size:.72rem;color:var(--muted)">
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:12px;height:12px;background:#bfdbfe;border:2px solid #3b82f6;display:inline-block;border-radius:2px"></span> 開設月
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:12px;height:12px;background:#fef3c7;display:inline-block;border-radius:2px"></span> 立ち上がり
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:12px;height:12px;background:#d1fae5;display:inline-block;border-radius:2px"></span> 安定稼働
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px">
+            <span style="width:12px;height:12px;background:#f1f5f9;display:inline-block;border-radius:2px"></span> 未開設
+          </span>
+        </span>
+      </div>
+      <div class="res-card-body" style="padding:12px">
+        <div class="tl-wrap">
+          <table class="tl-table" id="tlTable">
+            <thead id="tlHead"></thead>
+            <tbody id="tlBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 年次収支表 -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📊 年次収支サマリー</h3>
+      </div>
+      <div class="res-card-body" style="padding:0">
+        <div class="tbl-wrap">
+          <table class="fin-tbl" id="finTable">
+            <thead>
+              <tr>
+                <th style="text-align:left">年度</th>
+                <th>稼働ホーム数</th>
+                <th>総定員</th>
+                <th>年間収入</th>
+                <th>年間支出</th>
+                <th>初期投資</th>
+                <th>年次収支</th>
+                <th>累積収支</th>
+              </tr>
+            </thead>
+            <tbody id="finBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- グラフ -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📈 収支推移グラフ</h3>
+      </div>
+      <div class="res-card-body">
+        <div class="chart-wrap">
+          <canvas id="cfChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ホーム別収支 -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>🏠 ホーム別 年次収支内訳</h3>
+        <span style="font-size:.72rem;color:var(--muted)">年間純収支（収入 − 支出）</span>
+      </div>
+      <div class="res-card-body" style="padding:0">
+        <div class="tbl-wrap">
+          <table class="fin-tbl" id="homeTable">
+            <thead id="homeThead"></thead>
+            <tbody id="homeTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /res-panel -->
+
+</div><!-- /layout -->
+
+<script>
+// ─────────────────────────────────────────────────
+//  State
+// ─────────────────────────────────────────────────
+let cfChart = null;
+
+const state = {
+  existingHomes: [],
+  newHomes: [],
+};
+
+let existingIdCounter = 0;
+let newIdCounter = 0;
+
+// ─────────────────────────────────────────────────
+//  Helpers
+// ─────────────────────────────────────────────────
+function $(id){ return document.getElementById(id); }
+function gn(id){ return parseFloat($(id).value) || 0; }
+function gi(id){ return parseInt($(id).value) || 0; }
+
+function fmtMan(v){ return Math.round(v / 10000).toLocaleString('ja-JP') + '万円'; }
+function fmtManSign(v){
+  const m = Math.round(v / 10000);
+  return (m >= 0 ? '+' : '') + m.toLocaleString('ja-JP') + '万円';
+}
+function fmtManShort(v){ return Math.round(v / 10000) + '万'; }
+
+// ─────────────────────────────────────────────────
+//  Init year selector
+// ─────────────────────────────────────────────────
+function initYearSel(){
+  const sel = $('startYear');
+  const now = new Date().getFullYear();
+  for(let y = now - 1; y <= now + 5; y++){
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if(y === now) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  Existing home card
+// ─────────────────────────────────────────────────
+function addExistingHome(){
+  if(state.existingHomes.length >= 5){ alert('既存ホームは最大5棟まで登録できます。'); return; }
+  const id = ++existingIdCounter;
+  const n = state.existingHomes.length + 1;
+  state.existingHomes.push({ id });
+
+  const div = document.createElement('div');
+  div.className = 'home-card';
+  div.id = `ehc-${id}`;
+  div.innerHTML = `
+    <div class="home-card-hdr">
+      <span class="home-badge badge-exist">既存</span>
+      <span class="home-card-name">既存ホーム ${n}</span>
+      <button class="home-del-btn" onclick="delExistingHome(${id})">✕</button>
+    </div>
+    <div class="inp-row">
+      <label>ホーム名</label>
+      <div class="inp-unit">
+        <input type="text" id="eh-name-${id}" value="ホーム${n}"
+          style="width:110px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 7px;font-size:.82rem;font-family:inherit"
+          oninput="calculate()">
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>定員数</label>
+      <div class="inp-unit">
+        <input type="number" id="eh-cap-${id}" value="5" min="1" max="20" oninput="calculate()">
+        <span class="unit">人</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>月額収入</label>
+      <div class="inp-unit">
+        <input type="number" id="eh-rev-${id}" value="900000" min="0" step="10000" oninput="calculate()">
+        <span class="unit">円</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>月額支出</label>
+      <div class="inp-unit">
+        <input type="number" id="eh-exp-${id}" value="700000" min="0" step="10000" oninput="calculate()">
+        <span class="unit">円</span>
+      </div>
+    </div>
+  `;
+  $('existingList').appendChild(div);
+  calculate();
+}
+
+function delExistingHome(id){
+  state.existingHomes = state.existingHomes.filter(h => h.id !== id);
+  const el = $(`ehc-${id}`);
+  if(el) el.remove();
+  calculate();
+}
+
+// ─────────────────────────────────────────────────
+//  New home card
+// ─────────────────────────────────────────────────
+function addNewHome(){
+  if(state.newHomes.length >= 5){ alert('新規ホームは最大5棟まで追加できます。'); return; }
+  const id = ++newIdCounter;
+  const n = state.newHomes.length + 1;
+  state.newHomes.push({ id });
+
+  // Default open date: plan start + n years
+  const baseY = gi('startYear') || new Date().getFullYear();
+  const defY = baseY + n;
+
+  const div = document.createElement('div');
+  div.className = 'home-card';
+  div.id = `nhc-${id}`;
+  div.innerHTML = `
+    <div class="home-card-hdr">
+      <span class="home-badge badge-new">新規</span>
+      <span class="home-card-name">新設ホーム ${n}</span>
+      <button class="home-del-btn" onclick="delNewHome(${id})">✕</button>
+    </div>
+    <div class="inp-row">
+      <label>ホーム名</label>
+      <div class="inp-unit">
+        <input type="text" id="nh-name-${id}" value="新設ホーム${n}"
+          style="width:110px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 7px;font-size:.82rem;font-family:inherit"
+          oninput="calculate()">
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>開設年月</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-oy-${id}" value="${defY}" min="2020" max="2040" style="width:65px" oninput="calculate()">
+        <span class="unit">年</span>
+        <select id="nh-om-${id}" onchange="calculate()">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}"${m===4?' selected':''}>` + m + `月</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>定員数</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-cap-${id}" value="5" min="1" max="20" oninput="calculate()">
+        <span class="unit">人</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>1人当たり月額収入<br><span style="font-size:.68rem;color:var(--muted)">報酬＋補足給付＋実費</span></label>
+      <div class="inp-unit">
+        <input type="number" id="nh-revpp-${id}" value="195000" min="0" step="5000" oninput="calculate()">
+        <span class="unit">円</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>月額固定支出</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-exp-${id}" value="680000" min="0" step="10000" oninput="calculate()">
+        <span class="unit">円</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>初期投資額</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-inv-${id}" value="1000000" min="0" step="100000" oninput="calculate()">
+        <span class="unit">円</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>立ち上がり期間</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-ramp-${id}" value="6" min="0" max="24" oninput="calculate()">
+        <span class="unit">ヶ月</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>立ち上がり稼働率</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-occ1-${id}" value="65" min="0" max="100" oninput="calculate()">
+        <span class="unit">%</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <label>安定稼働率</label>
+      <div class="inp-unit">
+        <input type="number" id="nh-occ2-${id}" value="95" min="0" max="100" oninput="calculate()">
+        <span class="unit">%</span>
+      </div>
+    </div>
+  `;
+  $('newHomeList').appendChild(div);
+  calculate();
+}
+
+function delNewHome(id){
+  state.newHomes = state.newHomes.filter(h => h.id !== id);
+  const el = $(`nhc-${id}`);
+  if(el) el.remove();
+  calculate();
+}
+
+// ─────────────────────────────────────────────────
+//  Read current home data from DOM
+// ─────────────────────────────────────────────────
+function readExistingHomes(){
+  return state.existingHomes.map(h => ({
+    id:       h.id,
+    name:     $(`eh-name-${h.id}`)?.value || `既存ホーム${h.id}`,
+    capacity: parseFloat($(`eh-cap-${h.id}`)?.value) || 0,
+    revenue:  parseFloat($(`eh-rev-${h.id}`)?.value) || 0,
+    expense:  parseFloat($(`eh-exp-${h.id}`)?.value) || 0,
+  }));
+}
+
+function readNewHomes(){
+  return state.newHomes.map(h => ({
+    id:       h.id,
+    name:     $(`nh-name-${h.id}`)?.value || `新設ホーム${h.id}`,
+    openYear: parseInt($(`nh-oy-${h.id}`)?.value) || 2027,
+    openMonth:parseInt($(`nh-om-${h.id}`)?.value) || 4,
+    capacity: parseFloat($(`nh-cap-${h.id}`)?.value) || 0,
+    revPP:    parseFloat($(`nh-revpp-${h.id}`)?.value) || 0,
+    expense:  parseFloat($(`nh-exp-${h.id}`)?.value) || 0,
+    initial:  parseFloat($(`nh-inv-${h.id}`)?.value) || 0,
+    rampMo:   parseInt($(`nh-ramp-${h.id}`)?.value) || 0,
+    occ1:     parseFloat($(`nh-occ1-${h.id}`)?.value) / 100 || 0.65,
+    occ2:     parseFloat($(`nh-occ2-${h.id}`)?.value) / 100 || 0.95,
+  }));
+}
+
+// ─────────────────────────────────────────────────
+//  Occupancy for a new home
+// ─────────────────────────────────────────────────
+function getOcc(home, monthsOpen){
+  // monthsOpen: 0 = opening month, 1 = 1st full month, ...
+  if(monthsOpen < home.rampMo) return home.occ1;
+  return home.occ2;
+}
+
+// ─────────────────────────────────────────────────
+//  Main calculation
+// ─────────────────────────────────────────────────
+function calculate(){
+  const years      = gi('years');
+  const startY     = gi('startYear');
+  const startM     = gi('startMonth');
+  const totalMo    = years * 12;
+
+  const existing   = readExistingHomes();
+  const newHomes   = readNewHomes();
+  const allHomes   = [
+    ...existing.map(h => ({ ...h, type: 'existing' })),
+    ...newHomes.map(h => ({ ...h, type: 'new' }))
+  ];
+
+  // Month-by-month
+  const months = [];
+  let cumulative = 0;
+
+  for(let m = 0; m < totalMo; m++){
+    const calY = startY + Math.floor((startM - 1 + m) / 12);
+    const calM = ((startM - 1 + m) % 12) + 1;
+
+    let totalRev = 0, totalExp = 0, totalInit = 0;
+
+    // Existing homes: constant contribution
+    for(const h of existing){
+      totalRev += h.revenue;
+      totalExp += h.expense;
+    }
+
+    // New homes
+    for(const h of newHomes){
+      const monthsOpen = (calY - h.openYear) * 12 + (calM - h.openMonth);
+      if(monthsOpen === 0){
+        totalInit += h.initial;
+      }
+      if(monthsOpen >= 0){
+        const occ = getOcc(h, monthsOpen);
+        totalRev += h.capacity * occ * h.revPP;
+        totalExp += h.expense;
+      }
+    }
+
+    const cashFlow = totalRev - totalExp - totalInit;
+    cumulative += cashFlow;
+    months.push({ calY, calM, totalRev, totalExp, totalInit, cashFlow, cumulative });
+  }
+
+  // Year aggregates
+  const yearData = [];
+  for(let y = 0; y < years; y++){
+    const slice = months.slice(y * 12, (y + 1) * 12);
+    if(!slice.length) continue;
+
+    const last    = slice[slice.length - 1];
+    const annRev  = slice.reduce((s, d) => s + d.totalRev,  0);
+    const annExp  = slice.reduce((s, d) => s + d.totalExp,  0);
+    const annInit = slice.reduce((s, d) => s + d.totalInit, 0);
+    const annCF   = slice.reduce((s, d) => s + d.cashFlow,  0);
+
+    // Count open homes at year end
+    let homesOpen = existing.length;
+    let totalCap  = existing.reduce((s, h) => s + h.capacity, 0);
+    for(const h of newHomes){
+      const mo = (last.calY - h.openYear) * 12 + (last.calM - h.openMonth);
+      if(mo >= 0){ homesOpen++; totalCap += h.capacity; }
+    }
+
+    // Per-home annual net for breakdown
+    const homeNets = {};
+    for(const h of existing){
+      const net = (h.revenue - h.expense) * 12;
+      homeNets[h.name || `既存${h.id}`] = net;
+    }
+    for(const h of newHomes){
+      let net = 0;
+      for(const d of slice){
+        const mo = (d.calY - h.openYear) * 12 + (d.calM - h.openMonth);
+        if(mo === 0) net -= h.initial;
+        if(mo >= 0){
+          const occ = getOcc(h, mo);
+          net += h.capacity * occ * h.revPP - h.expense;
+        }
+      }
+      homeNets[h.name || `新設${h.id}`] = net;
+    }
+
+    yearData.push({
+      year: y + 1,
+      calY: last.calY,
+      annRev, annExp, annInit, annCF,
+      cumulative: last.cumulative,
+      homesOpen, totalCap, homeNets
+    });
+  }
+
+  // ─── Summary bar ───
+  const lastYD = yearData[yearData.length - 1];
+  $('sb-homes').textContent = lastYD ? lastYD.homesOpen + '棟' : '—';
+  $('sb-cap').textContent   = lastYD ? lastYD.totalCap  + '人' : '—';
+
+  // Stable monthly CF (last year / 12, approx)
+  const stableMonthly = lastYD ? (lastYD.annRev - lastYD.annExp) / 12 : 0;
+  const sbM = $('sb-monthly');
+  sbM.textContent = fmtMan(stableMonthly);
+  sbM.className   = 'val ' + (stableMonthly >= 0 ? 'pos' : 'neg');
+
+  const totalInvest = newHomes.reduce((s, h) => s + h.initial, 0);
+  $('sb-invest').textContent = fmtMan(totalInvest);
+
+  const finalCum = lastYD ? lastYD.cumulative : 0;
+  const sbF = $('sb-final');
+  sbF.textContent = fmtMan(finalCum);
+  sbF.className   = 'val ' + (finalCum >= 0 ? 'pos' : 'neg');
+
+  const lastAnn = lastYD ? lastYD.annCF : 0;
+  const sbL = $('sb-lastyear');
+  sbL.textContent = fmtManSign(lastAnn);
+  sbL.className   = 'val ' + (lastAnn >= 0 ? 'pos' : 'neg');
+
+  renderTimeline(allHomes, existing, newHomes, years, startY, startM);
+  renderFinTable(yearData, startY, startM);
+  renderHomeTable(yearData, existing, newHomes);
+  renderChart(months, startY, startM);
+}
+
+// ─────────────────────────────────────────────────
+//  Timeline
+// ─────────────────────────────────────────────────
+function renderTimeline(allHomes, existing, newHomes, years, startY, startM){
+  const thead = $('tlHead');
+  const tbody = $('tlBody');
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+  if(!allHomes.length){ tbody.innerHTML = '<tr><td colspan="99" style="text-align:center;padding:16px;color:var(--muted)">ホームを追加してください</td></tr>'; return; }
+
+  // Header: Year columns
+  const hr = document.createElement('tr');
+  hr.appendChild(Object.assign(document.createElement('th'), { textContent: 'ホーム' }));
+  for(let y = 0; y < years; y++){
+    const calEndY = startY + Math.floor((startM - 1 + (y + 1) * 12 - 1) / 12);
+    const th = document.createElement('th');
+    th.textContent = `${y + 1}年目（${calEndY}）`;
+    hr.appendChild(th);
+  }
+  thead.appendChild(hr);
+
+  // Rows
+  for(const h of allHomes){
+    const tr = document.createElement('tr');
+    const nameType = h.type === 'existing'
+      ? `<span class="home-badge badge-exist" style="margin-right:4px">既存</span>${h.name}`
+      : `<span class="home-badge badge-new" style="margin-right:4px">新規</span>${h.name}`;
+    const nameTd = document.createElement('td');
+    nameTd.innerHTML = nameType;
+    tr.appendChild(nameTd);
+
+    for(let y = 0; y < years; y++){
+      // Check status at mid-year (month 6 of year y)
+      const midMoIdx = y * 12 + 5;
+      const midCalY = startY + Math.floor((startM - 1 + midMoIdx) / 12);
+      const midCalM = ((startM - 1 + midMoIdx) % 12) + 1;
+
+      const td = document.createElement('td');
+
+      if(h.type === 'existing'){
+        td.className = 'tl-cell-run';
+        const net = h.revenue - h.expense;
+        td.textContent = net >= 0 ? `+${Math.round(net/10000)}万/月` : `${Math.round(net/10000)}万/月`;
+      } else {
+        // New home
+        const moOpen = (midCalY - h.openYear) * 12 + (midCalM - h.openMonth);
+        // Check if opening this year
+        let openedThisYear = false;
+        for(let mm = y * 12; mm < (y + 1) * 12; mm++){
+          const cy = startY + Math.floor((startM - 1 + mm) / 12);
+          const cm = ((startM - 1 + mm) % 12) + 1;
+          const mo = (cy - h.openYear) * 12 + (cm - h.openMonth);
+          if(mo === 0){ openedThisYear = true; break; }
+        }
+
+        if(openedThisYear){
+          td.className = 'tl-cell-open';
+          td.textContent = `🔑 開設（${h.openYear}/${String(h.openMonth).padStart(2,'0')}）`;
+        } else if(moOpen < 0){
+          td.className = 'tl-cell-pre';
+          td.textContent = '未開設';
+        } else if(moOpen < h.rampMo){
+          td.className = 'tl-cell-ramp';
+          td.textContent = `立ち上がり ${Math.round(h.occ1*100)}%`;
+        } else {
+          td.className = 'tl-cell-run';
+          td.textContent = `安定 ${Math.round(h.occ2*100)}%`;
+        }
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  Financial table
+// ─────────────────────────────────────────────────
+function renderFinTable(yearData, startY, startM){
+  const tbody = $('finBody');
+  tbody.innerHTML = '';
+
+  for(const d of yearData){
+    const cfC  = d.annCF >= 0 ? 'cell-pos' : 'cell-neg';
+    const cumC = d.cumulative >= 0 ? 'cell-pos' : 'cell-neg';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${d.year}年目（${d.calY}年）</td>
+      <td style="text-align:center">${d.homesOpen}棟</td>
+      <td style="text-align:center">${d.totalCap}人</td>
+      <td>${fmtMan(d.annRev)}</td>
+      <td>${fmtMan(d.annExp)}</td>
+      <td>${d.annInit > 0 ? '▼' + fmtMan(d.annInit) : '—'}</td>
+      <td class="${cfC}">${fmtManSign(d.annCF)}</td>
+      <td class="${cumC}">${fmtManSign(d.cumulative)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  Home breakdown table
+// ─────────────────────────────────────────────────
+function renderHomeTable(yearData, existing, newHomes){
+  const thead = $('homeThead');
+  const tbody = $('homeTbody');
+  thead.innerHTML = '';
+  tbody.innerHTML = '';
+
+  const allNames = [
+    ...existing.map(h => h.name || `既存${h.id}`),
+    ...newHomes.map(h => h.name || `新設${h.id}`)
+  ];
+  if(!allNames.length){ return; }
+
+  // Header
+  const hr = document.createElement('tr');
+  hr.appendChild(Object.assign(document.createElement('th'), { textContent: '年度', style: 'text-align:left' }));
+  for(const name of allNames){
+    const th = document.createElement('th');
+    th.textContent = name;
+    hr.appendChild(th);
+  }
+  const thTotal = document.createElement('th');
+  thTotal.textContent = '合計';
+  hr.appendChild(thTotal);
+  thead.appendChild(hr);
+
+  // Rows
+  for(const d of yearData){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${d.year}年目（${d.calY}）</td>`;
+    let rowTotal = 0;
+    for(const name of allNames){
+      const v = d.homeNets[name] ?? 0;
+      rowTotal += v;
+      const cls = v >= 0 ? 'cell-pos' : 'cell-neg';
+      const td = document.createElement('td');
+      td.className = cls;
+      td.textContent = fmtManSign(v);
+      tr.appendChild(td);
+    }
+    const totTd = document.createElement('td');
+    totTd.className = (rowTotal >= 0 ? 'cell-pos' : 'cell-neg');
+    totTd.style.fontWeight = '800';
+    totTd.textContent = fmtManSign(rowTotal);
+    tr.appendChild(totTd);
+    tbody.appendChild(tr);
+  }
+}
+
+// ─────────────────────────────────────────────────
+//  Chart
+// ─────────────────────────────────────────────────
+function renderChart(months, startY, startM){
+  // Aggregate to months but show quarterly labels for readability
+  const labels = months.map((d, i) => i % 3 === 0 ? `${d.calY}/${String(d.calM).padStart(2,'0')}` : '');
+  const cfVals  = months.map(d => Math.round(d.cashFlow / 10000));
+  const cumVals = months.map(d => Math.round(d.cumulative / 10000));
+
+  const barColors = cfVals.map(v => v >= 0 ? 'rgba(5,150,105,.7)' : 'rgba(220,38,38,.7)');
+
+  if(cfChart) cfChart.destroy();
+
+  cfChart = new Chart($('cfChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: '月次収支（万円）',
+          data: cfVals,
+          backgroundColor: barColors,
+          borderRadius: 2,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: '累積収支（万円）',
+          data: cumVals,
+          borderColor: '#1e40af',
+          backgroundColor: 'rgba(30,64,175,.07)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'y2',
+          order: 1,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const v = ctx.parsed.y;
+              return `${ctx.dataset.label}: ${v >= 0 ? '+' : ''}${v.toLocaleString()}万円`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { font: { size: 10 }, maxRotation: 0 },
+          grid: { display: false }
+        },
+        y: {
+          position: 'left',
+          title: { display: true, text: '月次収支（万円）', font: { size: 10 } },
+          ticks: { font: { size: 10 }, callback: v => v + '万' }
+        },
+        y2: {
+          position: 'right',
+          title: { display: true, text: '累積収支（万円）', font: { size: 10 } },
+          ticks: { font: { size: 10 }, callback: v => v + '万' },
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────
+//  Accordion
+// ─────────────────────────────────────────────────
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  hdr.nextElementSibling.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────────────
+//  Boot
+// ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  initYearSel();
+
+  // Global event listeners
+  ['years', 'startYear', 'startMonth'].forEach(id => {
+    $(id).addEventListener('change', calculate);
+  });
+  $('planName').addEventListener('input', () => {
+    document.title = ($('planName').value || 'GH') + ' 拡大プラン';
+  });
+
+  // Start with 1 existing + 1 new home as default
+  addExistingHome();
+  addNewHome();
+});
+</script>
+</body>
+</html>

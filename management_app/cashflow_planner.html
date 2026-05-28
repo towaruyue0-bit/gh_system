@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>月次キャッシュフロー計画 | GH管理システム</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary:      #1e40af;
+      --primary-l:    #3b82f6;
+      --green:        #059669;
+      --green-l:      #d1fae5;
+      --red:          #dc2626;
+      --red-l:        #fee2e2;
+      --amber:        #d97706;
+      --bg:           #f1f5f9;
+      --card:         #ffffff;
+      --text:         #1e293b;
+      --muted:        #64748b;
+      --border:       #e2e8f0;
+      --sh:           0 1px 3px rgba(0,0,0,.08);
+      --sh-lg:        0 6px 18px rgba(0,0,0,.10);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Hiragino Sans','Meiryo','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+    /* ─── Header ─── */
+    .hdr{background:linear-gradient(135deg,#0f2462 0%,#1e40af 55%,#2563eb 100%);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .hdr-left h1{font-size:1.3rem;font-weight:800;letter-spacing:.02em}
+    .hdr-left p{color:rgba(255,255,255,.7);font-size:.75rem;margin-top:2px}
+    .hdr-right{display:flex;gap:8px;align-items:center}
+    .hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.76rem;font-family:inherit;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+    .hdr-btn:hover{background:rgba(255,255,255,.28)}
+
+    /* ─── Summary Bar ─── */
+    .sum-bar{background:#fff;border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+    .sum-item{display:flex;flex-direction:column;gap:1px;min-width:90px}
+    .sum-item .lbl{font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .sum-item .val{font-size:1.05rem;font-weight:800;color:var(--primary);letter-spacing:-.02em}
+    .sum-item .val.pos{color:var(--green)}
+    .sum-item .val.neg{color:var(--red)}
+    .sum-item .val.warn{color:var(--amber)}
+
+    /* ─── Layout ─── */
+    .layout{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 96px)}
+    .inp-panel{background:#fff;border-right:1px solid var(--border);overflow-y:auto;position:sticky;top:52px;height:calc(100vh - 52px)}
+    .inp-panel::-webkit-scrollbar{width:3px}
+    .inp-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+    .res-panel{padding:20px;overflow-y:auto}
+
+    /* ─── Accordion Sections ─── */
+    .sec{border-bottom:1px solid var(--border)}
+    .sec-hdr{padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background .15s}
+    .sec-hdr:hover{background:#f8faff}
+    .sec-hdr .sec-title{font-size:.85rem;font-weight:700;color:var(--text)}
+    .sec-hdr .sec-tag{font-size:.65rem;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--bg);color:var(--muted)}
+    .sec-hdr .chevron{font-size:.8rem;color:var(--muted);transition:transform .2s}
+    .sec-hdr.open .chevron{transform:rotate(90deg)}
+    .sec-body{padding:10px 16px 14px;display:none}
+    .sec-body.open{display:block}
+
+    /* ─── Input Row ─── */
+    .inp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .inp-row label{font-size:.8rem;color:var(--text);flex:1;line-height:1.3}
+    .inp-row .inp-unit{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .inp-row input[type=number]{width:90px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.9rem;font-family:inherit;color:var(--text);background:#fafbfc;text-align:right;outline:none;transition:border-color .15s}
+    .inp-row input[type=number]:focus{border-color:var(--primary-l);background:#fff}
+    .inp-row .unit{font-size:.75rem;color:var(--muted);white-space:nowrap}
+    .inp-row input[type=range]{width:90px;accent-color:var(--primary);cursor:pointer}
+    .inp-row select{border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.85rem;font-family:inherit;color:var(--text);background:#fafbfc;outline:none}
+    .inp-row select:focus{border-color:var(--primary-l)}
+
+    /* Range with value display */
+    .range-row{margin-bottom:8px}
+    .range-row label{font-size:.8rem;color:var(--text);display:flex;justify-content:space-between;margin-bottom:3px}
+    .range-row label span{font-weight:700;color:var(--primary)}
+    .range-row input[type=range]{width:100%;accent-color:var(--primary);cursor:pointer}
+
+    .sec-note{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.5;padding:6px 8px;background:var(--bg);border-radius:6px}
+    .subtotal{text-align:right;font-size:.78rem;color:var(--muted);margin-top:2px;margin-bottom:8px}
+    .subtotal strong{color:var(--text);font-weight:700}
+
+    /* ─── Result cards ─── */
+    .res-card{background:var(--card);border-radius:12px;box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+    .res-card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+    .res-card-hdr h3{font-size:.9rem;font-weight:700;color:var(--text)}
+    .res-card-body{padding:16px}
+    .chart-wrap{position:relative;height:260px}
+
+    /* ─── Tables ─── */
+    .tbl-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+    table{width:100%;border-collapse:collapse;font-size:.78rem}
+    thead th{position:sticky;top:0;background:#f1f5f9;padding:8px 10px;text-align:right;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap;z-index:1}
+    thead th:first-child{text-align:left}
+    tbody tr:nth-child(even){background:#fafbfc}
+    tbody tr:hover{background:#eef4ff}
+    tbody td{padding:6px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+    tbody td:first-child{text-align:left;color:var(--muted);font-weight:600}
+    .cell-pos{color:var(--green);font-weight:700}
+    .cell-neg{color:var(--red);font-weight:700}
+    .row-year{background:#e8f0fe !important;font-weight:700}
+    .row-year td{font-weight:700;color:var(--primary)}
+    .row-year td:first-child{color:var(--primary)}
+    .cell-occ{font-size:.72rem;color:var(--muted)}
+
+    /* ─── Phase grid ─── */
+    .phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .phase-item label{font-size:.78rem;color:var(--muted);display:block;margin-bottom:2px}
+    .phase-item input[type=number]{width:100%;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.9rem;font-family:inherit;text-align:right;background:#fafbfc;outline:none}
+    .phase-item input[type=number]:focus{border-color:var(--primary-l);background:#fff}
+
+    /* ─── Breakeven badge ─── */
+    .be-badge{display:inline-flex;align-items:center;gap:6px;background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
+    .be-badge.negative{background:#fee2e2;color:#991b1b}
+
+    /* ─── Summary grid ─── */
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .sg-item{background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center}
+    .sg-item .sg-label{font-size:.65rem;color:var(--muted);font-weight:700;margin-bottom:4px}
+    .sg-item .sg-value{font-size:1.05rem;font-weight:800;color:var(--text)}
+    .sg-item .sg-value.pos{color:var(--green)}
+    .sg-item .sg-value.neg{color:var(--red)}
+    .sg-item .sg-value.warn{color:var(--amber)}
+
+    /* ─── Print ─── */
+    @media print{
+      .inp-panel,.hdr-right{display:none}
+      .layout{grid-template-columns:1fr}
+      .sum-bar{position:static}
+    }
+    @media(max-width:800px){
+      .layout{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+      .inp-panel{position:static;height:auto;max-height:60vh;overflow-y:auto}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>📅 月次キャッシュフロー計画</h1>
+    <p>月ごとの収支・資金繰りを複数年にわたって計画・確認する</p>
+  </div>
+  <div class="hdr-right">
+    <a class="hdr-btn" href="index.html">‹ 運営方針ツール</a>
+    <button class="hdr-btn" onclick="window.print()">🖨 印刷</button>
+  </div>
+</div>
+
+<!-- ===== Summary Bar ===== -->
+<div class="sum-bar">
+  <div class="sum-item">
+    <div class="lbl">安定稼働時 月収入</div>
+    <div class="val" id="sb-revenue">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">月額支出</div>
+    <div class="val" id="sb-expense">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">安定稼働時 月次収支</div>
+    <div class="val" id="sb-monthly">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">初期投資合計</div>
+    <div class="val" id="sb-initial">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">黒字転換</div>
+    <div class="val" id="sb-be">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">計画末 累積収支</div>
+    <div class="val" id="sb-final">—</div>
+  </div>
+</div>
+
+<!-- ===== Main Layout ===== -->
+<div class="layout">
+
+  <!-- ========== Input Panel ========== -->
+  <div class="inp-panel">
+
+    <!-- 基本設定 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">🏠 基本設定</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="inp-row">
+          <label>ホーム名（表示用）</label>
+          <div class="inp-unit">
+            <input type="text" id="homeName" value="グループホーム" style="width:130px;border:1px solid #e2e8f0;border-radius:6px;padding:5px 8px;font-size:.85rem;font-family:inherit">
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>定員数</label>
+          <div class="inp-unit">
+            <input type="number" id="capacity" value="5" min="1" max="20">
+            <span class="unit">人</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>計画期間</label>
+          <div class="inp-unit">
+            <select id="years">
+              <option value="3">3 年</option>
+              <option value="5" selected>5 年</option>
+              <option value="7">7 年</option>
+              <option value="10">10 年</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>開設年月</label>
+          <div class="inp-unit">
+            <select id="startYear" style="width:70px"></select>
+            <span class="unit">年</span>
+            <select id="startMonth" style="width:55px">
+              <option value="1">1月</option><option value="2">2月</option>
+              <option value="3">3月</option><option value="4">4月</option>
+              <option value="5">5月</option><option value="6">6月</option>
+              <option value="7">7月</option><option value="8">8月</option>
+              <option value="9">9月</option><option value="10">10月</option>
+              <option value="11">11月</option><option value="12">12月</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 収入設定 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">💰 収入設定（1人当たり月額）</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="inp-row">
+          <label>障害福祉サービス報酬<br><span style="font-size:.72rem;color:var(--muted)">区分3〜6＋各種加算込み目安</span></label>
+          <div class="inp-unit">
+            <input type="number" id="careFee" value="150000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>補足給付（家賃補助）</label>
+          <div class="inp-unit">
+            <input type="number" id="subsidy" value="10000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>食費・光熱費等実費収入</label>
+          <div class="inp-unit">
+            <input type="number" id="miscIncome" value="35000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="subtotal" id="incomeSubtotal">1人当たり月額合計: <strong>—</strong></div>
+        <div class="sec-note">※ 障害福祉サービス報酬は地域・区分・加算によって大きく異なります。実態に合わせて入力してください。</div>
+      </div>
+    </div>
+
+    <!-- 支出設定 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">📤 支出設定（月額固定費）</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="inp-row">
+          <label>人件費（管理者・世話人・生活支援員）</label>
+          <div class="inp-unit">
+            <input type="number" id="labor" value="400000" min="0" step="10000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>家賃・賃借料</label>
+          <div class="inp-unit">
+            <input type="number" id="rent" value="100000" min="0" step="5000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>光熱費（電気・ガス・水道）</label>
+          <div class="inp-unit">
+            <input type="number" id="utilities" value="30000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>食費・材料費</label>
+          <div class="inp-unit">
+            <input type="number" id="food" value="60000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>消耗品・備品・設備維持</label>
+          <div class="inp-unit">
+            <input type="number" id="supplies" value="20000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>借入返済（元金＋利息）</label>
+          <div class="inp-unit">
+            <input type="number" id="loan" value="50000" min="0" step="5000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>保険・税・その他固定費</label>
+          <div class="inp-unit">
+            <input type="number" id="otherFixed" value="20000" min="0" step="1000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="subtotal" id="expenseSubtotal">月額固定支出合計: <strong>—</strong></div>
+      </div>
+    </div>
+
+    <!-- 初期投資 -->
+    <div class="sec">
+      <div class="sec-hdr" onclick="toggleSec(this)">
+        <span class="sec-title">🏗 初期投資・開設費用</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body">
+        <div class="inp-row">
+          <label>開設準備費（人件費・研修・広告など）</label>
+          <div class="inp-unit">
+            <input type="number" id="setupCost" value="500000" min="0" step="10000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>敷金・保証金</label>
+          <div class="inp-unit">
+            <input type="number" id="deposit" value="200000" min="0" step="10000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>設備購入・改修費</label>
+          <div class="inp-unit">
+            <input type="number" id="equipment" value="300000" min="0" step="10000">
+            <span class="unit">円</span>
+          </div>
+        </div>
+        <div class="subtotal" id="initialSubtotal">初期投資合計: <strong>—</strong></div>
+        <div class="sec-note">※ 開設月（1ヶ月目）の支出として計上されます。敷金は解約時に返還されますが、本シミュレーターでは支出として扱います。</div>
+      </div>
+    </div>
+
+    <!-- 稼働率スケジュール -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">📈 稼働率スケジュール</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="sec-note" style="margin-bottom:10px">開設後の入居率が月の収入を左右します。段階的な立ち上がりを設定してください。</div>
+        <div class="phase-grid">
+          <div class="phase-item">
+            <label>1〜3ヶ月目</label>
+            <input type="number" id="occ1" value="50" min="0" max="100"><span style="font-size:.75rem;color:var(--muted)">%</span>
+          </div>
+          <div class="phase-item">
+            <label>4〜6ヶ月目</label>
+            <input type="number" id="occ2" value="70" min="0" max="100"><span style="font-size:.75rem;color:var(--muted)">%</span>
+          </div>
+          <div class="phase-item">
+            <label>7〜12ヶ月目</label>
+            <input type="number" id="occ3" value="85" min="0" max="100"><span style="font-size:.75rem;color:var(--muted)">%</span>
+          </div>
+          <div class="phase-item">
+            <label>13ヶ月目以降（安定）</label>
+            <input type="number" id="occ4" value="95" min="0" max="100"><span style="font-size:.75rem;color:var(--muted)">%</span>
+          </div>
+        </div>
+        <div class="sec-note" style="margin-top:8px">※ 安定稼働時（13ヶ月以降）の稼働率がサマリーの基準値になります。</div>
+      </div>
+    </div>
+
+  </div><!-- /inp-panel -->
+
+  <!-- ========== Result Panel ========== -->
+  <div class="res-panel">
+
+    <!-- 年次サマリー -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📊 年次サマリー</h3>
+        <span id="be-badge" class="be-badge">—</span>
+      </div>
+      <div class="res-card-body">
+        <div class="tbl-wrap">
+          <table id="yearTable">
+            <thead>
+              <tr>
+                <th style="text-align:left">年度</th>
+                <th>平均稼働率</th>
+                <th>年間収入</th>
+                <th>年間支出</th>
+                <th>年次収支</th>
+                <th>年度末累積収支</th>
+              </tr>
+            </thead>
+            <tbody id="yearTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- グラフ -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📈 キャッシュフロー推移</h3>
+      </div>
+      <div class="res-card-body">
+        <div class="chart-wrap">
+          <canvas id="cfChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 月次詳細 -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📋 月次詳細</h3>
+        <span style="font-size:.72rem;color:var(--muted)">スクロールで全期間を確認できます</span>
+      </div>
+      <div class="res-card-body" style="padding:0">
+        <div class="tbl-wrap">
+          <table id="monthTable">
+            <thead>
+              <tr>
+                <th style="text-align:left;min-width:80px">年月</th>
+                <th>稼働率</th>
+                <th>入居者数</th>
+                <th>月収入</th>
+                <th>月支出</th>
+                <th>月次収支</th>
+                <th>累積収支</th>
+              </tr>
+            </thead>
+            <tbody id="monthTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /res-panel -->
+
+</div><!-- /layout -->
+
+<script>
+// ─────────────────────────────────────────
+//  State & helpers
+// ─────────────────────────────────────────
+let cfChart = null;
+
+function $(id){ return document.getElementById(id); }
+function n(id){ return parseFloat($(id).value) || 0; }
+function int(id){ return parseInt($(id).value) || 0; }
+
+function fmt(val, decimal=0){
+  return val.toLocaleString('ja-JP', {minimumFractionDigits:decimal, maximumFractionDigits:decimal});
+}
+function fmtMan(val){
+  return (val / 10000).toLocaleString('ja-JP', {minimumFractionDigits:1, maximumFractionDigits:1}) + '万円';
+}
+function fmtManShort(val){
+  return Math.round(val / 10000) + '万';
+}
+
+// ─────────────────────────────────────────
+//  Init year selector
+// ─────────────────────────────────────────
+function initYearSel(){
+  const sel = $('startYear');
+  const now = new Date().getFullYear();
+  for(let y = now - 1; y <= now + 5; y++){
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if(y === now) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+// ─────────────────────────────────────────
+//  Occupancy rate for month index (0-based)
+// ─────────────────────────────────────────
+function getOcc(m){
+  if(m < 3)  return n('occ1') / 100;
+  if(m < 6)  return n('occ2') / 100;
+  if(m < 12) return n('occ3') / 100;
+  return n('occ4') / 100;
+}
+
+// ─────────────────────────────────────────
+//  Main calculation
+// ─────────────────────────────────────────
+function calculate(){
+  const capacity  = n('capacity');
+  const years     = int('years');
+  const months    = years * 12;
+  const startY    = int('startYear');
+  const startM    = int('startMonth');
+
+  // Revenue per person per month
+  const revPer = n('careFee') + n('subsidy') + n('miscIncome');
+
+  // Monthly fixed expense
+  const fixedExp = n('labor') + n('rent') + n('utilities') + n('food') +
+                   n('supplies') + n('loan') + n('otherFixed');
+
+  // Initial investment
+  const initial = n('setupCost') + n('deposit') + n('equipment');
+
+  // Stable monthly revenue (for summary bar)
+  const stableOcc = n('occ4') / 100;
+  const stableRev = capacity * stableOcc * revPer;
+
+  // Update subtotals
+  $('incomeSubtotal').innerHTML  = `1人当たり月額合計: <strong>${fmt(revPer)}円</strong>`;
+  $('expenseSubtotal').innerHTML = `月額固定支出合計: <strong>${fmt(fixedExp)}円</strong>`;
+  $('initialSubtotal').innerHTML = `初期投資合計: <strong>${fmt(initial)}円</strong>`;
+
+  // Summary bar
+  $('sb-revenue').textContent  = fmtMan(stableRev);
+  $('sb-expense').textContent  = fmtMan(fixedExp);
+  const stableMonthlyCF = stableRev - fixedExp;
+  const sbMonthly = $('sb-monthly');
+  sbMonthly.textContent = fmtMan(stableMonthlyCF);
+  sbMonthly.className   = 'val ' + (stableMonthlyCF >= 0 ? 'pos' : 'neg');
+  $('sb-initial').textContent = fmtMan(initial);
+
+  // Month-by-month
+  const data = [];
+  let cumulative = -initial;
+  let breakevenMonth = null;
+
+  for(let m = 0; m < months; m++){
+    const occ = getOcc(m);
+    const revenue  = capacity * occ * revPer;
+    const expense  = fixedExp;
+    const cashFlow = revenue - expense;
+    cumulative += cashFlow;
+
+    const calY = startY + Math.floor((startM - 1 + m) / 12);
+    const calM = ((startM - 1 + m) % 12) + 1;
+
+    if(breakevenMonth === null && cumulative >= 0){
+      breakevenMonth = m + 1;
+    }
+
+    data.push({ m, calY, calM, occ, revenue, expense, cashFlow, cumulative });
+  }
+
+  // Summary bar: final
+  const finalCF = data[data.length - 1].cumulative;
+  const sbFinal = $('sb-final');
+  sbFinal.textContent = fmtMan(finalCF);
+  sbFinal.className   = 'val ' + (finalCF >= 0 ? 'pos' : 'neg');
+
+  // Breakeven
+  const sbBe = $('sb-be');
+  const beBadge = $('be-badge');
+  if(breakevenMonth !== null){
+    const beY = startY + Math.floor((startM - 1 + breakevenMonth - 1) / 12);
+    const beM = ((startM - 1 + breakevenMonth - 1) % 12) + 1;
+    sbBe.textContent = `${breakevenMonth}ヶ月目（${beY}/${String(beM).padStart(2,'0')}）`;
+    sbBe.className   = 'val pos';
+    beBadge.textContent = `🎉 ${breakevenMonth}ヶ月目に黒字転換`;
+    beBadge.className = 'be-badge';
+  } else {
+    sbBe.textContent = `計画期間内に黒字転換なし`;
+    sbBe.className   = 'val neg';
+    beBadge.textContent = `⚠ 計画期間内に黒字転換なし`;
+    beBadge.className = 'be-badge negative';
+  }
+
+  renderMonthTable(data, startY, startM);
+  renderYearTable(data, years, startY, startM);
+  renderChart(data, startY, startM);
+}
+
+// ─────────────────────────────────────────
+//  Monthly table
+// ─────────────────────────────────────────
+function renderMonthTable(data, startY, startM){
+  const tbody = $('monthTbody');
+  tbody.innerHTML = '';
+
+  data.forEach(d => {
+    const tr  = document.createElement('tr');
+    const cfC = d.cashFlow  >= 0 ? 'cell-pos' : 'cell-neg';
+    const cuC = d.cumulative >= 0 ? 'cell-pos' : 'cell-neg';
+    const occPct = (d.occ * 100).toFixed(0);
+    const occ  = $('capacity').value;
+    const persons = (d.occ * parseFloat(occ)).toFixed(1);
+
+    tr.innerHTML = `
+      <td>${d.calY}/${String(d.calM).padStart(2,'0')}</td>
+      <td class="cell-occ">${occPct}%</td>
+      <td>${persons}人</td>
+      <td>${fmtManShort(d.revenue)}万円</td>
+      <td>${fmtManShort(d.expense)}万円</td>
+      <td class="${cfC}">${d.cashFlow >= 0 ? '+' : ''}${fmtManShort(d.cashFlow)}万円</td>
+      <td class="${cuC}">${fmtManShort(d.cumulative)}万円</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ─────────────────────────────────────────
+//  Annual table
+// ─────────────────────────────────────────
+function renderYearTable(data, years, startY, startM){
+  const tbody = $('yearTbody');
+  tbody.innerHTML = '';
+
+  for(let y = 0; y < years; y++){
+    const slice = data.slice(y * 12, (y + 1) * 12);
+    if(slice.length === 0) continue;
+
+    const annualRev  = slice.reduce((s,d) => s + d.revenue,  0);
+    const annualExp  = slice.reduce((s,d) => s + d.expense,  0);
+    const annualCF   = slice.reduce((s,d) => s + d.cashFlow, 0);
+    const avgOcc     = slice.reduce((s,d) => s + d.occ,      0) / slice.length;
+    const endCumul   = slice[slice.length - 1].cumulative;
+
+    const calEndY = startY + Math.floor((startM - 1 + (y + 1) * 12 - 1) / 12);
+    const calEndM = ((startM - 1 + (y + 1) * 12 - 1) % 12) + 1;
+    const calStartY = startY + Math.floor((startM - 1 + y * 12) / 12);
+    const calStartM = ((startM - 1 + y * 12) % 12) + 1;
+
+    const cfC  = annualCF  >= 0 ? 'cell-pos' : 'cell-neg';
+    const cuC  = endCumul  >= 0 ? 'cell-pos' : 'cell-neg';
+
+    const tr = document.createElement('tr');
+    tr.className = 'row-year';
+    tr.innerHTML = `
+      <td>${y + 1}年目（${calStartY}/${String(calStartM).padStart(2,'0')}〜${calEndY}/${String(calEndM).padStart(2,'0')}）</td>
+      <td>${(avgOcc * 100).toFixed(1)}%</td>
+      <td>${fmt(Math.round(annualRev / 10000))}万円</td>
+      <td>${fmt(Math.round(annualExp / 10000))}万円</td>
+      <td class="${cfC}">${annualCF >= 0 ? '+' : ''}${fmt(Math.round(annualCF / 10000))}万円</td>
+      <td class="${cuC}">${fmt(Math.round(endCumul / 10000))}万円</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ─────────────────────────────────────────
+//  Chart
+// ─────────────────────────────────────────
+function renderChart(data, startY, startM){
+  const labels  = data.map(d => `${d.calY}/${String(d.calM).padStart(2,'0')}`);
+  const cfVals  = data.map(d => Math.round(d.cashFlow  / 10000));
+  const cuVals  = data.map(d => Math.round(d.cumulative / 10000));
+
+  const barColors = cfVals.map(v => v >= 0 ? 'rgba(5,150,105,.75)' : 'rgba(220,38,38,.75)');
+
+  if(cfChart){ cfChart.destroy(); }
+
+  cfChart = new Chart($('cfChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          type: 'bar',
+          label: '月次収支（万円）',
+          data: cfVals,
+          backgroundColor: barColors,
+          borderRadius: 2,
+          yAxisID: 'y',
+          order: 2,
+        },
+        {
+          type: 'line',
+          label: '累積収支（万円）',
+          data: cuVals,
+          borderColor: '#1e40af',
+          backgroundColor: 'rgba(30,64,175,.08)',
+          borderWidth: 2,
+          pointRadius: data.length <= 36 ? 2 : 0,
+          tension: 0.3,
+          fill: true,
+          yAxisID: 'y2',
+          order: 1,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y >= 0 ? '+' : ''}${fmt(ctx.parsed.y)}万円`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            maxTicksLimit: 24,
+            font: { size: 10 },
+            callback: function(_, i){ return i % 6 === 0 ? labels[i] : ''; }
+          },
+          grid: { display: false }
+        },
+        y: {
+          position: 'left',
+          title: { display: true, text: '月次収支（万円）', font: { size: 10 } },
+          ticks: { font: { size: 10 }, callback: v => fmt(v) + '万' }
+        },
+        y2: {
+          position: 'right',
+          title: { display: true, text: '累積収支（万円）', font: { size: 10 } },
+          ticks: { font: { size: 10 }, callback: v => fmt(v) + '万' },
+          grid: { drawOnChartArea: false }
+        }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────────────────
+//  Accordion
+// ─────────────────────────────────────────
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  const body = hdr.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ─────────────────────────────────────────
+//  Event listeners
+// ─────────────────────────────────────────
+function addListeners(){
+  const ids = [
+    'capacity','years','startYear','startMonth',
+    'careFee','subsidy','miscIncome',
+    'labor','rent','utilities','food','supplies','loan','otherFixed',
+    'setupCost','deposit','equipment',
+    'occ1','occ2','occ3','occ4'
+  ];
+  ids.forEach(id => {
+    const el = $(id);
+    if(el) el.addEventListener('input', calculate);
+  });
+  $('homeName').addEventListener('input', () => {
+    document.title = ($('homeName').value || 'GH') + ' キャッシュフロー計画';
+  });
+}
+
+// ─────────────────────────────────────────
+//  Boot
+// ─────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  initYearSel();
+  addListeners();
+  calculate();
+});
+</script>
+</body>
+</html>

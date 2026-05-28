@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>物件内覧チェック表</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:       #1D4ED8;
+  --blue-light: #EFF6FF;
+  --green:      #15803D;
+  --green-bg:   #F0FDF4;
+  --red:        #DC2626;
+  --red-bg:     #FEF2F2;
+  --yellow:     #D97706;
+  --yellow-bg:  #FFFBEB;
+  --gray:       #64748B;
+  --border:     #E2E8F0;
+  --radius:     12px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #f0f4fb;
+  font-size: 15px;
+  color: #1a1a1a;
+}
+#wrap { max-width: 640px; margin: 0 auto; padding: 16px 14px 80px; }
+
+/* ===== ヘッダー ===== */
+.page-header {
+  background: var(--blue);
+  color: white;
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.page-header h1 { font-size: 20px; font-weight: 700; }
+.page-header p  { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+/* ===== 物件情報カード ===== */
+.info-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.info-card h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--blue-light);
+}
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.info-row.full { grid-template-columns: 1fr; }
+.info-label {
+  font-size: 11px;
+  color: var(--gray);
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+.info-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fafafa;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.info-input:focus { border-color: var(--blue); background: white; }
+
+/* ===== セクション ===== */
+.section {
+  background: white;
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  background: #fafcff;
+  border-bottom: 1.5px solid var(--border);
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+.section-icon { font-size: 18px; }
+.section-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--border);
+  color: var(--gray);
+  margin-left: 4px;
+}
+.section-arrow {
+  font-size: 18px;
+  color: var(--gray);
+  transition: transform 0.2s;
+}
+.section.open .section-arrow { transform: rotate(180deg); }
+.section-body { display: none; padding: 0; }
+.section.open .section-body { display: block; }
+
+/* ===== チェック行 ===== */
+.check-item {
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.check-item:last-child { border-bottom: none; }
+.check-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.check-sub {
+  font-size: 11px;
+  color: var(--gray);
+  margin-bottom: 8px;
+}
+.check-btns {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.check-btn {
+  flex: 1;
+  min-width: 60px;
+  padding: 7px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: white;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.12s;
+}
+.check-btn.ok    { border-color: #86EFAC; color: var(--green); background: #F0FDF4; }
+.check-btn.ng    { border-color: #FCA5A5; color: var(--red);   background: #FEF2F2; }
+.check-btn.warn  { border-color: #FCD34D; color: var(--yellow);background: #FFFBEB; }
+.check-btn.note  { border-color: #93C5FD; color: var(--blue);  background: #EFF6FF; }
+.check-btn.selected.ok   { background: var(--green); color: white; border-color: var(--green); }
+.check-btn.selected.ng   { background: var(--red);   color: white; border-color: var(--red); }
+.check-btn.selected.warn { background: var(--yellow);color: white; border-color: var(--yellow); }
+.check-note-area {
+  margin-top: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  background: #fafafa;
+  resize: vertical;
+  min-height: 52px;
+  display: none;
+  outline: none;
+  font-family: inherit;
+}
+.check-note-area.visible { display: block; }
+.check-note-area:focus { border-color: var(--blue); background: white; }
+
+/* ===== 部屋追加セクション ===== */
+.room-item {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: #fffef8;
+}
+.room-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.room-label { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+.room-del-btn {
+  padding: 3px 10px;
+  border: 1px solid #FCA5A5;
+  border-radius: 6px;
+  color: var(--red);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+}
+.room-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.room-field label { font-size: 11px; color: var(--gray); display: block; margin-bottom: 2px; }
+.room-field input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: #fafafa;
+  outline: none;
+}
+.room-field input:focus { border-color: var(--blue); background: white; }
+.room-area-display {
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 700;
+  padding: 4px 0;
+}
+.room-area-display.ng { color: var(--red); }
+.add-room-btn {
+  display: block;
+  width: calc(100% - 32px);
+  margin: 10px 16px;
+  padding: 10px;
+  background: var(--blue-light);
+  color: var(--blue);
+  border: 1.5px dashed #93C5FD;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* ===== 総合評価 ===== */
+.summary-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.summary-card h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--blue-light);
+}
+.eval-stars {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.eval-star {
+  font-size: 32px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.eval-star.active { opacity: 1; }
+.eval-star:active { transform: scale(1.2); }
+.summary-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fafafa;
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  font-family: inherit;
+}
+.summary-textarea:focus { border-color: var(--blue); background: white; }
+
+/* ===== ボタン ===== */
+.print-btn {
+  display: block;
+  width: 100%;
+  padding: 15px;
+  background: var(--blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.reset-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: var(--gray);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* ===== 印刷スタイル ===== */
+@media print {
+  @page { margin: 15mm 12mm; size: A4; }
+  body { background: white; font-size: 12px; }
+  #wrap { max-width: 100%; padding: 0; }
+  .print-btn, .reset-btn, .add-room-btn, .room-del-btn { display: none !important; }
+  .section { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  .section-body { display: block !important; }
+  .section-arrow { display: none; }
+  .info-card, .summary-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+  .check-note-area { display: block !important; }
+  .info-input, .room-field input, .summary-textarea { background: white; border: 1px solid #ccc; }
+  .page-header { background: var(--blue) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .check-btn.selected { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .section-header { background: #f0f4fb !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<!-- ヘッダー -->
+<div class="page-header">
+  <h1>🏠 物件内覧チェック表</h1>
+  <p>グループホーム物件 内覧用チェックリスト</p>
+</div>
+
+<!-- 物件基本情報 -->
+<div class="info-card">
+  <h2>📍 物件基本情報</h2>
+  <div class="info-row full">
+    <div>
+      <div class="info-label">物件名・所在地</div>
+      <input class="info-input" type="text" id="addr" placeholder="例: 〇〇市〇〇町1-2-3">
+    </div>
+  </div>
+  <div class="info-row">
+    <div>
+      <div class="info-label">内覧日</div>
+      <input class="info-input" type="date" id="date">
+    </div>
+    <div>
+      <div class="info-label">担当者名</div>
+      <input class="info-input" type="text" id="person" placeholder="氏名">
+    </div>
+  </div>
+  <div class="info-row">
+    <div>
+      <div class="info-label">築年数</div>
+      <input class="info-input" type="text" id="age" placeholder="例: 築20年">
+    </div>
+    <div>
+      <div class="info-label">建物構造</div>
+      <input class="info-input" type="text" id="struct" placeholder="木造・RC・軽量鉄骨 等">
+    </div>
+  </div>
+  <div class="info-row">
+    <div>
+      <div class="info-label">家賃・購入価格</div>
+      <input class="info-input" type="text" id="price" placeholder="例: 月額12万円">
+    </div>
+    <div>
+      <div class="info-label">延床面積</div>
+      <input class="info-input" type="text" id="area" placeholder="例: 120㎡">
+    </div>
+  </div>
+  <div class="info-row">
+    <div>
+      <div class="info-label">間取り</div>
+      <input class="info-input" type="text" id="layout" placeholder="例: 4LDK">
+    </div>
+    <div>
+      <div class="info-label">想定定員</div>
+      <input class="info-input" type="text" id="capacity" placeholder="例: 4名">
+    </div>
+  </div>
+</div>
+
+<!-- ===== 1. 立地・周辺環境 ===== -->
+<div class="section open" id="s1">
+  <div class="section-header" onclick="toggleSection('s1')">
+    <div class="section-title">
+      <span class="section-icon">🗺</span>立地・周辺環境
+    </div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body">
+    <!-- items -->
+  </div>
+</div>
+
+<!-- ===== 2. 外観・建物全体 ===== -->
+<div class="section" id="s2">
+  <div class="section-header" onclick="toggleSection('s2')">
+    <div class="section-title"><span class="section-icon">🏗</span>外観・建物全体</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 3. 共用スペース ===== -->
+<div class="section" id="s3">
+  <div class="section-header" onclick="toggleSection('s3')">
+    <div class="section-title"><span class="section-icon">🛋</span>共用スペース</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 4. 居室確認 ===== -->
+<div class="section" id="s4">
+  <div class="section-header" onclick="toggleSection('s4')">
+    <div class="section-title"><span class="section-icon">🚪</span>居室確認（各部屋）</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body" id="s4body">
+    <div id="roomList"></div>
+    <button class="add-room-btn" onclick="addRoom()">＋ 部屋を追加する</button>
+  </div>
+</div>
+
+<!-- ===== 5. バリアフリー ===== -->
+<div class="section" id="s5">
+  <div class="section-header" onclick="toggleSection('s5')">
+    <div class="section-title"><span class="section-icon">♿</span>バリアフリー・安全</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 6. 設備・設備系統 ===== -->
+<div class="section" id="s6">
+  <div class="section-header" onclick="toggleSection('s6')">
+    <div class="section-title"><span class="section-icon">🔧</span>設備・インフラ</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 7. 安全・防災 ===== -->
+<div class="section" id="s7">
+  <div class="section-header" onclick="toggleSection('s7')">
+    <div class="section-title"><span class="section-icon">🔥</span>防災・安全設備</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 8. 契約・管理 ===== -->
+<div class="section" id="s8">
+  <div class="section-header" onclick="toggleSection('s8')">
+    <div class="section-title"><span class="section-icon">📄</span>契約・管理面</div>
+    <span class="section-arrow">⌄</span>
+  </div>
+  <div class="section-body"></div>
+</div>
+
+<!-- ===== 総合評価 ===== -->
+<div class="summary-card">
+  <h2>⭐ 総合評価・メモ</h2>
+  <div style="text-align:center; margin-bottom:8px; font-size:13px; color:var(--gray);">総合評価（タップで選択）</div>
+  <div class="eval-stars">
+    <span class="eval-star" onclick="setStars(1)">★</span>
+    <span class="eval-star" onclick="setStars(2)">★</span>
+    <span class="eval-star" onclick="setStars(3)">★</span>
+    <span class="eval-star" onclick="setStars(4)">★</span>
+    <span class="eval-star" onclick="setStars(5)">★</span>
+  </div>
+  <div class="info-label" style="margin-bottom:6px;">総合コメント・所感</div>
+  <textarea class="summary-textarea" id="summaryNote" placeholder="物件全体の印象・懸念点・追加確認事項などを自由に記入してください"></textarea>
+</div>
+
+<!-- 操作ボタン -->
+<button class="print-btn" onclick="printCheck()">🖨 PDF・印刷する</button>
+<button class="reset-btn" onclick="resetAll()">🔄 リセット（チェックをすべてクリア）</button>
+
+</div><!-- /wrap -->
+
+<script>
+// ===================================================
+// チェックデータ定義
+// ===================================================
+const SECTIONS = {
+  s1: {
+    items: [
+      { id: "loc_access",  label: "公共交通アクセス", sub: "最寄り駅・バス停からの距離・本数は適切か" },
+      { id: "loc_shop",    label: "生活施設（スーパー・コンビニ・薬局）", sub: "徒歩圏内または送迎で利用できる範囲にあるか" },
+      { id: "loc_hosp",    label: "医療機関（病院・クリニック）", sub: "通院に無理のない距離か" },
+      { id: "loc_env",     label: "周辺環境（騒音・臭い・治安）", sub: "住宅地として落ち着いた環境か" },
+      { id: "loc_park",    label: "駐車スペース", sub: "スタッフ・送迎車が停められる台数か" },
+      { id: "loc_road",    label: "道路状況・接道", sub: "救急車・福祉車両が入れる道路幅か" },
+      { id: "loc_neigh",   label: "隣接施設・近隣", sub: "近隣住民への説明・理解が得やすい環境か" },
+    ]
+  },
+  s2: {
+    items: [
+      { id: "ext_cond",    label: "建物外観の状態", sub: "外壁のひび割れ・塗装の剥がれ・雨染みなど" },
+      { id: "ext_roof",    label: "屋根・雨どいの状態", sub: "破損・詰まりなどの確認" },
+      { id: "ext_base",    label: "基礎・土台の状態", sub: "ひび割れ・傾きがないか" },
+      { id: "ext_entry",   label: "玄関アプローチ", sub: "段差・すべり・明るさは適切か" },
+      { id: "ext_garage",  label: "駐車場・外構", sub: "駐車しやすいか、外構の状態は良好か" },
+      { id: "ext_fence",   label: "フェンス・塀・庭", sub: "修繕が必要な箇所がないか" },
+    ]
+  },
+  s3: {
+    items: [
+      { id: "com_hall",    label: "玄関・廊下の広さ", sub: "車いす通行や複数人の出入りに対応できるか（廊下幅80cm以上推奨）" },
+      { id: "com_living",  label: "リビング・ダイニングの広さ", sub: "入居者全員が利用できる十分なスペースがあるか" },
+      { id: "com_kitchen", label: "キッチンの状態・広さ", sub: "調理・片付けができる設備があるか" },
+      { id: "com_bath",    label: "浴室の広さ・状態", sub: "介助が必要な場合に対応できる広さか（要介護対応）" },
+      { id: "com_wash",    label: "洗面所の広さ・数", sub: "複数の入居者が使用できる状態か" },
+      { id: "com_toilet",  label: "トイレの数・広さ", sub: "入居者数に対して十分な数があるか（2つ以上推奨）" },
+      { id: "com_laundry", label: "洗濯機置き場", sub: "洗濯機・乾燥機の設置スペースがあるか" },
+      { id: "com_storage", label: "共用収納・倉庫", sub: "備品・消耗品の保管場所があるか" },
+    ]
+  },
+  s5: {
+    items: [
+      { id: "bf_ramp",     label: "スロープ・段差解消", sub: "玄関・敷地入口に段差がある場合、スロープ設置が可能か" },
+      { id: "bf_hallw",    label: "廊下幅", sub: "車いす通行には80cm以上必要。780mm未満の場合は要確認" },
+      { id: "bf_handrail", label: "手すり（廊下・トイレ・浴室）", sub: "既存の手すりがあるか、設置が可能な構造か" },
+      { id: "bf_floor",    label: "床材・すべり止め", sub: "転倒リスクのある素材（フローリングの光沢など）はないか" },
+      { id: "bf_door",     label: "ドアの種類・幅", sub: "引き戸への変更が可能か、ドア幅は十分か" },
+      { id: "bf_bath_in",  label: "浴室の入口段差", sub: "洗い場への段差が大きくないか、またぎ段の高さ" },
+      { id: "bf_garden",   label: "庭・テラスの安全性", sub: "転落・迷い出しのリスクがないか" },
+    ]
+  },
+  s6: {
+    items: [
+      { id: "eq_elec",     label: "電気容量（アンペア数）", sub: "暖冷房・調理機器・介護機器を使う場合の容量は十分か" },
+      { id: "eq_gas",      label: "ガスの種別", sub: "都市ガスかプロパンか（プロパンはランニングコスト高め）" },
+      { id: "eq_water",    label: "給水・排水の状態", sub: "水圧・水質・水道管の老朽化がないか" },
+      { id: "eq_hot",      label: "給湯設備", sub: "追い焚き機能・給湯能力（複数人対応できるか）" },
+      { id: "eq_hvac",     label: "冷暖房設備", sub: "エアコンの設置数・能力は各居室をカバーできるか" },
+      { id: "eq_internet", label: "インターネット・通信", sub: "光回線導入可否、スタッフ連絡用通信環境" },
+      { id: "eq_tv",       label: "TV・アンテナ", sub: "各居室への引き込みが可能か" },
+    ]
+  },
+  s7: {
+    items: [
+      { id: "sf_alarm",    label: "火災報知器", sub: "設置されているか。設置義務箇所（各居室・廊下・キッチン）の確認" },
+      { id: "sf_exit",     label: "避難経路・非常口", sub: "2方向避難が確保されているか。窓からの避難も含む" },
+      { id: "sf_ext",      label: "消火器", sub: "設置されているか。期限内か" },
+      { id: "sf_sprink",   label: "スプリンクラー", sub: "必要規模か確認。なければ設置工事の可否" },
+      { id: "sf_light",    label: "非常照明・誘導灯", sub: "設置されているか（一定規模以上の施設は義務）" },
+      { id: "sf_lock",     label: "施錠・防犯", sub: "玄関・窓の施錠状態、セキュリティの確認" },
+    ]
+  },
+  s8: {
+    items: [
+      { id: "con_owner",   label: "オーナー・管理会社の理解", sub: "障害者グループホームとしての利用を了承しているか" },
+      { id: "con_reform",  label: "改修・リフォームの可否", sub: "手すり設置・間取り変更などが認められるか" },
+      { id: "con_term",    label: "契約形態・契約期間", sub: "定期借家か普通借家か。長期利用が可能か" },
+      { id: "con_renew",   label: "更新条件・退去条件", sub: "突然の退去を求められるリスクがないか" },
+      { id: "con_cost",    label: "修繕費・原状回復の取り決め", sub: "退去時の費用負担の範囲が明確か" },
+      { id: "con_zoning",  label: "用途地域・法的制限", sub: "グループホーム設置可能な用途地域か（住居系・商業系は概ねOK）" },
+    ]
+  }
+};
+
+// ===================================================
+// セクションにアイテムを描画
+// ===================================================
+function buildSections() {
+  Object.entries(SECTIONS).forEach(([secId, sec]) => {
+    const body = document.querySelector(`#${secId} .section-body`);
+    if (!body) return;
+    sec.items.forEach(item => {
+      body.appendChild(buildCheckItem(item));
+    });
+  });
+}
+
+function buildCheckItem(item) {
+  const div = document.createElement('div');
+  div.className = 'check-item';
+  div.innerHTML = `
+    <div class="check-label">${item.label}</div>
+    ${item.sub ? `<div class="check-sub">${item.sub}</div>` : ''}
+    <div class="check-btns">
+      <button class="check-btn ok"   onclick="selectBtn(this,'ok'  ,'${item.id}')">✅ 良好</button>
+      <button class="check-btn warn" onclick="selectBtn(this,'warn','${item.id}')">⚠️ 要確認</button>
+      <button class="check-btn ng"   onclick="selectBtn(this,'ng'  ,'${item.id}')">❌ 問題あり</button>
+      <button class="check-btn note" onclick="toggleNote('${item.id}')">📝 メモ</button>
+    </div>
+    <textarea class="check-note-area" id="note_${item.id}" placeholder="メモを入力..."></textarea>
+  `;
+  return div;
+}
+
+// ===================================================
+// トグル・選択
+// ===================================================
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function selectBtn(btn, type, id) {
+  const btns = btn.parentElement.querySelectorAll('.check-btn');
+  btns.forEach(b => {
+    if (b !== btn) b.classList.remove('selected');
+  });
+  btn.classList.toggle('selected');
+}
+
+function toggleNote(id) {
+  const area = document.getElementById('note_' + id);
+  area.classList.toggle('visible');
+  if (area.classList.contains('visible')) area.focus();
+}
+
+// ===================================================
+// 居室追加
+// ===================================================
+let roomCount = 0;
+function addRoom() {
+  roomCount++;
+  const n = roomCount;
+  const div = document.createElement('div');
+  div.className = 'room-item';
+  div.id = 'room_' + n;
+  div.innerHTML = `
+    <div class="room-header">
+      <div class="room-label">🚪 居室 ${n}（部屋番号・名称: <input style="width:80px;border:none;border-bottom:1px solid #ccc;font-size:13px;outline:none;" placeholder="例:洋室A">）</div>
+      <button class="room-del-btn" onclick="document.getElementById('room_${n}').remove()">削除</button>
+    </div>
+    <div class="room-grid">
+      <div class="room-field">
+        <label>縦（m）</label>
+        <input type="number" step="0.01" placeholder="例: 3.5" id="rl${n}" oninput="calcArea(${n})">
+      </div>
+      <div class="room-field">
+        <label>横（m）</label>
+        <input type="number" step="0.01" placeholder="例: 2.7" id="rw${n}" oninput="calcArea(${n})">
+      </div>
+      <div class="room-field">
+        <label>収納（㎡）</label>
+        <input type="number" step="0.01" placeholder="例: 0.5" id="rs${n}" oninput="calcArea(${n})">
+      </div>
+    </div>
+    <div class="room-area-display" id="ra${n}">面積: 入力してください</div>
+    <div class="check-btns" style="margin-top:8px;">
+      <button class="check-btn ok"   onclick="selectBtn(this,'ok'  ,'rm${n}')">✅ 良好</button>
+      <button class="check-btn warn" onclick="selectBtn(this,'warn','rm${n}')">⚠️ 要確認</button>
+      <button class="check-btn ng"   onclick="selectBtn(this,'ng'  ,'rm${n}')">❌ 問題あり</button>
+      <button class="check-btn note" onclick="toggleNote('rm${n}')">📝 メモ</button>
+    </div>
+    <textarea class="check-note-area" id="note_rm${n}" placeholder="居室のメモ（採光・収納・状態など）"></textarea>
+  `;
+  document.getElementById('roomList').appendChild(div);
+}
+
+function calcArea(n) {
+  const l = parseFloat(document.getElementById('rl'+n)?.value) || 0;
+  const w = parseFloat(document.getElementById('rw'+n)?.value) || 0;
+  const s = parseFloat(document.getElementById('rs'+n)?.value) || 0;
+  const el = document.getElementById('ra'+n);
+  if (l && w) {
+    const gross = (l * w).toFixed(2);
+    const net   = (l * w - s).toFixed(2);
+    const ok743 = parseFloat(net) >= 7.43;
+    el.className = 'room-area-display' + (ok743 ? '' : ' ng');
+    el.textContent = `面積: ${gross}㎡（収納除く: ${net}㎡） → 基準(7.43㎡/人): ${ok743 ? '✅ OK' : '❌ 不足'}`;
+  } else {
+    el.className = 'room-area-display';
+    el.textContent = '面積: 入力してください';
+  }
+}
+
+// ===================================================
+// 星評価
+// ===================================================
+let currentStars = 0;
+function setStars(n) {
+  currentStars = n;
+  document.querySelectorAll('.eval-star').forEach((s, i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+// ===================================================
+// 印刷
+// ===================================================
+function printCheck() {
+  // 未入力メモ欄を印刷前に全開
+  document.querySelectorAll('.check-note-area').forEach(el => {
+    if (el.value) el.classList.add('visible');
+  });
+  window.print();
+}
+
+// ===================================================
+// リセット
+// ===================================================
+function resetAll() {
+  if (!confirm('すべてのチェックをリセットしますか？')) return;
+  document.querySelectorAll('.check-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.check-note-area').forEach(a => { a.value = ''; a.classList.remove('visible'); });
+  document.querySelectorAll('.info-input').forEach(i => i.value = '');
+  document.getElementById('summaryNote').value = '';
+  document.getElementById('roomList').innerHTML = '';
+  roomCount = 0;
+  setStars(0);
+}
+
+// ===================================================
+// 初期化
+// ===================================================
+buildSections();
+
+// 今日の日付をセット
+document.getElementById('date').valueAsDate = new Date();
+</script>
+</body>
+</html>

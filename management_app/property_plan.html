@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>不動産取得プラン（合同会社）| GH管理システム</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary:    #1e40af;
+      --primary-l:  #3b82f6;
+      --green:      #059669;
+      --green-l:    #d1fae5;
+      --red:        #dc2626;
+      --red-l:      #fee2e2;
+      --amber:      #d97706;
+      --amber-l:    #fef3c7;
+      --purple:     #7c3aed;
+      --teal:       #0f766e;
+      --bg:         #f1f5f9;
+      --card:       #ffffff;
+      --text:       #1e293b;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --sh:         0 1px 3px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Hiragino Sans','Meiryo','Yu Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+    /* ─── Header ─── */
+    .hdr{background:linear-gradient(135deg,#0f2462 0%,#1e40af 55%,#2563eb 100%);color:#fff;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .hdr-left h1{font-size:1.3rem;font-weight:800;letter-spacing:.02em}
+    .hdr-left p{color:rgba(255,255,255,.7);font-size:.75rem;margin-top:2px}
+    .hdr-right{display:flex;gap:8px;align-items:center}
+    .hdr-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:.76rem;font-family:inherit;transition:.2s;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+    .hdr-btn:hover{background:rgba(255,255,255,.28)}
+
+    /* ─── Summary Bar ─── */
+    .sum-bar{background:#fff;border-bottom:1px solid var(--border);padding:9px 24px;display:flex;gap:20px;flex-wrap:wrap;position:sticky;top:0;z-index:200;box-shadow:var(--sh)}
+    .sum-item{display:flex;flex-direction:column;gap:1px;min-width:100px}
+    .sum-item .lbl{font-size:.6rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+    .sum-item .val{font-size:1rem;font-weight:800;color:var(--primary)}
+    .sum-item .val.pos{color:var(--green)}
+    .sum-item .val.neg{color:var(--red)}
+    .sum-item .val.warn{color:var(--amber)}
+
+    /* ─── Layout ─── */
+    .layout{display:grid;grid-template-columns:370px 1fr;align-items:start}
+    .inp-panel{background:#fff;border-right:1px solid var(--border)}
+    .res-panel{padding:20px}
+
+    /* ─── Accordion ─── */
+    .sec{border-bottom:1px solid var(--border)}
+    .sec-hdr{padding:11px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background .15s}
+    .sec-hdr:hover{background:#f8faff}
+    .sec-title{font-size:.85rem;font-weight:700;color:var(--text)}
+    .chevron{font-size:.8rem;color:var(--muted);transition:transform .2s}
+    .sec-hdr.open .chevron{transform:rotate(90deg)}
+    .sec-body{padding:10px 16px 14px;display:none}
+    .sec-body.open{display:block}
+    .sec-note{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.5;padding:6px 8px;background:var(--bg);border-radius:6px}
+
+    /* ─── Input row ─── */
+    .inp-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .inp-row label{font-size:.8rem;color:var(--text);flex:1;line-height:1.3}
+    .inp-unit{display:flex;align-items:center;gap:4px;flex-shrink:0}
+    .inp-unit input[type=number]{width:90px;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.88rem;font-family:inherit;text-align:right;background:#fafbfc;outline:none;transition:border-color .15s}
+    .inp-unit input[type=number]:focus{border-color:var(--primary-l);background:#fff}
+    .inp-unit .unit{font-size:.74rem;color:var(--muted);white-space:nowrap}
+    .inp-unit select{border:1px solid var(--border);border-radius:6px;padding:5px 7px;font-size:.8rem;font-family:inherit;background:#fafbfc;outline:none}
+    .inp-unit select:focus{border-color:var(--primary-l)}
+
+    /* ─── Auto-calc display ─── */
+    .auto-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .auto-row label{font-size:.75rem;color:var(--muted);flex:1}
+    .auto-val{font-size:.85rem;font-weight:700;color:var(--primary);background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;min-width:90px;text-align:right}
+    .auto-val.neg{color:var(--red);background:#fff1f2;border-color:#fecaca}
+    .auto-val.pos{color:var(--green);background:#f0fdf4;border-color:#bbf7d0}
+
+    /* ─── Property cards ─── */
+    .prop-card{border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative}
+    .prop-card.exist-card{border-left:3px solid var(--teal)}
+    .prop-card.new-card{border-left:3px solid var(--primary)}
+    .prop-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+    .prop-badge{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:12px;white-space:nowrap}
+    .badge-exist{background:#ccfbf1;color:#0f766e}
+    .badge-new{background:#dbeafe;color:#1e40af}
+    .prop-name{font-size:.9rem;font-weight:700;flex:1}
+    .prop-del{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:2px 6px;border-radius:4px;transition:.15s}
+    .prop-del:hover{background:#fee2e2;color:var(--red)}
+    .prop-card .inp-row label{font-size:.76rem}
+    .prop-card .inp-unit input[type=number]{width:82px;font-size:.82rem}
+    .divider{border:none;border-top:1px dashed var(--border);margin:8px 0}
+
+    /* ─── Add button ─── */
+    .add-btn{width:100%;padding:8px;background:none;border:1.5px dashed var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;transition:.15s;margin-top:4px}
+    .add-btn:hover{border-color:var(--primary-l);color:var(--primary);background:#f0f4ff}
+
+    /* ─── Result cards ─── */
+    .res-card{background:var(--card);border-radius:12px;box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+    .res-card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .res-card-hdr h3{font-size:.9rem;font-weight:700}
+    .res-card-body{padding:16px}
+    .chart-wrap{position:relative;height:300px}
+
+    /* ─── Tables ─── */
+    .tbl-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.78rem}
+    thead th{background:#f1f5f9;padding:8px 10px;text-align:right;font-weight:700;color:var(--muted);border-bottom:2px solid var(--border);white-space:nowrap}
+    thead th:first-child{text-align:left;min-width:90px}
+    tbody tr:nth-child(even){background:#fafbfc}
+    tbody tr:hover{background:#eef4ff}
+    tbody td{padding:7px 10px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+    tbody td:first-child{text-align:left;font-weight:600}
+    .cell-pos{color:var(--green);font-weight:700}
+    .cell-neg{color:var(--red);font-weight:700}
+    .cell-warn{color:var(--amber);font-weight:700}
+    .row-acq{background:#eff6ff!important}
+    .row-acq td:first-child{color:var(--primary);font-weight:800}
+
+    /* ─── Timeline ─── */
+    .tl-wrap{overflow-x:auto}
+    .tl-table{border-collapse:collapse;font-size:.77rem;min-width:100%}
+    .tl-table th{padding:6px 10px;background:#f1f5f9;font-weight:700;color:var(--muted);text-align:center;border:1px solid var(--border);white-space:nowrap}
+    .tl-table th:first-child{text-align:left;min-width:130px}
+    .tl-table td{padding:5px 10px;border:1px solid var(--border);text-align:center;white-space:nowrap;font-size:.72rem}
+    .tl-table td:first-child{text-align:left;font-size:.78rem;font-weight:600}
+    .tl-acq{background:#bfdbfe;color:#1e40af;font-weight:800;outline:2px solid #3b82f6;outline-offset:-2px}
+    .tl-run{background:#d1fae5;color:#065f46;font-weight:600}
+    .tl-run-tight{background:#fef3c7;color:#92400e;font-weight:600}
+    .tl-pre{background:#f8fafc;color:#94a3b8}
+    .tl-paid{background:#f3f4f6;color:#6b7280;font-style:italic}
+
+    /* ─── Warning banner ─── */
+    .warn-banner{background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;font-size:.8rem;color:#92400e;margin-bottom:14px;display:none}
+    .warn-banner.show{display:block}
+
+    @media(max-width:800px){
+      .layout{grid-template-columns:1fr}
+      .inp-panel{border-right:none;border-bottom:1px solid var(--border)}
+    }
+    @media print{.inp-panel,.hdr-right{display:none}.layout{grid-template-columns:1fr}.sum-bar{position:static}}
+  </style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="hdr">
+  <div class="hdr-left">
+    <h1>🏢 不動産取得プラン（合同会社）</h1>
+    <p>自己資金・頭金・借入をもとに物件取得のタイミングと手元資金の変化を計画する</p>
+  </div>
+  <div class="hdr-right">
+    <a class="hdr-btn" href="index.html">‹ 運営方針ツール</a>
+    <button class="hdr-btn" onclick="window.print()">🖨 印刷</button>
+  </div>
+</div>
+
+<!-- ===== Summary Bar ===== -->
+<div class="sum-bar">
+  <div class="sum-item">
+    <div class="lbl">計画末 手元資金</div>
+    <div class="val" id="sb-cash">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">物件数（計画終了時）</div>
+    <div class="val" id="sb-props">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">累積頭金投入額</div>
+    <div class="val warn" id="sb-dp">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">最終年 月次CF（全物件）</div>
+    <div class="val" id="sb-cf">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">計画末 借入残高（合計）</div>
+    <div class="val" id="sb-loan">—</div>
+  </div>
+  <div class="sum-item">
+    <div class="lbl">最低資金割れ</div>
+    <div class="val" id="sb-dip">—</div>
+  </div>
+</div>
+
+<!-- ===== Layout ===== -->
+<div class="layout">
+
+  <!-- ========== Input Panel ========== -->
+  <div class="inp-panel">
+
+    <!-- 基本設定 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">💼 合同会社 基本設定</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="inp-row">
+          <label>現在の手元資金（自己資金）</label>
+          <div class="inp-unit">
+            <input type="number" id="initCash" value="1500" min="0" step="100" oninput="calculate()">
+            <span class="unit">万円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>最低手元資金（常に確保したいライン）</label>
+          <div class="inp-unit">
+            <input type="number" id="minReserve" value="300" min="0" step="50" oninput="calculate()">
+            <span class="unit">万円</span>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>計画期間</label>
+          <div class="inp-unit">
+            <select id="years" onchange="calculate()">
+              <option value="5">5 年</option>
+              <option value="10" selected>10 年</option>
+              <option value="15">15 年</option>
+              <option value="20">20 年</option>
+            </select>
+          </div>
+        </div>
+        <div class="inp-row">
+          <label>計画開始年月</label>
+          <div class="inp-unit">
+            <select id="startYear" style="width:68px" onchange="calculate()"></select>
+            <span class="unit">年</span>
+            <select id="startMonth" style="width:53px" onchange="calculate()">
+              <option value="1" selected>1月</option><option value="2">2月</option><option value="3">3月</option>
+              <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+              <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+              <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+            </select>
+          </div>
+        </div>
+        <div class="sec-note">※ 月次CFがプラスでも頭金投入時に手元資金が最低ラインを下回る場合は警告を表示します。</div>
+      </div>
+    </div>
+
+    <!-- 既存物件 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">🏠 既存物件（すでに保有中）</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="sec-note" style="margin-bottom:10px">合同会社がすでに所有・ローン返済中の物件を入力してください。</div>
+        <div id="existList"></div>
+        <button class="add-btn" onclick="addExistProp()">＋ 既存物件を追加</button>
+      </div>
+    </div>
+
+    <!-- 新規取得計画 -->
+    <div class="sec">
+      <div class="sec-hdr open" onclick="toggleSec(this)">
+        <span class="sec-title">🏗 新規取得計画</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="sec-body open">
+        <div class="sec-note" style="margin-bottom:10px">これから取得（建設・購入）する物件を追加してください（最大5件）。</div>
+        <div id="newPropList"></div>
+        <button class="add-btn" id="addNewBtn" onclick="addNewProp()">＋ 新規物件を追加</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========== Result Panel ========== -->
+  <div class="res-panel">
+
+    <!-- 警告 -->
+    <div class="warn-banner" id="warnBanner"></div>
+
+    <!-- 手元資金推移グラフ -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>💰 手元資金・月次CF推移</h3>
+        <span style="font-size:.72rem;color:var(--muted)">
+          棒: 月次CF｜折れ線: 手元資金残高｜オレンジ破線: 最低資金ライン
+        </span>
+      </div>
+      <div class="res-card-body">
+        <div class="chart-wrap">
+          <canvas id="cashChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 物件取得タイムライン -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📅 物件取得タイムライン</h3>
+        <span style="font-size:.72rem;color:var(--muted)">
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:10px;height:10px;background:#bfdbfe;border:2px solid #3b82f6;display:inline-block;border-radius:2px"></span>取得月
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:10px;height:10px;background:#d1fae5;display:inline-block;border-radius:2px"></span>返済中・収支プラス
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px;margin-right:8px">
+            <span style="width:10px;height:10px;background:#fef3c7;display:inline-block;border-radius:2px"></span>返済中・収支タイト
+          </span>
+          <span style="display:inline-flex;align-items:center;gap:3px">
+            <span style="width:10px;height:10px;background:#f3f4f6;display:inline-block;border-radius:2px"></span>完済
+          </span>
+        </span>
+      </div>
+      <div class="res-card-body" style="padding:12px">
+        <div class="tl-wrap">
+          <table class="tl-table" id="tlTable">
+            <thead id="tlHead"></thead>
+            <tbody id="tlBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 年次収支表 -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📊 年次キャッシュフロー表</h3>
+      </div>
+      <div class="res-card-body" style="padding:0">
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:left">年度</th>
+                <th>稼働物件数</th>
+                <th>年間賃料収入</th>
+                <th>年間ローン返済</th>
+                <th>年間固定費</th>
+                <th>頭金投入</th>
+                <th>年次CF</th>
+                <th>年度末 手元資金</th>
+                <th>借入残高合計</th>
+              </tr>
+            </thead>
+            <tbody id="yearBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 借入残高推移グラフ -->
+    <div class="res-card">
+      <div class="res-card-hdr">
+        <h3>📉 借入残高推移</h3>
+      </div>
+      <div class="res-card-body">
+        <div class="chart-wrap" style="height:220px">
+          <canvas id="loanChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────
+//  State & counters
+// ──────────────────────────────────────────────────
+let cashChart = null, loanChart = null;
+const state = { existProps: [], newProps: [] };
+let eid = 0, nid = 0;
+
+function $(id){ return document.getElementById(id); }
+function gn(id){ return parseFloat($(id)?.value) || 0; }
+function gi(id){ return parseInt($(id)?.value)   || 0; }
+function gv(id){ return $(id)?.value || ''; }
+function fmt(v, d=0){ return v.toLocaleString('ja-JP', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function fmtM(v){   return Math.round(v / 10000).toLocaleString('ja-JP') + '万円'; }
+function fmtMs(v){  const m=Math.round(v/10000); return (m>=0?'+':'') + m.toLocaleString('ja-JP') + '万円'; }
+
+// ──────────────────────────────────────────────────
+//  Loan math
+// ──────────────────────────────────────────────────
+function monthlyPayment(principal, annualRatePct, years){
+  if(principal <= 0) return 0;
+  const n = years * 12;
+  if(annualRatePct === 0) return principal / n;
+  const r = annualRatePct / 100 / 12;
+  return principal * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+}
+
+function remainingBalance(principal, annualRatePct, years, monthsPaid){
+  if(principal <= 0 || monthsPaid <= 0) return principal;
+  const n = years * 12;
+  if(monthsPaid >= n) return 0;
+  if(annualRatePct === 0) return principal * (1 - monthsPaid / n);
+  const r  = annualRatePct / 100 / 12;
+  const mp = monthlyPayment(principal, annualRatePct, years);
+  return principal * Math.pow(1+r, monthsPaid) - mp * (Math.pow(1+r, monthsPaid) - 1) / r;
+}
+
+// ──────────────────────────────────────────────────
+//  Init
+// ──────────────────────────────────────────────────
+function initYearSel(){
+  const sel = $('startYear');
+  const now = new Date().getFullYear();
+  for(let y = now-1; y <= now+5; y++){
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    if(y === now) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Existing property card
+// ──────────────────────────────────────────────────
+function addExistProp(){
+  if(state.existProps.length >= 5){ alert('既存物件は最大5件です。'); return; }
+  const id = ++eid;
+  state.existProps.push({ id });
+  const n = state.existProps.length;
+  const div = document.createElement('div');
+  div.className = 'prop-card exist-card';
+  div.id = `epc-${id}`;
+  div.innerHTML = `
+    <div class="prop-card-hdr">
+      <span class="prop-badge badge-exist">既存</span>
+      <span class="prop-name">物件${n}</span>
+      <button class="prop-del" onclick="delExistProp(${id})">✕</button>
+    </div>
+    <div class="inp-row"><label>物件名</label><div class="inp-unit">
+      <input type="text" id="ep-name-${id}" value="物件${n}"
+        style="width:110px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 7px;font-size:.82rem;font-family:inherit"
+        oninput="calculate()">
+    </div></div>
+    <div class="inp-row"><label>残ローン残高</label><div class="inp-unit">
+      <input type="number" id="ep-bal-${id}" value="4000" min="0" step="100" oninput="calculate()">
+      <span class="unit">万円</span></div></div>
+    <div class="inp-row"><label>月額ローン返済</label><div class="inp-unit">
+      <input type="number" id="ep-pay-${id}" value="22" min="0" step="1" oninput="calculate()">
+      <span class="unit">万円/月</span></div></div>
+    <div class="inp-row"><label>NPOからの月額賃料</label><div class="inp-unit">
+      <input type="number" id="ep-rent-${id}" value="25" min="0" step="1" oninput="calculate()">
+      <span class="unit">万円/月</span></div></div>
+    <div class="inp-row"><label>月額固定費（税・保険等）</label><div class="inp-unit">
+      <input type="number" id="ep-fix-${id}" value="2" min="0" step="0.5" oninput="calculate()">
+      <span class="unit">万円/月</span></div></div>
+  `;
+  $('existList').appendChild(div);
+  calculate();
+}
+
+function delExistProp(id){
+  state.existProps = state.existProps.filter(p => p.id !== id);
+  $(`epc-${id}`)?.remove();
+  calculate();
+}
+
+// ──────────────────────────────────────────────────
+//  New property card
+// ──────────────────────────────────────────────────
+function addNewProp(){
+  if(state.newProps.length >= 5){ alert('新規物件は最大5件です。'); return; }
+  const id = ++nid;
+  state.newProps.push({ id });
+  const n  = state.newProps.length;
+  const baseY = gi('startYear') || new Date().getFullYear();
+  const defY  = baseY + n;
+
+  const div = document.createElement('div');
+  div.className = 'prop-card new-card';
+  div.id = `npc-${id}`;
+  div.innerHTML = `
+    <div class="prop-card-hdr">
+      <span class="prop-badge badge-new">新規</span>
+      <span class="prop-name">新規物件${n}</span>
+      <button class="prop-del" onclick="delNewProp(${id})">✕</button>
+    </div>
+    <div class="inp-row"><label>物件名</label><div class="inp-unit">
+      <input type="text" id="np-name-${id}" value="GH物件${n}"
+        style="width:110px;border:1px solid #e2e8f0;border-radius:6px;padding:4px 7px;font-size:.82rem;font-family:inherit"
+        oninput="updateAutoCalc(${id}); calculate()">
+    </div></div>
+    <div class="inp-row"><label>取得（建設完了）予定年月</label><div class="inp-unit">
+      <input type="number" id="np-oy-${id}" value="${defY}" min="2020" max="2045" style="width:62px" oninput="calculate()">
+      <span class="unit">年</span>
+      <select id="np-om-${id}" onchange="calculate()">
+        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}"${m===4?' selected':''}>` + m + `月</option>`).join('')}
+      </select>
+    </div></div>
+
+    <hr class="divider">
+    <div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:6px">📐 物件・資金計画</div>
+
+    <div class="inp-row"><label>取得価格（建設費込み）</label><div class="inp-unit">
+      <input type="number" id="np-price-${id}" value="6000" min="0" step="100" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">万円</span></div></div>
+    <div class="inp-row"><label>頭金（自己資金から投入）</label><div class="inp-unit">
+      <input type="number" id="np-dp-${id}" value="1000" min="0" step="100" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">万円</span></div></div>
+    <div class="auto-row"><label>借入額（自動）</label>
+      <div class="auto-val" id="np-loan-${id}">—</div></div>
+    <div class="inp-row"><label>借入金利（年率）</label><div class="inp-unit">
+      <input type="number" id="np-rate-${id}" value="1.5" min="0" max="10" step="0.1" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">%</span></div></div>
+    <div class="inp-row"><label>借入期間</label><div class="inp-unit">
+      <input type="number" id="np-yrs-${id}" value="20" min="1" max="35" step="1" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">年</span></div></div>
+    <div class="auto-row"><label>月額ローン返済（自動）</label>
+      <div class="auto-val" id="np-mpay-${id}">—</div></div>
+
+    <hr class="divider">
+    <div style="font-size:.72rem;font-weight:700;color:var(--muted);margin-bottom:6px">🏠 賃料・収支</div>
+
+    <div class="inp-row"><label>NPOからの月額賃料</label><div class="inp-unit">
+      <input type="number" id="np-rent-${id}" value="30" min="0" step="1" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">万円/月</span></div></div>
+    <div class="inp-row"><label>月額固定費（固定資産税・保険等）</label><div class="inp-unit">
+      <input type="number" id="np-fix-${id}" value="3" min="0" step="0.5" oninput="updateAutoCalc(${id}); calculate()">
+      <span class="unit">万円/月</span></div></div>
+    <div class="auto-row"><label>月次CF（安定時・自動）</label>
+      <div class="auto-val" id="np-cf-${id}">—</div></div>
+  `;
+  $('newPropList').appendChild(div);
+  updateAutoCalc(id);
+  calculate();
+}
+
+function delNewProp(id){
+  state.newProps = state.newProps.filter(p => p.id !== id);
+  $(`npc-${id}`)?.remove();
+  calculate();
+}
+
+function updateAutoCalc(id){
+  const price = gn(`np-price-${id}`) * 10000;
+  const dp    = gn(`np-dp-${id}`)    * 10000;
+  const loan  = Math.max(0, price - dp);
+  const rate  = gn(`np-rate-${id}`);
+  const yrs   = gi(`np-yrs-${id}`);
+  const mp    = monthlyPayment(loan, rate, yrs);
+  const rent  = gn(`np-rent-${id}`) * 10000;
+  const fix   = gn(`np-fix-${id}`)  * 10000;
+  const cf    = rent - mp - fix;
+
+  const loanEl = $(`np-loan-${id}`);
+  const mpEl   = $(`np-mpay-${id}`);
+  const cfEl   = $(`np-cf-${id}`);
+  if(loanEl) loanEl.textContent = fmt(Math.round(loan/10000)) + '万円';
+  if(mpEl)   mpEl.textContent   = fmt(Math.round(mp/10000), 1) + '万円/月';
+  if(cfEl){
+    cfEl.textContent  = (cf>=0?'+':'') + fmt(Math.round(cf/10000),1) + '万円/月';
+    cfEl.className    = 'auto-val ' + (cf>=0?'pos':(cf>-30000?'':'neg'));
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Read data
+// ──────────────────────────────────────────────────
+function readExistProps(){
+  return state.existProps.map(p => ({
+    id:      p.id,
+    name:    $(`ep-name-${p.id}`)?.value || `物件${p.id}`,
+    balance: gn(`ep-bal-${p.id}`) * 10000,
+    payment: gn(`ep-pay-${p.id}`) * 10000,
+    rent:    gn(`ep-rent-${p.id}`)* 10000,
+    fixed:   gn(`ep-fix-${p.id}`) * 10000,
+    type:    'existing',
+  }));
+}
+
+function readNewProps(){
+  return state.newProps.map(p => {
+    const price = gn(`np-price-${p.id}`) * 10000;
+    const dp    = gn(`np-dp-${p.id}`)    * 10000;
+    const loan  = Math.max(0, price - dp);
+    const rate  = gn(`np-rate-${p.id}`);
+    const yrs   = gi(`np-yrs-${p.id}`);
+    const mp    = monthlyPayment(loan, rate, yrs);
+    return {
+      id:        p.id,
+      name:      $(`np-name-${p.id}`)?.value || `物件${p.id}`,
+      openYear:  parseInt($(`np-oy-${p.id}`)?.value) || 2027,
+      openMonth: parseInt($(`np-om-${p.id}`)?.value) || 4,
+      price, dp, loan, rate, yrs, mp,
+      rent:  gn(`np-rent-${p.id}`) * 10000,
+      fixed: gn(`np-fix-${p.id}`)  * 10000,
+      type: 'new',
+    };
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Main calculation
+// ──────────────────────────────────────────────────
+function calculate(){
+  const years      = gi('years');
+  const startY     = gi('startYear');
+  const startM     = gi('startMonth');
+  const totalMo    = years * 12;
+  const initCash   = gn('initCash')    * 10000;
+  const minReserve = gn('minReserve')  * 10000;
+
+  const existing   = readExistProps();
+  const newPs      = readNewProps();
+
+  const months = [];
+  let cash = initCash;
+  const warnings = [];
+
+  for(let m = 0; m < totalMo; m++){
+    const calY = startY + Math.floor((startM - 1 + m) / 12);
+    const calM = ((startM - 1 + m) % 12) + 1;
+
+    let rent=0, payment=0, fixed=0, dpOut=0;
+    const acqNames = [];
+
+    // Existing props
+    for(const p of existing){
+      rent    += p.rent;
+      payment += p.payment;
+      fixed   += p.fixed;
+    }
+
+    // New props
+    for(const p of newPs){
+      const moSince = (calY - p.openYear)*12 + (calM - p.openMonth);
+      if(moSince === 0){
+        dpOut += p.dp;
+        acqNames.push(p.name);
+      }
+      if(moSince >= 0){
+        const mosPaid = moSince + 1;
+        const totalMoLoan = p.yrs * 12;
+        if(mosPaid <= totalMoLoan){
+          rent    += p.rent;
+          payment += p.mp;
+          fixed   += p.fixed;
+        } else {
+          // Loan repaid
+          rent  += p.rent;
+          fixed += p.fixed;
+        }
+      }
+    }
+
+    const monthlyCF = rent - payment - fixed;
+    cash += monthlyCF - dpOut;
+
+    // Check reserve breach
+    if(cash < minReserve && (acqNames.length > 0 || m===0)){
+      const label = acqNames.length ? `${acqNames.join('・')}の取得時` : '計画開始時';
+      warnings.push(`⚠ ${calY}/${String(calM).padStart(2,'0')} ${label}に手元資金が最低ライン（${fmt(minReserve/10000)}万円）を下回ります（${fmt(Math.round(cash/10000))}万円）`);
+    }
+
+    // Loan balances per new prop
+    const loanBals = newPs.map(p => {
+      const moSince = (calY - p.openYear)*12 + (calM - p.openMonth);
+      if(moSince < 0) return 0;
+      return remainingBalance(p.loan, p.rate, p.yrs, moSince + 1);
+    });
+    const totalLoan = existing.reduce((s,p) => s + p.balance, 0) + loanBals.reduce((s,v) => s+v, 0);
+    // Approximate existing balance decay (linear approx for simplicity)
+    const existLoan = existing.reduce((s,p) => s + Math.max(0, p.balance - p.payment * m), 0);
+    const newLoanTotal = loanBals.reduce((s,v) => s+v, 0);
+    const totalLoanApprox = existLoan + newLoanTotal;
+
+    months.push({ calY, calM, rent, payment, fixed, dpOut, monthlyCF, cash, acqNames, totalLoan:totalLoanApprox });
+  }
+
+  // ─── Summary bar ───
+  const lastMo    = months[months.length-1];
+  const finalCash = lastMo?.cash ?? 0;
+  const sbC = $('sb-cash');
+  sbC.textContent = fmtM(finalCash);
+  sbC.className   = 'val ' + (finalCash >= minReserve ? 'pos' : 'neg');
+
+  // Count props at end
+  const endY = lastMo?.calY ?? startY;
+  const endM = lastMo?.calM ?? startM;
+  let propsAtEnd = existing.length;
+  for(const p of newPs){
+    if((endY - p.openYear)*12 + (endM - p.openMonth) >= 0) propsAtEnd++;
+  }
+  $('sb-props').textContent = propsAtEnd + '件';
+
+  const totalDP = newPs.reduce((s,p) => s+p.dp, 0);
+  $('sb-dp').textContent = fmtM(totalDP);
+
+  // Last-year monthly CF (last month)
+  const lastCF = lastMo?.monthlyCF ?? 0;
+  const sbCF = $('sb-cf');
+  sbCF.textContent = fmtMs(lastCF);
+  sbCF.className   = 'val ' + (lastCF >= 0 ? 'pos' : 'neg');
+
+  $('sb-loan').textContent = fmtM(lastMo?.totalLoan ?? 0);
+
+  // Min cash dip
+  const minCash = Math.min(...months.map(m => m.cash));
+  const sbDip = $('sb-dip');
+  sbDip.textContent = fmtM(minCash);
+  sbDip.className   = 'val ' + (minCash >= minReserve ? 'pos' : 'neg');
+
+  // Warnings
+  const wb = $('warnBanner');
+  if(warnings.length){
+    wb.innerHTML = warnings.map(w => `<div>${w}</div>`).join('');
+    wb.classList.add('show');
+  } else {
+    wb.classList.remove('show');
+    wb.innerHTML = '';
+  }
+
+  renderCashChart(months, minReserve, newPs, startY, startM);
+  renderTimeline(existing, newPs, months, years, startY, startM);
+  renderYearTable(months, years, startY, startM, existing, newPs);
+  renderLoanChart(months, startY, startM);
+}
+
+// ──────────────────────────────────────────────────
+//  Cash chart
+// ──────────────────────────────────────────────────
+function renderCashChart(months, minReserve, newPs, startY, startM){
+  const labels   = months.map((d,i) => i%6===0 ? `${d.calY}/${String(d.calM).padStart(2,'0')}` : '');
+  const cfVals   = months.map(d => Math.round(d.monthlyCF / 10000));
+  const cashVals = months.map(d => Math.round(d.cash / 10000));
+  const minLine  = months.map(() => Math.round(minReserve / 10000));
+
+  // Mark acquisition months
+  const barBg = months.map((d,i) => {
+    if(d.acqNames.length) return 'rgba(239,68,68,.8)';  // red = down payment month
+    return d.monthlyCF >= 0 ? 'rgba(5,150,105,.7)' : 'rgba(220,38,38,.7)';
+  });
+
+  if(cashChart) cashChart.destroy();
+  cashChart = new Chart($('cashChart').getContext('2d'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { type:'bar', label:'月次CF（万円）', data:cfVals, backgroundColor:barBg, borderRadius:2, yAxisID:'y', order:2 },
+        { type:'line', label:'手元資金残高（万円）', data:cashVals, borderColor:'#1e40af', backgroundColor:'rgba(30,64,175,.06)', borderWidth:2.5, pointRadius:0, tension:0.3, fill:true, yAxisID:'y2', order:1 },
+        { type:'line', label:'最低資金ライン', data:minLine, borderColor:'#f97316', borderWidth:1.5, borderDash:[6,3], pointRadius:0, tension:0, yAxisID:'y2', order:0, fill:false },
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins:{
+        legend:{ position:'top', labels:{ font:{size:11} } },
+        tooltip:{ callbacks:{ label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y>=0?'+':''}${fmt(ctx.parsed.y)}万円` } }
+      },
+      scales:{
+        x:{ ticks:{ font:{size:10}, maxRotation:0 }, grid:{ display:false } },
+        y:{ position:'left', title:{ display:true, text:'月次CF（万円）', font:{size:10} }, ticks:{ font:{size:10}, callback:v=>v+'万' } },
+        y2:{ position:'right', title:{ display:true, text:'手元資金（万円）', font:{size:10} }, ticks:{ font:{size:10}, callback:v=>v+'万' }, grid:{ drawOnChartArea:false } }
+      }
+    }
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Timeline
+// ──────────────────────────────────────────────────
+function renderTimeline(existing, newPs, months, years, startY, startM){
+  const thead = $('tlHead'), tbody = $('tlBody');
+  thead.innerHTML = ''; tbody.innerHTML = '';
+  const all = [...existing, ...newPs];
+  if(!all.length){ tbody.innerHTML='<tr><td colspan="99" style="text-align:center;padding:16px;color:var(--muted)">物件を追加してください</td></tr>'; return; }
+
+  // Header
+  const hr = document.createElement('tr');
+  hr.appendChild(Object.assign(document.createElement('th'),{textContent:'物件名'}));
+  for(let y=0; y<years; y++){
+    const calEndY = startY + Math.floor((startM-1+(y+1)*12-1)/12);
+    const th = document.createElement('th');
+    th.textContent = `${y+1}年目（${calEndY}）`;
+    hr.appendChild(th);
+  }
+  thead.appendChild(hr);
+
+  // Rows
+  for(const p of all){
+    const tr = document.createElement('tr');
+    const badge = p.type==='existing'
+      ? '<span class="prop-badge badge-exist" style="margin-right:4px">既存</span>'
+      : '<span class="prop-badge badge-new" style="margin-right:4px">新規</span>';
+    const nameTd = document.createElement('td');
+    nameTd.innerHTML = badge + (p.name||'');
+    tr.appendChild(nameTd);
+
+    for(let y=0; y<years; y++){
+      const midMoIdx = y*12 + 5;
+      const midCalY  = startY + Math.floor((startM-1+midMoIdx)/12);
+      const midCalM  = ((startM-1+midMoIdx)%12)+1;
+      const td = document.createElement('td');
+
+      if(p.type==='existing'){
+        const netM = p.rent - p.payment - p.fixed;
+        td.className  = netM >= 0 ? 'tl-run' : 'tl-run-tight';
+        td.textContent = (netM>=0?'+':'') + Math.round(netM/10000) + '万/月';
+      } else {
+        const moSince = (midCalY - p.openYear)*12 + (midCalM - p.openMonth);
+        // Check if opening this year
+        let openedThisYear = false;
+        for(let mm=y*12; mm<(y+1)*12; mm++){
+          const cy = startY + Math.floor((startM-1+mm)/12);
+          const cm = ((startM-1+mm)%12)+1;
+          if((cy - p.openYear)*12 + (cm - p.openMonth) === 0){ openedThisYear=true; break; }
+        }
+        const loanMoTotal = p.yrs * 12;
+        if(openedThisYear){
+          td.className  = 'tl-acq';
+          td.textContent = `🔑 取得（${p.openYear}/${String(p.openMonth).padStart(2,'0')}）`;
+        } else if(moSince < 0){
+          td.className  = 'tl-pre';
+          td.textContent = '未取得';
+        } else if(moSince >= loanMoTotal){
+          td.className  = 'tl-paid';
+          td.textContent = '完済 ' + (Math.round((p.rent-p.fixed)/10000)) + '万/月';
+        } else {
+          const cf = p.rent - p.mp - p.fixed;
+          td.className  = cf >= 0 ? 'tl-run' : 'tl-run-tight';
+          td.textContent = (cf>=0?'+':'') + Math.round(cf/10000) + '万/月';
+        }
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Year table
+// ──────────────────────────────────────────────────
+function renderYearTable(months, years, startY, startM, existing, newPs){
+  const tbody = $('yearBody');
+  tbody.innerHTML = '';
+  for(let y=0; y<years; y++){
+    const slice = months.slice(y*12, (y+1)*12);
+    if(!slice.length) continue;
+    const last     = slice[slice.length-1];
+    const annRent  = slice.reduce((s,d)=>s+d.rent, 0);
+    const annPay   = slice.reduce((s,d)=>s+d.payment, 0);
+    const annFix   = slice.reduce((s,d)=>s+d.fixed, 0);
+    const annDP    = slice.reduce((s,d)=>s+d.dpOut, 0);
+    const annCF    = slice.reduce((s,d)=>s+d.monthlyCF, 0) - annDP;
+    const endCash  = last.cash;
+    const endLoan  = last.totalLoan;
+    const hasAcq   = slice.some(d=>d.acqNames.length);
+
+    // Count props
+    const endY = last.calY, endM = last.calM;
+    let props = existing.length;
+    for(const p of newPs) if((endY-p.openYear)*12+(endM-p.openMonth)>=0) props++;
+
+    const cfC   = annCF  >= 0 ? 'cell-pos' : 'cell-neg';
+    const cashC = endCash >= gn('minReserve')*10000 ? 'cell-pos' : 'cell-neg';
+
+    const tr = document.createElement('tr');
+    if(hasAcq) tr.className = 'row-acq';
+    const calEndY = startY + Math.floor((startM-1+(y+1)*12-1)/12);
+    tr.innerHTML = `
+      <td>${y+1}年目（${calEndY}）${hasAcq?'　🔑':'　　'}</td>
+      <td style="text-align:center">${props}件</td>
+      <td>${fmtM(annRent)}</td>
+      <td>${fmtM(annPay)}</td>
+      <td>${fmtM(annFix)}</td>
+      <td>${annDP>0 ? '▼'+fmtM(annDP) : '—'}</td>
+      <td class="${cfC}">${fmtMs(annCF)}</td>
+      <td class="${cashC}">${fmtM(endCash)}</td>
+      <td>${fmtM(endLoan)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// ──────────────────────────────────────────────────
+//  Loan balance chart
+// ──────────────────────────────────────────────────
+function renderLoanChart(months, startY, startM){
+  const labels   = months.map((d,i) => i%6===0 ? `${d.calY}/${String(d.calM).padStart(2,'0')}` : '');
+  const loanVals = months.map(d => Math.round(d.totalLoan/10000));
+
+  if(loanChart) loanChart.destroy();
+  loanChart = new Chart($('loanChart').getContext('2d'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[{
+        label:'借入残高合計（万円）',
+        data:loanVals,
+        borderColor:'#dc2626',
+        backgroundColor:'rgba(220,38,38,.07)',
+        borderWidth:2,
+        pointRadius:0,
+        tension:0.3,
+        fill:true
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ position:'top', labels:{font:{size:11}} }, tooltip:{ callbacks:{ label: ctx => `借入残高: ${fmt(ctx.parsed.y)}万円` } } },
+      scales:{
+        x:{ ticks:{ font:{size:10}, maxRotation:0 }, grid:{ display:false } },
+        y:{ ticks:{ font:{size:10}, callback:v=>v+'万' }, beginAtZero:true }
+      }
+    }
+  });
+}
+
+// ──────────────────────────────────────────────────
+//  Accordion
+// ──────────────────────────────────────────────────
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  hdr.nextElementSibling.classList.toggle('open');
+}
+
+// ──────────────────────────────────────────────────
+//  Boot
+// ──────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  initYearSel();
+  calculate();  // render empty state
+});
+</script>
+</body>
+</html>
