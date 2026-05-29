@@ -468,14 +468,26 @@ textarea {
       <select class="modal-select" id="mi-type" onchange="onTypeChange()">
         <option value="2">2択（ある／ない）</option>
         <option value="3">3択（たっぷり／少し／ない）</option>
+        <option value="3num">3択（なし／1個／2個）</option>
+        <option value="range">範囲指定（3択・数字を設定）</option>
         <option value="num">数量（0〜5個）</option>
         <option value="custom">カスタム（自由設定）</option>
       </select>
     </div>
+    <div class="modal-field" id="mi-range-field" style="display:none;">
+      <div class="modal-label">境界値を入力（下限・上限の個数）</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input class="modal-input" type="number" id="mi-range-low" min="0" placeholder="5" style="width:72px;" oninput="updateRangePreview()">
+        <span style="color:var(--text2);font-size:13px;white-space:nowrap;">個以下 ／</span>
+        <input class="modal-input" type="number" id="mi-range-high" min="1" placeholder="10" style="width:72px;" oninput="updateRangePreview()">
+        <span style="color:var(--text2);font-size:13px;white-space:nowrap;">個まで</span>
+      </div>
+      <div style="font-size:12px;margin-top:6px;" id="mi-range-preview">例：5・10と入力すると「5個以下 / 6〜10個 / 11個以上」になります</div>
+    </div>
     <div class="modal-field" id="mi-custom-field" style="display:none;">
-      <div class="modal-label">選択肢（1行に1つ・上から「なし→たっぷり」の順で入力）</div>
-      <textarea class="modal-input" id="mi-choices" placeholder="なし&#10;5個以上&#10;10個以上" style="min-height:96px;resize:vertical;"></textarea>
-      <div style="font-size:11px;color:var(--text3);margin-top:4px;">先頭の選択肢＝赤、末尾＝緑、中間＝黄で表示されます</div>
+      <div class="modal-label">選択肢（1行に1つ・上から「たっぷり→なし」の順で入力）</div>
+      <textarea class="modal-input" id="mi-choices" placeholder="10個以上&#10;5個以上&#10;なし" style="min-height:96px;resize:vertical;"></textarea>
+      <div style="font-size:11px;color:var(--text3);margin-top:4px;">先頭の選択肢＝緑、末尾＝赤、中間＝黄で表示されます</div>
     </div>
     <div class="modal-field">
       <div class="modal-label">買い物カテゴリ</div>
@@ -642,17 +654,29 @@ function renderCard() {
     choicesHtml = '<div class="choice-grid-2"><button class="choice-btn ok" onclick="choose(' + item.id + ',\'ある\')">ある</button><button class="choice-btn ng" onclick="choose(' + item.id + ',\'ない\')">ない</button></div>';
   } else if (item.type === '3') {
     choicesHtml = '<div class="choice-grid-3"><button class="choice-btn ok" onclick="choose(' + item.id + ',\'たっぷり\')">たっぷり</button><button class="choice-btn warn" onclick="choose(' + item.id + ',\'少し\')">少し</button><button class="choice-btn ng" onclick="choose(' + item.id + ',\'ない\')">ない</button></div>';
+  } else if (item.type === '3num') {
+    choicesHtml = '<div class="choice-grid-3"><button class="choice-btn ok" onclick="choose(' + item.id + ',\'2個\')">2個</button><button class="choice-btn warn" onclick="choose(' + item.id + ',\'1個\')">1個</button><button class="choice-btn ng" onclick="choose(' + item.id + ',\'なし\')">なし</button></div>';
+  } else if (item.type === 'range') {
+    const lo = item.rangeLow, hi = item.rangeHigh;
+    const v0 = (hi+1) + '個以上';
+    const v1 = (lo+1) + '〜' + hi + '個';
+    const v2 = lo + '個以下';
+    choicesHtml = '<div class="choice-grid-3">'
+      + '<button class="choice-btn ok"   onclick="choose(' + item.id + ',\'' + v0 + '\')">' + v0 + '</button>'
+      + '<button class="choice-btn warn" onclick="choose(' + item.id + ',\'' + v1 + '\')">' + v1 + '</button>'
+      + '<button class="choice-btn ng"   onclick="choose(' + item.id + ',\'' + v2 + '\')">' + v2 + '</button>'
+      + '</div>';
   } else if (item.type === 'custom') {
     // カスタム選択肢：先頭=赤、末尾=緑、中間=黄で色分けする
     const choices = item.choices || [];
     const last = choices.length - 1;
     const gridClass = choices.length <= 2 ? 'choice-grid-2' : choices.length === 3 ? 'choice-grid-3' : 'choice-grid-num';
     choicesHtml = '<div class="' + gridClass + '">' + choices.map((c, idx) => {
-      const cls = idx === last ? 'ok' : idx === 0 ? 'ng' : 'warn';
+      const cls = idx === 0 ? 'ok' : idx === last ? 'ng' : 'warn';
       return '<button class="choice-btn ' + cls + '" onclick="choose(' + item.id + ',\'' + c.replace(/'/g, "\\'") + '\')">' + c + '</button>';
     }).join('') + '</div>';
   } else {
-    const nums = [0,1,2,3,4,5];
+    const nums = [5,4,3,2,1,0];
     choicesHtml = '<div class="choice-grid-num">' + nums.map(n =>
       '<button class="choice-btn num ' + (n <= 1 ? 'ng' : n <= 2 ? 'warn' : 'ok') + '" onclick="choose(' + item.id + ',' + n + ')">' + n + '<span class="choice-btn-label">個</span></button>'
     ).join('') + '</div>';
@@ -729,13 +753,19 @@ function goResult() {
 }
 
 function isShortage(v, item) {
-  if (v === undefined || v === '－' || v === 'ある' || v === 'たっぷり') return false;
-  if (v === 'ない' || v === '少し') return true;
+  if (v === undefined || v === '－' || v === 'ある' || v === 'たっぷり' || v === '2個') return false;
+  if (v === 'ない' || v === '少し' || v === 'なし' || v === '1個') return true;
   const n = Number(v);
   if (!isNaN(n)) return n <= 1;
-  // カスタム選択肢の場合：先頭（index=0）が選ばれたら不足とみなす
+  // 範囲指定の場合：「X個以下」または中間範囲なら不足とみなす
+  if (item && item.type === 'range') {
+    const v2 = item.rangeLow + '個以下';
+    const v1 = (item.rangeLow+1) + '〜' + item.rangeHigh + '個';
+    return v === v2 || v === v1;
+  }
+  // カスタム選択肢の場合：末尾（index=last）が選ばれたら不足とみなす
   if (item && item.type === 'custom' && item.choices) {
-    return item.choices[0] === v;
+    return item.choices[item.choices.length - 1] === v;
   }
   return false;
 }
@@ -760,6 +790,18 @@ function priorityLevel(v, item) {
     if (v === 'たっぷり') return 'low';
     return 'none';
   }
+  if (item.type === '3num') {
+    if (v === 'なし') return 'high';
+    if (v === '1個')  return 'mid';
+    if (v === '2個')  return 'low';
+    return 'none';
+  }
+  if (item.type === 'range') {
+    if (v === item.rangeLow + '個以下')                          return 'high';
+    if (v === (item.rangeLow+1) + '〜' + item.rangeHigh + '個') return 'mid';
+    if (v === (item.rangeHigh+1) + '個以上')                     return 'low';
+    return 'none';
+  }
   if (item.type === 'num') {
     const n = Number(v);
     if (isNaN(n)) return 'none';
@@ -770,18 +812,29 @@ function priorityLevel(v, item) {
   if (item.type === 'custom' && item.choices) {
     const idx = item.choices.indexOf(String(v));
     if (idx < 0) return 'none';
-    if (idx === 0) return 'high';                         // 先頭 = 不足
-    if (idx === item.choices.length - 1) return 'low';    // 末尾 = 十分
-    return 'mid';                                         // 中間
+    if (idx === 0) return 'low';                          // 先頭 = 十分（緑）
+    if (idx === item.choices.length - 1) return 'high';   // 末尾 = 不足（赤）
+    return 'mid';                                         // 中間（黄）
   }
   return 'none';
 }
 
 function badgeClass(v) {
-  if (v === 'ない' || v === 0 || v === '0') return 'badge-ng';
-  if (v === '少し' || v === 1 || v === '1') return 'badge-warn';
+  if (v === 'ない' || v === 'なし' || v === 0 || v === '0') return 'badge-ng';
+  if (v === '少し' || v === '1個' || v === 1 || v === '1') return 'badge-warn';
   if (v === undefined || v === '未チェック') return 'badge-none';
   return 'badge-ok';
+}
+
+function itemBadgeClass(v, item) {
+  if (item && item.type === 'range') {
+    const pl = priorityLevel(v, item);
+    if (pl === 'high') return 'badge-ng';
+    if (pl === 'mid')  return 'badge-warn';
+    if (pl === 'low')  return 'badge-ok';
+    return 'badge-none';
+  }
+  return badgeClass(v);
 }
 
 function dispVal(v) {
@@ -868,7 +921,7 @@ function renderResult() {
         html += '<div class="section-title">' + cat + '</div>';
         byStore[store][cat].forEach(i => {
           const v = state.results[i.id];
-          html += '<div class="result-item"><div><div class="result-name">' + i.name + '</div><div class="result-cat">' + i.tab + '</div></div><div style="display:flex;align-items:center;"><span class="result-badge ' + badgeClass(v) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
+          html += '<div class="result-item"><div><div class="result-name">' + i.name + '</div><div class="result-cat">' + i.tab + '</div></div><div style="display:flex;align-items:center;"><span class="result-badge ' + itemBadgeClass(v, i) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
         });
       });
       html += '</div>';
@@ -882,7 +935,7 @@ function renderResult() {
     html += '<div class="section-title">' + tab + '</div>';
     tabList.forEach(i => {
       const v = state.results[i.id];
-      html += '<div class="result-item"><div class="result-name">' + i.name + '</div><div style="display:flex;align-items:center;"><span class="result-badge ' + badgeClass(v) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
+      html += '<div class="result-item"><div class="result-name">' + i.name + '</div><div style="display:flex;align-items:center;"><span class="result-badge ' + itemBadgeClass(v, i) + '">' + dispVal(v) + '</span><button class="change-btn" onclick="changeResult(' + i.id + ')">変更</button></div></div>';
     });
   });
   html += '</div>';
@@ -895,7 +948,9 @@ function changeResult(id) {
   let opts = [];
   if (item.type === '2') opts = ['ある', 'ない'];
   else if (item.type === '3') opts = ['たっぷり', '少し', 'ない'];
-  else opts = ['0', '1', '2', '3', '4', '5'];
+  else if (item.type === '3num') opts = ['2個', '1個', 'なし'];
+  else if (item.type === 'range') opts = [(item.rangeHigh+1)+'個以上', (item.rangeLow+1)+'〜'+item.rangeHigh+'個', item.rangeLow+'個以下'];
+  else opts = ['5', '4', '3', '2', '1', '0'];
   const val = prompt(item.name + 'の状態を変更します。\n選択肢：' + opts.join('、') + '\n\n半角で入力してください。');
   if (val !== null && val.trim() !== '') {
     const trimmed = val.trim();
@@ -1187,13 +1242,22 @@ function openItemModal(id) {
   storeSel.innerHTML = state.stores.map(s => `<option value="${s}">${s}</option>`).join('');
   if (item) storeSel.value = item.store || state.stores[0];
 
-  // カスタムタイプの場合は選択肢テキストエリアを表示する
+  // 範囲指定タイプの場合は境界値フィールドを表示する
+  const rangeField  = document.getElementById('mi-range-field');
   const customField = document.getElementById('mi-custom-field');
   const choicesArea = document.getElementById('mi-choices');
-  if (item && item.type === 'custom') {
+  if (item && item.type === 'range') {
+    rangeField.style.display = '';
+    customField.style.display = 'none';
+    document.getElementById('mi-range-low').value  = item.rangeLow  ?? '';
+    document.getElementById('mi-range-high').value = item.rangeHigh ?? '';
+    updateRangePreview();
+  } else if (item && item.type === 'custom') {
+    rangeField.style.display = 'none';
     customField.style.display = '';
     choicesArea.value = (item.choices || []).join('\n');
   } else {
+    rangeField.style.display  = 'none';
     customField.style.display = 'none';
     choicesArea.value = '';
   }
@@ -1205,6 +1269,8 @@ function openItemModal(id) {
 function typeLabel(item) {
   if (item.type === '2') return '2択（ある/ない）';
   if (item.type === '3') return '3択（たっぷり/少し/ない）';
+  if (item.type === '3num') return '3択（なし/1個/2個）';
+  if (item.type === 'range') return '範囲（' + item.rangeLow + '個以下〜' + (item.rangeHigh+1) + '個以上）';
   if (item.type === 'num') return '数量（0〜5個）';
   if (item.type === 'custom') return 'カスタム（' + (item.choices || []).join('・') + '）';
   return '';
@@ -1213,7 +1279,25 @@ function typeLabel(item) {
 // タイプのプルダウンが変わったときにカスタム入力欄の表示を切り替える
 function onTypeChange() {
   const type = document.getElementById('mi-type').value;
+  document.getElementById('mi-range-field').style.display  = type === 'range'  ? '' : 'none';
   document.getElementById('mi-custom-field').style.display = type === 'custom' ? '' : 'none';
+  if (type === 'range') updateRangePreview();
+}
+
+function updateRangePreview() {
+  const low  = parseInt(document.getElementById('mi-range-low').value,  10);
+  const high = parseInt(document.getElementById('mi-range-high').value, 10);
+  const el   = document.getElementById('mi-range-preview');
+  if (!isNaN(low) && !isNaN(high) && high > low) {
+    el.textContent = '選択肢：' + low + '個以下 / ' + (low+1) + '〜' + high + '個 / ' + (high+1) + '個以上';
+    el.style.color = 'var(--accent)';
+  } else if (!isNaN(low) || !isNaN(high)) {
+    el.textContent = '※ 右の数字は左より大きくしてください';
+    el.style.color = '#A32D2D';
+  } else {
+    el.textContent = '例：5・10と入力すると「5個以下 / 6〜10個 / 11個以上」になります';
+    el.style.color = 'var(--text3)';
+  }
 }
 
 function closeItemModal() {
@@ -1228,6 +1312,16 @@ function saveItem() {
   const cat = document.getElementById('mi-cat').value;
   const store = document.getElementById('mi-store').value;
 
+  // 範囲指定タイプの場合、境界値を取得する
+  let rangeLow = null, rangeHigh = null;
+  if (type === 'range') {
+    rangeLow  = parseInt(document.getElementById('mi-range-low').value,  10);
+    rangeHigh = parseInt(document.getElementById('mi-range-high').value, 10);
+    if (isNaN(rangeLow) || isNaN(rangeHigh) || rangeHigh <= rangeLow) {
+      alert('境界値を正しく入力してください（右の数字を左より大きくしてください）'); return;
+    }
+  }
+
   // カスタムタイプの場合、選択肢を行ごとに分割して配列にする
   let choices = [];
   if (type === 'custom') {
@@ -1238,9 +1332,9 @@ function saveItem() {
 
   if (state.editingItemId) {
     const item = state.items.find(i => i.id === state.editingItemId);
-    if (item) { item.name = name; item.tab = tab; item.type = type; item.cat = cat; item.store = store; item.choices = choices; }
+    if (item) { item.name = name; item.tab = tab; item.type = type; item.cat = cat; item.store = store; item.choices = choices; item.rangeLow = rangeLow; item.rangeHigh = rangeHigh; }
   } else {
-    state.items.push({ id: state.nextId++, name, tab, type, cat, store, choices });
+    state.items.push({ id: state.nextId++, name, tab, type, cat, store, choices, rangeLow, rangeHigh });
   }
   save();
   closeItemModal();
