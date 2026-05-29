@@ -475,14 +475,6 @@ body {
 </div>
 
 <!-- ===== 7. 安全・防災 ===== -->
-<div class="section" id="s7">
-  <div class="section-header" onclick="toggleSection('s7')">
-    <div class="section-title"><span class="section-icon">🔥</span>防災・安全設備</div>
-    <span class="section-arrow">⌄</span>
-  </div>
-  <div class="section-body"></div>
-</div>
-
 <!-- ===== 9. 不動産屋への聞き取り ===== -->
 <div class="section" id="s9">
   <div class="section-header" onclick="toggleSection('s9')">
@@ -583,13 +575,6 @@ const SECTIONS = {
       { id: "eq_hot",      label: "給湯設備", sub: "追い焚き機能・給湯能力（複数人対応できるか）" },
       { id: "eq_internet", label: "インターネット・通信", sub: "光回線導入可否、スタッフ連絡用通信環境" },
       { id: "eq_tv",       label: "TV・アンテナ", sub: "各居室への引き込みが可能か" },
-    ]
-  },
-  s7: {
-    items: [
-      { id: "sf_alarm",    label: "火災報知器", sub: "各居室・廊下・キッチンに設置されているか（戸建て住宅でも設置義務あり）" },
-      { id: "sf_exit",     label: "避難経路", sub: "2方向以上の脱出ルートが確保できそうか。窓からの避難も確認" },
-      { id: "sf_lock",     label: "施錠・防犯", sub: "玄関・窓の施錠状態。夜間の見通し・防犯環境も確認" },
     ]
   },
   s9: {
