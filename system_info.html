@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>システム情報メモ</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #F1F5F9;
+  min-height: 100vh;
+  color: #1a1a1a;
+}
+
+#app { max-width: 860px; margin: 0 auto; padding: 28px 16px 60px; }
+
+/* ========== ヘッダー ========== */
+.page-header {
+  margin-bottom: 28px;
+}
+.page-title { font-size: 22px; font-weight: 700; color: #0F172A; }
+.page-sub { font-size: 13px; color: #64748B; margin-top: 4px; }
+
+/* ========== セクション ========== */
+.section { margin-bottom: 28px; }
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94A3B8;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-left: 2px;
+}
+
+/* ========== カード ========== */
+.card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid #F1F5F9;
+}
+.card-icon {
+  font-size: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-pages    { background: #E0F2FE; }
+.icon-gas      { background: #DCFCE7; }
+.icon-github   { background: #F3F4F6; }
+.icon-launcher { background: #EDE9FE; }
+
+.card-name { font-size: 16px; font-weight: 600; color: #0F172A; }
+.card-desc { font-size: 12px; color: #94A3B8; margin-top: 1px; }
+
+/* ========== 行 ========== */
+.info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 18px;
+  border-bottom: 1px solid #F8FAFC;
+}
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+  font-size: 12px;
+  color: #64748B;
+  flex-shrink: 0;
+  min-width: 150px;
+}
+.info-value-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+.info-value {
+  font-family: 'Menlo', 'Consolas', 'SF Mono', monospace;
+  font-size: 12px;
+  color: #1E293B;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 5px 10px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.info-value.url { color: #1D4ED8; }
+.info-value a {
+  color: inherit;
+  text-decoration: none;
+}
+.info-value a:hover { text-decoration: underline; }
+
+/* ========== コピーボタン ========== */
+.copy-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748B;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.copy-btn:hover { background: #E2E8F0; }
+.copy-btn.copied {
+  color: #15803D;
+  background: #F0FDF4;
+  border-color: #BBF7D0;
+}
+
+/* ========== リンクボタン ========== */
+.link-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1D4ED8;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.link-btn:hover { background: #DBEAFE; }
+
+/* ========== メモ行 ========== */
+.memo-row {
+  padding: 10px 18px 14px;
+  background: #FFFBEB;
+  border-top: 1px solid #FEF3C7;
+}
+.memo-label { font-size: 11px; color: #92400E; font-weight: 600; margin-bottom: 4px; }
+.memo-text  { font-size: 13px; color: #78350F; line-height: 1.6; }
+
+/* ========== バッジ ========== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.badge-live { background: #DCFCE7; color: #166534; }
+.badge-dev  { background: #F3F4F6; color: #6B7280; }
+
+/* ========== レスポンシブ ========== */
+@media (max-width: 600px) {
+  .info-row { flex-wrap: wrap; gap: 6px; }
+  .info-label { min-width: 100%; font-size: 11px; }
+  .info-value-wrap { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="page-header">
+    <div class="page-title">🗂 システム情報メモ</div>
+    <div class="page-sub">GHシステムで使っているサービスのURL・ID・設定をまとめています</div>
+  </div>
+
+
+  <!-- ===== GitHub Pages ===== -->
+  <div class="section">
+    <div class="section-label">🌐 GitHub Pages — Webホスティング</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-pages">🐙</div>
+        <div>
+          <div class="card-name">GHシステム公開サイト</div>
+          <div class="card-desc">GitHubリポジトリから自動デプロイ（masterブランチへのpushで反映）</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">サイトURL（トップ）</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://towaruyue0-bit.github.io/gh_system/" target="_blank">
+              https://towaruyue0-bit.github.io/gh_system/
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://towaruyue0-bit.github.io/gh_system/')">コピー</button>
+          <a class="link-btn" href="https://towaruyue0-bit.github.io/gh_system/" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">職員メニューURL</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://towaruyue0-bit.github.io/gh_system/staff_launcher.html" target="_blank">
+              https://towaruyue0-bit.github.io/gh_system/staff_launcher.html
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://towaruyue0-bit.github.io/gh_system/staff_launcher.html')">コピー</button>
+          <a class="link-btn" href="https://towaruyue0-bit.github.io/gh_system/staff_launcher.html" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイ状況（Actions）</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://github.com/towaruyue0-bit/gh_system/actions" target="_blank">
+              github.com › towaruyue0-bit/gh_system › actions
+            </a>
+          </div>
+          <a class="link-btn" href="https://github.com/towaruyue0-bit/gh_system/actions" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">リポジトリ</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://github.com/towaruyue0-bit/gh_system" target="_blank">
+              github.com/towaruyue0-bit/gh_system
+            </a>
+          </div>
+          <a class="link-btn" href="https://github.com/towaruyue0-bit/gh_system" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイ方法</div>
+        <div class="info-value-wrap">
+          <div class="info-value" style="font-family:inherit;font-size:12px;">
+            masterブランチにpushすると GitHub Actions が自動でデプロイ（.github/workflows/deploy.yml）
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ===== GAS ===== -->
+  <div class="section">
+    <div class="section-label">⚙ Google Apps Script — GASプロジェクト</div>
+
+    <!-- GAS: 在庫チェック -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-gas">📊</div>
+        <div>
+          <div class="card-name">在庫チェック・お買い物リスト</div>
+          <div class="card-desc">在庫チェックアプリからの送信・買い物リストへのデータ提供</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">WebアプリURL <span class="badge badge-live">本番 v14</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://script.google.com/macros/s/AKfycbz7f2zJ_yk56v_dl8eebfiPHCVsmGOjEife1z4fvCLssK3QOLgJy3HypCNF-n6K_IAWUQ/exec" target="_blank">
+              https://script.google.com/macros/s/AKfycbz7f2...exec
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://script.google.com/macros/s/AKfycbz7f2zJ_yk56v_dl8eebfiPHCVsmGOjEife1z4fvCLssK3QOLgJy3HypCNF-n6K_IAWUQ/exec')">コピー</button>
+          <a class="link-btn" href="https://script.google.com/home/projects/1HNfHRSoSilhpfPbEVHvfrxunNGfqbMg4iEc7nCm5o34Lj9CsVRdkKAHD/edit" target="_blank">編集</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイID <span class="badge badge-live">v14</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value">AKfycbz7f2zJ_yk56v_dl8eebfiPHCVsmGOjEife1z4fvCLssK3QOLgJy3HypCNF-n6K_IAWUQ</div>
+          <button class="copy-btn" onclick="copyText(this, 'AKfycbz7f2zJ_yk56v_dl8eebfiPHCVsmGOjEife1z4fvCLssK3QOLgJy3HypCNF-n6K_IAWUQ')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイID <span class="badge badge-dev">HEAD</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value">AKfycbyPcsmjHUuueTU6lf_IvXlrDn0z5GM-wnwKIv5iLoaA</div>
+          <button class="copy-btn" onclick="copyText(this, 'AKfycbyPcsmjHUuueTU6lf_IvXlrDn0z5GM-wnwKIv5iLoaA')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">スクリプトID</div>
+        <div class="info-value-wrap">
+          <div class="info-value">1HNfHRSoSilhpfPbEVHvfrxunNGfqbMg4iEc7nCm5o34Lj9CsVRdkKAHD</div>
+          <button class="copy-btn" onclick="copyText(this, '1HNfHRSoSilhpfPbEVHvfrxunNGfqbMg4iEc7nCm5o34Lj9CsVRdkKAHD')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">ローカルフォルダ</div>
+        <div class="info-value-wrap">
+          <div class="info-value">C:\Users\Public\gh_system\inventory_app</div>
+          <button class="copy-btn" onclick="copyText(this, 'C:\\Users\\Public\\gh_system\\inventory_app')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">連携しているアプリ</div>
+        <div class="info-value-wrap">
+          <div class="info-value" style="font-family:inherit;font-size:12px;">
+            sumika_inventory.html / facility_inventory.html / shopping_list.html / facility_shopping_list.html
+          </div>
+        </div>
+      </div>
+
+      <div class="memo-row">
+        <div class="memo-label">📌 メモ</div>
+        <div class="memo-text">
+          コードを修正した後は「デプロイを管理」→「編集（鉛筆）」→「新しいバージョン」で更新する。URL（デプロイID）は変わらない。<br>
+          在庫チェックアプリの設定画面「GAS送信先URL」に WebアプリURL（v14）を入力済みか確認すること。
+        </div>
+      </div>
+    </div>
+
+
+    <!-- GAS: 支援記録 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-gas">📝</div>
+        <div>
+          <div class="card-name">支援記録フォーム</div>
+          <div class="card-desc">日々の支援記録をスプレッドシートに送信する</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">WebアプリURL <span class="badge badge-live">本番 v6</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://script.google.com/macros/s/AKfycbznFOtfa9FbPdjvTQtYttEbDf-HeuApe4yt00JfIFSvvHpBkqkZ1sd0T7gulZt-uYD4xA/exec" target="_blank">
+              https://script.google.com/macros/s/AKfycbzn...exec
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://script.google.com/macros/s/AKfycbznFOtfa9FbPdjvTQtYttEbDf-HeuApe4yt00JfIFSvvHpBkqkZ1sd0T7gulZt-uYD4xA/exec')">コピー</button>
+          <a class="link-btn" href="https://script.google.com/home/projects/1gsJNDWQY8UJeOQFbpdhSwj8RYlVJqiPVluFKEUl6AAngRbGTP6la817E/edit" target="_blank">編集</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイID <span class="badge badge-live">v6</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value">AKfycbznFOtfa9FbPdjvTQtYttEbDf-HeuApe4yt00JfIFSvvHpBkqkZ1sd0T7gulZt-uYD4xA</div>
+          <button class="copy-btn" onclick="copyText(this, 'AKfycbznFOtfa9FbPdjvTQtYttEbDf-HeuApe4yt00JfIFSvvHpBkqkZ1sd0T7gulZt-uYD4xA')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">デプロイID <span class="badge badge-dev">HEAD</span></div>
+        <div class="info-value-wrap">
+          <div class="info-value">AKfycby9nnOv7ypT7Wg6ybAuP6dqpEKg9K1dPAjW2zG65LVi</div>
+          <button class="copy-btn" onclick="copyText(this, 'AKfycby9nnOv7ypT7Wg6ybAuP6dqpEKg9K1dPAjW2zG65LVi')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">スクリプトID</div>
+        <div class="info-value-wrap">
+          <div class="info-value">1gsJNDWQY8UJeOQFbpdhSwj8RYlVJqiPVluFKEUl6AAngRbGTP6la817E</div>
+          <button class="copy-btn" onclick="copyText(this, '1gsJNDWQY8UJeOQFbpdhSwj8RYlVJqiPVluFKEUl6AAngRbGTP6la817E')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">ローカルフォルダ</div>
+        <div class="info-value-wrap">
+          <div class="info-value">C:\Users\Public\gh_system\gas_support_record</div>
+          <button class="copy-btn" onclick="copyText(this, 'C:\\Users\\Public\\gh_system\\gas_support_record')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">連携しているアプリ</div>
+        <div class="info-value-wrap">
+          <div class="info-value" style="font-family:inherit;font-size:12px;">
+            gas_support_record/index.html（支援記録フォーム）
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ここに新しいGASプロジェクトを追加する
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-gas">📄</div>
+        <div>
+          <div class="card-name">プロジェクト名</div>
+          <div class="card-desc">用途の説明</div>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">WebアプリURL</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">https://script.google.com/macros/s/デプロイID/exec</div>
+          <button class="copy-btn" onclick="copyText(this, 'URL')">コピー</button>
+        </div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">スクリプトID</div>
+        <div class="info-value-wrap">
+          <div class="info-value">スクリプトID</div>
+          <button class="copy-btn" onclick="copyText(this, 'スクリプトID')">コピー</button>
+        </div>
+      </div>
+    </div>
+    -->
+
+  </div>
+
+
+  <!-- ===== GitHub ===== -->
+  <div class="section">
+    <div class="section-label">🐙 GitHub — コード管理</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-github">🐙</div>
+        <div>
+          <div class="card-name">GHシステム リポジトリ</div>
+          <div class="card-desc">ソースコードのバックアップ・バージョン管理</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">GitHubアカウント</div>
+        <div class="info-value-wrap">
+          <div class="info-value">towaruyue0-bit</div>
+          <button class="copy-btn" onclick="copyText(this, 'towaruyue0-bit')">コピー</button>
+          <a class="link-btn" href="https://github.com/towaruyue0-bit" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">ローカルパス</div>
+        <div class="info-value-wrap">
+          <div class="info-value">C:\Users\Public\gh_system</div>
+          <button class="copy-btn" onclick="copyText(this, 'C:\\Users\\Public\\gh_system')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">ログインアカウント</div>
+        <div class="info-value-wrap">
+          <div class="info-value">towaruyue0@gmail.com（Google連携）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== ランチャー ===== -->
+  <div class="section">
+    <div class="section-label">🚀 ランチャー・メニュー</div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon icon-launcher">🏠</div>
+        <div>
+          <div class="card-name">各メニュー画面の場所</div>
+          <div class="card-desc">PCとタブレットからアクセスする起点</div>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">PC用ランチャー</div>
+        <div class="info-value-wrap">
+          <div class="info-value">C:\Users\Public\gh_system\launcher.py</div>
+          <button class="copy-btn" onclick="copyText(this, 'C:\\Users\\Public\\gh_system\\launcher.py')">コピー</button>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">スマホ・タブレット用メニュー</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://towaruyue0-bit.github.io/gh_system/index.html" target="_blank">
+              .../index.html
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://towaruyue0-bit.github.io/gh_system/index.html')">コピー</button>
+          <a class="link-btn" href="https://towaruyue0-bit.github.io/gh_system/index.html" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">職員専用メニュー</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://towaruyue0-bit.github.io/gh_system/staff_launcher.html" target="_blank">
+              .../staff_launcher.html
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://towaruyue0-bit.github.io/gh_system/staff_launcher.html')">コピー</button>
+          <a class="link-btn" href="https://towaruyue0-bit.github.io/gh_system/staff_launcher.html" target="_blank">開く</a>
+        </div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">このページ（システム情報）</div>
+        <div class="info-value-wrap">
+          <div class="info-value url">
+            <a href="https://towaruyue0-bit.github.io/gh_system/system_info.html" target="_blank">
+              .../system_info.html
+            </a>
+          </div>
+          <button class="copy-btn" onclick="copyText(this, 'https://towaruyue0-bit.github.io/gh_system/system_info.html')">コピー</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = 'コピー済み ✓';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    var orig = btn.textContent;
+    btn.textContent = 'コピー済み ✓';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = orig;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+
+</body>
+</html>

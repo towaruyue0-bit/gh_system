@@ -79,6 +79,9 @@ DEFAULT_SETTINGS = {
         {
             "name": "入居者管理",
             "items": [
+                {"name": "集約カレンダー",             "desc": "全予定情報（通院・案件・定期業務・勤務メモ）を2ヶ月カレンダー・一覧・ガントで一括確認", "path": r"master_calendar_app\master_calendar_app.py"},
+                {"name": "定期業務管理",             "desc": "月次・週次・年1回など定期的に発生する業務を登録・管理する。変更は集約カレンダーへ自動反映", "path": r"routine_app\routine_app.py"},
+                {"name": "予定管理",               "desc": "利用者別・ホーム全体・管理者の予定を月間カレンダーで一元管理。通院記録からの自動取込に対応",  "path": r"schedule_app\schedule_app.py"},
                 {"name": "入居管理マスター",       "desc": "入居者の基本情報（氏名・部屋・入退居日など）を管理する",               "path": r"residents_app\main.py"},
                 {"name": "血圧測定記録",           "desc": "入居者の血圧測定値を日ごとに記録・確認する",                           "path": r"bp_app\bp_app.py"},
                 {"name": "体重測定記録",           "desc": "入居者の体重を日ごとに記録・グラフで確認する",                             "path": r"weight_app\weight_app.py"},
@@ -99,11 +102,24 @@ DEFAULT_SETTINGS = {
                 {"name": "請求書作成",             "desc": "月次の請求書を生成・印刷する",                                         "path": r"billing_app\billing_app.py"},
                 {"name": "収支計算",               "desc": "月次の報酬試算と人件費を計算し、収支の概算を確認する",                 "path": r"finance_app\finance_app.py"},
                 {"name": "預かり金管理",           "desc": "利用者の預かり金の収支を管理する",                                     "path": r"deposit_app\deposit_app.py"},
+                {"name": "コレクトハブ",             "desc": "全銀ファイル生成・入金明細DL・カレンダー登録を一元管理するハブ",       "path": r"ricoh_collect_app\ricoh_collect_app.py"},
+            ],
+        },
+        {
+            "name": "経営・運営計画",
+            "items": [
+                {"name": "入所案件管理",               "desc": "入所・退所・体験・申請等の案件を登録し、準備期間をガントチャートで確認する",    "path": r"admission_app\admission_app.py"},
+                {"name": "運営方針ツール（メニュー）",     "desc": "GH経営の判断・計画に使うシミュレーターをまとめたメニュー画面",           "path": r"management_app\index.html"},
+                {"name": "不動産取得プラン（合同会社）",     "desc": "自己資金・頭金・借入から物件取得タイミングと手元資金の推移を計画する", "path": r"management_app\property_plan.html"},
+                {"name": "GH拡大プラン（NPO法人）",         "desc": "新規ホームの開設タイミングと複数年の収支を計画する",                 "path": r"management_app\expansion_plan.html"},
+                {"name": "月次キャッシュフロー計画",       "desc": "月ごとの収支・資金繰りを複数年にわたって計画・確認する",               "path": r"management_app\cashflow_planner.html"},
+                {"name": "GH不動産投資シミュレーター",     "desc": "新築GHの採算性・収支・固定資産税を総合シミュレーション",               "path": r"management_app\real_estate_simulator.html"},
             ],
         },
         {
             "name": "書類・印刷",
             "items": [
+                {"name": "フェイスシート作成",       "desc": "入所時のフェイスシートを入力してExcelで出力する",                     "path": r"facesheet_app\facesheet_app.py"},
                 {"name": "書類差し込み印刷",       "desc": "利用者書類に氏名・日付などを差し込んで作成する",                       "path": r"documents_app\documents_app.py"},
                 {"name": "契約書印刷",             "desc": "入居・体験利用の契約書ファイルを一括印刷する",                         "path": r"contract_app\contract_app.py"},
                 {"name": "封筒宛名印刷",           "desc": "長形封筒に宛名を縦書きで印刷する",                                     "path": r"envelope_app\envelope_app.py"},
@@ -121,8 +137,14 @@ DEFAULT_SETTINGS = {
         {
             "name": "在庫管理",
             "items": [
-                {"name": "在庫チェック（ブラウザ）",  "desc": "すみかの消耗品・備品の在庫をブラウザ画面で確認・更新する",         "path": r"inventory_app\sumika_inventory.html"},
-                {"name": "お買い物リスト（ブラウザ）", "desc": "購入が必要な品目をブラウザ画面でリスト管理する",                   "path": r"inventory_app\shopping_list.html"},
+                {"name": "ホーム管理メニュー（スマホ・タブレット用）", "desc": "在庫チェック・買い物リスト・支援記録などをスマホ・タブレットで開くためのメニュー画面",  "path": r"index.html"},
+                {"name": "職員メニュー（タブレット用）",             "desc": "職員専用アプリをまとめたタブレット向けランチャー。在庫チェック・支援記録など職員のみ使用するものをここに追加していく", "path": r"staff_launcher.html"},
+                {"name": "システム情報メモ",                       "desc": "Netlify・GAS・GitHubのURL・ID・デプロイ情報をまとめた参照ページ（ブラウザで開く）", "path": r"system_info.html"},
+                {"name": "在庫チェック（ブラウザ）",        "desc": "すみかの食材・消耗品の在庫をブラウザ画面で確認・更新する",                     "path": r"inventory_app\sumika_inventory.html"},
+                {"name": "お買い物リスト（ブラウザ）",       "desc": "購入が必要な品目をブラウザ画面でリスト管理する",                               "path": r"inventory_app\shopping_list.html"},
+                {"name": "ホーム備品 在庫チェック（ブラウザ）", "desc": "洗剤・ゴミ袋など施設共用備品の在庫をブラウザ画面で確認・更新する（備品専用）",  "path": r"inventory_app\facility_inventory.html"},
+                {"name": "ホーム備品 買い物リスト（ブラウザ）", "desc": "備品在庫チェックの結果から買い物リストを確認する（備品専用）",                  "path": r"inventory_app\facility_shopping_list.html"},
+                {"name": "ホーム備品 消費サイクル管理",        "desc": "備品の入庫・使用記録を積み重ねて「何日おきに補充するか」を把握する",            "path": r"facility_items_app\facility_items_app.py"},
             ],
         },
         {
@@ -136,6 +158,7 @@ DEFAULT_SETTINGS = {
         {
             "name": "GAS・外部連携",
             "items": [
+                {"name": "システム情報メモ",             "desc": "Netlify・GAS・GitHubのURL・ID・デプロイ情報をまとめた参照ページ（ブラウザで開く）", "path": r"system_info.html"},
                 {"name": "GASプロジェクト管理",       "desc": "登録済みのGASアプリをまとめて管理・更新する（一括プッシュ）",       "path": r"gas_push_app\gas_push_app.py"},
                 {"name": "支援記録フォーム（ブラウザ）", "desc": "日々の支援記録をブラウザ画面から入力する（GASアプリ）",           "path": r"gas_support_record\index.html"},
                 {"name": "利用者データCSV書き出し",   "desc": "入居者・お薬情報をCSVに書き出してGASへ連携する前処理ツール",       "path": r"gas_support_record\export_residents.py"},
@@ -207,8 +230,9 @@ def launch_app(script_path):
     try:
         ext = os.path.splitext(full_path)[1].lower()
         if ext == ".py":
+            exe = get_python_exe()
             # cwd をスクリプトのある場所にすることで相対パスが正常に動く
-            subprocess.Popen([get_python_exe(), full_path], cwd=os.path.dirname(full_path))
+            subprocess.Popen([exe, full_path], cwd=os.path.dirname(full_path))
         else:
             # .html・フォルダ・その他はOSのデフォルトアプリで開く
             # （フォルダ → エクスプローラー、.html → ブラウザ）
@@ -232,7 +256,11 @@ class LauncherApp(tk.Tk):
 
         self.settings = load_settings()
 
+        self.search_var = tk.StringVar()
+        self.search_var.trace_add("write", lambda *_: self._draw_app_list())
+
         self._build_title()
+        self._build_search()
         self._build_scrollable_area()
         self._build_footer()
 
@@ -283,6 +311,57 @@ class LauncherApp(tk.Tk):
             bg=COLOR_TITLE_BG,
             fg="#BDD4F0",
         ).pack(pady=(2, 0))
+
+    def _build_search(self):
+        """タイトルバー直下の検索バーを作成する"""
+        bar = tk.Frame(self, bg="#EEF3F8", padx=16, pady=6)
+        bar.pack(fill="x")
+
+        tk.Label(bar, text="🔍", font=FONT, bg="#EEF3F8").pack(side="left")
+
+        self._search_entry = tk.Entry(
+            bar,
+            textvariable=self.search_var,
+            font=FONT,
+            relief="flat",
+            bg="white",
+            fg="#1A2A4A",
+            insertbackground="#1A2A4A",
+        )
+        self._search_entry.pack(side="left", fill="x", expand=True,
+                                padx=(6, 0), ipady=5)
+
+        # ×ボタン（クリアボタン）
+        tk.Button(
+            bar, text="×", font=FONT,
+            bg="#EEF3F8", fg="#888888", relief="flat",
+            cursor="hand2", padx=6,
+            activebackground="#DDE4EF",
+            command=lambda: self.search_var.set(""),
+        ).pack(side="left", padx=(2, 0))
+
+        # ヒントラベル（検索欄が空のときだけ表示）
+        self._search_hint = tk.Label(
+            bar,
+            text="アプリ名・説明文で絞り込み（Ctrl+F）",
+            font=FONT_SMALL, bg="#EEF3F8", fg="#AAAAAA",
+        )
+        self._search_hint.pack(side="left", padx=(10, 0))
+
+        # ヒントの表示／非表示を検索ワード変化に連動させる
+        def _on_search_change(*_):
+            if self.search_var.get():
+                self._search_hint.pack_forget()
+            else:
+                if not self._search_hint.winfo_ismapped():
+                    self._search_hint.pack(side="left", padx=(10, 0))
+        self.search_var.trace_add("write", _on_search_change)
+
+        # Ctrl+F で検索バーへフォーカス
+        self.bind_all("<Control-f>", lambda e: self._search_entry.focus_set())
+        self.bind_all("<Control-F>", lambda e: self._search_entry.focus_set())
+        # Escape で検索クリア
+        self._search_entry.bind("<Escape>", lambda e: self.search_var.set(""))
 
     def _build_scrollable_area(self):
         """スクロール可能なアプリ一覧エリアを作成する"""
@@ -353,8 +432,7 @@ class LauncherApp(tk.Tk):
     def _draw_app_list(self):
         """
         設定データをもとにカテゴリ＋アプリ一覧を描画する。
-        設定変更後の再描画にも対応（既存ウィジェットを削除して描き直す）。
-        カテゴリごとに色パレットを順番に割り当てる。
+        検索ワードがある場合は絞り込み結果を表示する。
         """
         for widget in self.inner.winfo_children():
             widget.destroy()
@@ -362,11 +440,88 @@ class LauncherApp(tk.Tk):
         outer = tk.Frame(self.inner, bg=COLOR_BG, padx=20, pady=12)
         outer.pack(fill="both", expand=True)
 
-        # enumerate でインデックスを取り、そのインデックスで色を決める
+        query = getattr(self, "search_var", None)
+        query = query.get().strip().lower() if query else ""
+
+        if query:
+            self._draw_search_results(outer, query)
+        else:
+            for cat_idx, cat in enumerate(self.settings["categories"]):
+                if cat.get("items"):
+                    palette = get_palette(cat_idx)
+                    self._draw_category(outer, cat, palette)
+
+    def _draw_search_results(self, parent, query):
+        """検索ワードに一致するアプリを横断的に表示する"""
+        matches = []
         for cat_idx, cat in enumerate(self.settings["categories"]):
-            if cat.get("items"):   # アプリが0件のカテゴリは表示しない
-                palette = get_palette(cat_idx)
-                self._draw_category(outer, cat, palette)
+            palette = get_palette(cat_idx)
+            for app in cat.get("items", []):
+                if (query in app["name"].lower()
+                        or query in app.get("desc", "").lower()):
+                    matches.append((app, palette, cat["name"]))
+
+        if not matches:
+            tk.Label(
+                parent,
+                text=f"「{query}」に一致するアプリはありません",
+                font=FONT, bg=COLOR_BG, fg="#888888",
+            ).pack(pady=40)
+            return
+
+        tk.Label(
+            parent,
+            text=f"{len(matches)} 件が一致しました",
+            font=FONT_SMALL, bg=COLOR_BG, fg="#666666",
+        ).pack(anchor="w", pady=(0, 6))
+
+        for i, (app, palette, cat_name) in enumerate(matches):
+            bg = COLOR_ROW_ODD if i % 2 == 0 else "#F0F4FA"
+            self._draw_search_row(parent, app, bg, palette["header"], cat_name)
+
+    def _draw_search_row(self, parent, app, bg, accent, cat_name):
+        """検索結果1件の行（カテゴリ名バッジ付き）"""
+        row = tk.Frame(parent, bg=bg)
+        row.pack(fill="x")
+
+        tk.Frame(row, bg=accent, width=5).pack(side="left", fill="y")
+
+        content = tk.Frame(row, bg=bg, pady=6, padx=12)
+        content.pack(side="left", fill="x", expand=True)
+
+        tk.Label(
+            content,
+            text=f"[{cat_name}]",
+            font=FONT_SMALL, bg=bg, fg=accent, anchor="w",
+        ).pack(fill="x")
+
+        tk.Label(
+            content,
+            text=app["name"],
+            font=FONT_BOLD, bg=bg, fg="#1A2A4A", anchor="w",
+        ).pack(fill="x")
+
+        desc_lbl = tk.Label(
+            content,
+            text=app.get("desc", ""),
+            font=FONT_SMALL, bg=bg, fg="#666666",
+            anchor="w", justify="left",
+        )
+        desc_lbl.pack(fill="x")
+        content.bind(
+            "<Configure>",
+            lambda e, lbl=desc_lbl: lbl.config(wraplength=max(e.width - 4, 100))
+        )
+
+        path = app["path"]
+        active_color = _darken(accent)
+        tk.Button(
+            row, text="起  動", font=FONT,
+            bg=accent, fg=COLOR_BTN_TXT, relief="flat",
+            cursor="hand2", padx=16, pady=6,
+            activebackground=active_color, activeforeground=COLOR_BTN_TXT,
+            command=lambda p=path: launch_app(p),
+        ).pack(side="right", padx=12, pady=6)
 
     def _draw_category(self, parent, cat, palette):
         """
@@ -549,6 +704,7 @@ class SettingsDialog(tk.Toplevel):
             frame, font=FONT, width=17,
             selectbackground=COLOR_HEADER, selectforeground=COLOR_HEADER_TXT,
             relief="solid", bd=1, activestyle="none",
+            exportselection=False,
         )
         self.cat_lb.grid(row=0, column=0, sticky="ns")
         self.cat_lb.bind("<<ListboxSelect>>", lambda e: self._on_cat_select())
@@ -592,6 +748,8 @@ class SettingsDialog(tk.Toplevel):
             lb_wrap, font=FONT,
             selectbackground=COLOR_HEADER, selectforeground=COLOR_HEADER_TXT,
             relief="solid", bd=1, activestyle="none",
+            exportselection=False,
+            selectmode=tk.EXTENDED,
         )
         self.app_lb.grid(row=0, column=0, sticky="nsew")
 
@@ -730,37 +888,42 @@ class SettingsDialog(tk.Toplevel):
     # -------------------------------------------------------------------------
 
     def _sel_app(self):
-        """選択中アプリのインデックス（なければ None）"""
-        s = self.app_lb.curselection()
-        return s[0] if s else None
+        """選択中アプリのインデックスリスト（昇順、なければ空リスト）"""
+        return list(self.app_lb.curselection())
 
     def _move_app_up(self):
-        """選択中のアプリを1つ上に移動する"""
-        ci = self._sel_cat()
-        ai = self._sel_app()
-        if ci is None or ai is None or ai == 0:
+        """選択中のアプリをまとめて1つ上に移動する"""
+        ci  = self._sel_cat()
+        ais = self._sel_app()
+        if ci is None or not ais or ais[0] == 0:
             return
         items = self.work["categories"][ci]["items"]
-        items[ai - 1], items[ai] = items[ai], items[ai - 1]
+        # 昇順に処理：先頭側から順番にスワップすることで連鎖ズレを防ぐ
+        for ai in ais:
+            items[ai - 1], items[ai] = items[ai], items[ai - 1]
         self._on_cat_select()
-        self.app_lb.selection_set(ai - 1)
+        for ai in ais:
+            self.app_lb.selection_set(ai - 1)
 
     def _move_app_down(self):
-        """選択中のアプリを1つ下に移動する"""
+        """選択中のアプリをまとめて1つ下に移動する"""
         ci    = self._sel_cat()
-        ai    = self._sel_app()
+        ais   = self._sel_app()
         items = self.work["categories"][ci]["items"] if ci is not None else []
-        if ci is None or ai is None or ai >= len(items) - 1:
+        if ci is None or not ais or ais[-1] >= len(items) - 1:
             return
-        items[ai], items[ai + 1] = items[ai + 1], items[ai]
+        # 降順に処理：末尾側から順番にスワップすることで連鎖ズレを防ぐ
+        for ai in reversed(ais):
+            items[ai], items[ai + 1] = items[ai + 1], items[ai]
         self._on_cat_select()
-        self.app_lb.selection_set(ai + 1)
+        for ai in ais:
+            self.app_lb.selection_set(ai + 1)
 
     def _move_app_to_cat(self):
-        """選択中のアプリを別カテゴリへ移動するサブダイアログを開く"""
-        ci = self._sel_cat()
-        ai = self._sel_app()
-        if ci is None or ai is None:
+        """選択中のアプリ（複数可）を別カテゴリへ移動するサブダイアログを開く"""
+        ci  = self._sel_cat()
+        ais = self._sel_app()
+        if ci is None or not ais:
             messagebox.showinfo("未選択", "移動するアプリを選択してください。", parent=self)
             return
 
@@ -771,6 +934,13 @@ class SettingsDialog(tk.Toplevel):
                 "移動先のカテゴリがありません。\nまずカテゴリを追加してください。", parent=self)
             return
 
+        # 選択件数に応じてラベルを変える
+        n = len(ais)
+        if n == 1:
+            app_label = f"「{self.work['categories'][ci]['items'][ais[0]]['name']}」"
+        else:
+            app_label = f"{n} 件のアプリ"
+
         # 移動先を選ぶ小ウィンドウ
         win = tk.Toplevel(self)
         win.title("移動先を選択")
@@ -779,7 +949,7 @@ class SettingsDialog(tk.Toplevel):
         win.grab_set()
 
         tk.Label(
-            win, text="どのカテゴリへ移動しますか？",
+            win, text=f"{app_label} をどのカテゴリへ移動しますか？",
             font=FONT, bg=COLOR_BG, pady=12, padx=16,
         ).pack()
 
@@ -791,8 +961,12 @@ class SettingsDialog(tk.Toplevel):
             ).pack(fill="x", padx=24, pady=2)
 
         def do_move():
-            app = self.work["categories"][ci]["items"].pop(ai)
-            self.work["categories"][dest_var.get()]["items"].append(app)
+            items = self.work["categories"][ci]["items"]
+            # インデックス順にアプリを取得してから、後ろから削除（ズレ防止）
+            apps_to_move = [items[ai] for ai in sorted(ais)]
+            for ai in sorted(ais, reverse=True):
+                items.pop(ai)
+            self.work["categories"][dest_var.get()]["items"].extend(apps_to_move)
             win.destroy()
             self._refresh_cat_lb(ci)
             self._on_cat_select()

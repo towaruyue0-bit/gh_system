@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>職員メニュー</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: #EFF6FF;
+  min-height: 100vh;
+}
+
+:root {
+  --accent:        #1E40AF;
+  --accent-mid:    #1D4ED8;
+  --accent-light:  #DBEAFE;
+  --green:         #15803D;
+  --green-light:   #F0FDF4;
+  --teal:          #0D9488;
+  --teal-light:    #F0FDFA;
+  --bg:            #ffffff;
+  --bg2:           #F8FAFF;
+  --text:          #1a1a1a;
+  --text2:         #64748B;
+  --text3:         #94A3B8;
+  --border:        rgba(0,0,0,0.09);
+  --radius:        16px;
+  --radius-sm:     10px;
+}
+
+#app { max-width: 600px; margin: 0 auto; padding: 20px 16px 48px; }
+
+/* ========== ヘッダー ========== */
+.app-header {
+  text-align: center;
+  padding: 32px 0 28px;
+}
+.staff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 14px;
+  border-radius: 99px;
+  margin-bottom: 14px;
+  letter-spacing: 0.04em;
+}
+.app-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.app-sub {
+  font-size: 13px;
+  color: var(--text3);
+  margin-top: 5px;
+}
+
+/* ========== グループ ========== */
+.group { margin-bottom: 20px; }
+.group-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+/* ========== カード ========== */
+.card {
+  background: var(--bg);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ========== アプリ行 ========== */
+.app-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.12s;
+}
+.app-link:last-child { border-bottom: none; }
+.app-link:active { background: var(--bg2); }
+
+.app-icon {
+  font-size: 26px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-green  { background: var(--green-light); }
+.icon-blue   { background: var(--accent-light); }
+.icon-teal   { background: var(--teal-light); }
+
+.app-info { flex: 1; }
+.app-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.app-desc { font-size: 12px; color: var(--text3); }
+
+.app-arrow { font-size: 18px; color: var(--text3); flex-shrink: 0; }
+
+/* ========== フッター ========== */
+.footer {
+  text-align: center;
+  padding-top: 24px;
+  font-size: 12px;
+  color: var(--text3);
+  line-height: 1.8;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div class="app-header">
+    <div class="staff-badge">👤 職員専用</div>
+    <div class="app-title">職員メニュー</div>
+    <div class="app-sub">職員用のアプリはこちらから開いてください</div>
+  </div>
+
+  <!-- ===== 食材管理 ===== -->
+  <div class="group">
+    <div class="group-label">🥦 食材管理</div>
+    <div class="card">
+
+      <a class="app-link" href="inventory_app/sumika_inventory.html">
+        <div class="app-icon icon-green">📋</div>
+        <div class="app-info">
+          <div class="app-name">食材 在庫チェック</div>
+          <div class="app-desc">食材の在庫状況を記録・送信する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-link" href="inventory_app/shopping_list.html">
+        <div class="app-icon icon-green">🛒</div>
+        <div class="app-info">
+          <div class="app-name">食材 買い物リスト</div>
+          <div class="app-desc">不足している食材を確認する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== 備品管理 ===== -->
+  <div class="group">
+    <div class="group-label">🧻 備品管理</div>
+    <div class="card">
+
+      <a class="app-link" href="inventory_app/facility_inventory.html">
+        <div class="app-icon icon-blue">📋</div>
+        <div class="app-info">
+          <div class="app-name">備品 在庫チェック</div>
+          <div class="app-desc">日用品・備品の在庫状況を記録・送信する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <a class="app-link" href="inventory_app/facility_shopping_list.html">
+        <div class="app-icon icon-blue">🛍</div>
+        <div class="app-info">
+          <div class="app-name">備品 買い物リスト</div>
+          <div class="app-desc">不足している備品・日用品を確認する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ===== 記録 ===== -->
+  <div class="group">
+    <div class="group-label">📝 記録・管理</div>
+    <div class="card">
+
+      <a class="app-link" href="gas_support_record/index.html">
+        <div class="app-icon icon-teal">📝</div>
+        <div class="app-info">
+          <div class="app-name">支援記録</div>
+          <div class="app-desc">支援記録を入力・送信する</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      <!-- ↓ アプリを追加するときはここにコピーして貼り付ける ↓
+
+      <a class="app-link" href="フォルダ名/ファイル名.html">
+        <div class="app-icon icon-teal">🔧</div>
+        <div class="app-info">
+          <div class="app-name">アプリ名</div>
+          <div class="app-desc">説明文</div>
+        </div>
+        <div class="app-arrow">›</div>
+      </a>
+
+      ↑ アプリを追加するときはここにコピーして貼り付ける ↑ -->
+
+    </div>
+  </div>
+
+  <div class="footer">
+    GHシステム 職員メニュー<br>
+    <a href="system_info.html" style="color:#94A3B8;font-size:11px;">システム情報メモ</a>
+  </div>
+
+</div>
+
+</body>
+</html>
